@@ -316,6 +316,16 @@
     render(true);
   });
 
+  /* 주소창 해시가 바뀌면(뒤로가기, 공유 링크 직접 입력) 그 화면으로 */
+  window.addEventListener('hashchange', function () {
+    var hash = (location.hash || '').replace('#/', '');
+    if (SINS[hash]) { state.browsing = hash; state.view = 'result'; }
+    else if (hash === 'menu') { state.view = 'menu'; }
+    else if (hash === 'q') { return; }
+    else { state.view = 'intro'; state.browsing = null; }
+    render();
+  });
+
   /* ---------- 시작 ---------- */
   (function boot() {
     document.documentElement.lang = state.lang;
