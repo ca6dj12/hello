@@ -15,6 +15,7 @@ public/
   scoring.js    채점 규칙
 tools/
   simulate.js   결과 쏠림 검증기
+  make-qr.js    테이블 QR 카드 생성
 ```
 
 ## 자주 하는 수정
@@ -47,6 +48,18 @@ node tools/simulate.js
 
 `tools/simulate.js` 는 "듣기 좋은 선택지로 기우는 사람" 같은 편향된 응답자까지
 4만 명씩 돌려보고, 한 죄가 30%를 넘거나 5% 아래로 굶으면 실패로 표시합니다.
+
+## 테이블 QR 카드
+
+배포 주소가 정해지면 카드까지 한 번에 만들어집니다.
+
+```bash
+cd tools && npm install
+node make-qr.js https://<배포주소>
+```
+
+`public/card.html` 을 브라우저에서 열고 인쇄하세요. A6, 배경 그래픽 켜기, 여백 없음.
+PDF 로 저장해 인쇄소에 넘기면 그대로 테이블 카드가 됩니다.
 
 ## 로컬에서 보기
 

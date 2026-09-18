@@ -1,0 +1,12 @@
+{
+  "name": "deadly-sins-tools",
+  "private": true,
+  "description": "QR/검증용 도구. 사이트 자체는 의존성이 없습니다.",
+  "scripts": {
+    "qr": "node make-qr.js",
+    "simulate": "node simulate.js"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  }
+}
