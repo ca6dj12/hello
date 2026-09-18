@@ -1,0 +1,29 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Serif+KR:wght@300;400&display=swap">
+<style>
+ *{margin:0;padding:0;box-sizing:border-box}
+ body{width:1200px;height:630px;background:#060607;color:#eae6de;
+  font-family:'Cormorant Garamond','Noto Serif KR',serif;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center}
+ .glow{position:absolute;inset:0;background:radial-gradient(70% 55% at 50% -6%,rgba(200,164,106,.22),transparent 62%)}
+ .frame{position:absolute;inset:34px;border:1px solid rgba(200,164,106,.3)}
+ .mark{font-size:20px;letter-spacing:.5em;color:#b6b1a8;margin-bottom:34px;z-index:2}
+ .shapes{display:flex;gap:22px;align-items:flex-end;margin-bottom:34px;z-index:2}
+ .shapes svg{width:34px;color:#eae6de;opacity:.3}
+ .shapes svg:nth-child(4){opacity:1;color:#c8a46a}
+ h1{font-family:'Noto Serif KR',serif;font-weight:300;font-size:56px;line-height:1.45;text-align:center;z-index:2}
+ p{margin-top:28px;font-size:22px;letter-spacing:.14em;color:#c8a46a;font-family:'Noto Serif KR',serif;font-weight:300;z-index:2}
+</style></head><body>
+<div class="glow"></div><div class="frame"></div>
+<div class="mark">DEADLYSINS</div>
+<div class="shapes" id="s"></div>
+<h1>오늘 밤,<br>당신은 어떤 죄를 삼키시겠습니까?</h1>
+<p>여기선 착할 필요 없습니다.</p>
+<svg style="position:absolute;width:0;height:0"><defs>
+<filter id="ink" x="-25%" y="-25%" width="150%" height="160%">
+<feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="7" result="n"/>
+<feDisplacementMap in="SourceGraphic" in2="n" scale="5.5" xChannelSelector="R" yChannelSelector="G"/>
+</filter></defs></svg>
+<script src="http://localhost:8080/data.js"></script>
+<script src="http://localhost:8080/app-shapes.js"></script>
+</body></html>

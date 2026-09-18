@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DEADLY SINS — 오늘 밤, 당신은 어떤 죄를 삼키시겠습니까?</title>
+<meta name="description" content="여덟 개의 질문이 끝나면, 일곱 개의 잔 중 하나가 당신을 고릅니다. DEADLY SINS.">
+<meta name="theme-color" content="#0b0b0c">
+<meta name="color-scheme" content="dark">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="오늘 밤, 당신은 어떤 죄를 삼키시겠습니까?">
+<meta property="og:description" content="여덟 개의 질문이 끝나면, 일곱 개의 잔 중 하나가 당신을 고릅니다. DEADLY SINS.">
+<meta property="og:image" content="./og.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Noto+Serif+KR:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<svg class="svg-defs" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="ink" x="-25%" y="-25%" width="150%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="5.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="inkSoft" x="-25%" y="-25%" width="150%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <button class="mark" type="button" data-act="home">DEADLYSINS</button>
+  <button id="lang" class="lang" type="button" aria-label="Switch language">EN</button>
+</header>
+
+<main id="app" class="app" aria-live="polite"></main>
+
+<script src="./data.js"></script>
+<script src="./scoring.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>

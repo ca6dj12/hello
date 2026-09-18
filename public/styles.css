@@ -1,0 +1,250 @@
+/* =============================================================
+   DEADLY SINS — 블랙. 여백과 헤어라인, 그리고 위에서 떨어지는 빛.
+   ============================================================= */
+
+:root{
+  --black:#060607;
+  --black-2:#0b0b0d;
+  --card:#0e0e10;
+  --ivory:#eae6de;
+  --ivory-dim:#b6b1a8;
+  --muted:#79756e;
+  --gold:#c8a46a;
+  --hair:rgba(234,230,222,.12);
+  --hair-gold:rgba(200,164,106,.28);
+  --serif:'Cormorant Garamond','Noto Serif KR',Georgia,serif;
+  --sans:'Noto Serif KR',system-ui,-apple-system,sans-serif;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  background:var(--black);color:var(--ivory);font-family:var(--serif);
+  min-height:100svh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+.vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(120% 50% at 50% -10%, rgba(200,164,106,.16), rgba(200,164,106,.03) 42%, transparent 68%),
+    radial-gradient(90% 55% at 50% 108%, rgba(0,0,0,.8), transparent 62%),
+    linear-gradient(180deg,#0d0d0f 0%,var(--black) 48%,#040405 100%);
+}
+.grain{
+  position:fixed;inset:-50%;pointer-events:none;z-index:1;opacity:.055;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+}
+.svg-defs{position:absolute;width:0;height:0}
+
+.app{
+  position:relative;z-index:2;max-width:34rem;margin:0 auto;
+  padding:clamp(3.4rem,11vw,4.4rem) clamp(1.25rem,5vw,2rem) 4rem;
+  min-height:100svh;display:flex;flex-direction:column;
+}
+
+/* ---------- 상단 바 ---------- */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.85rem clamp(1rem,5vw,1.5rem);
+  background:linear-gradient(180deg,var(--black) 38%,rgba(6,6,7,.86) 68%,rgba(6,6,7,0));
+}
+.topbar .mark{
+  font-size:.7rem;letter-spacing:.44em;color:var(--ivory-dim);
+  background:none;border:0;padding:.3rem 0;cursor:pointer;font-family:var(--serif);
+}
+.topbar .mark:hover{color:var(--gold)}
+.lang{
+  background:transparent;border:1px solid var(--hair);color:var(--muted);
+  font-family:var(--serif);font-size:.72rem;letter-spacing:.16em;
+  padding:.36rem .72rem;border-radius:999px;cursor:pointer;
+  transition:color .3s var(--ease),border-color .3s var(--ease);
+}
+.lang:hover,.lang:focus-visible{color:var(--gold);border-color:var(--hair-gold)}
+
+/* ---------- 공통 ---------- */
+.screen{flex:1;display:flex;flex-direction:column;animation:rise .6s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.rule-short{width:1.8rem;height:1px;background:var(--gold);opacity:.75;margin:1.2rem auto;border:0}
+.kicker{
+  text-align:center;color:var(--gold);font-size:.82rem;letter-spacing:.1em;
+  font-family:var(--sans);font-weight:300;margin:0;opacity:.85;
+}
+
+/* ---------- 인트로 ---------- */
+.intro{justify-content:center;text-align:center}
+.intro-shapes{display:flex;justify-content:center;align-items:flex-end;gap:.5rem;margin:1.9rem 0 .4rem}
+.intro-shapes svg{width:clamp(17px,5.4vw,22px);height:auto;color:var(--ivory);opacity:.28}
+.intro-shapes svg:nth-child(4){opacity:.9;color:var(--gold)}
+.intro-title{
+  font-size:clamp(2.05rem,9.2vw,2.95rem);font-weight:300;line-height:1.38;
+  margin:1.4rem 0 1.4rem;letter-spacing:-.012em;
+}
+.intro-body{
+  font-family:var(--sans);font-weight:300;font-size:.92rem;line-height:2.05;
+  color:var(--ivory-dim);margin:0 auto 2.4rem;max-width:25rem;opacity:.82;
+}
+.meta{font-family:var(--sans);font-size:.72rem;letter-spacing:.14em;color:var(--muted);margin:1.2rem 0 0;font-weight:300}
+.textlink{
+  display:inline-block;background:none;border:0;cursor:pointer;color:var(--muted);
+  font-family:var(--sans);font-size:.78rem;font-weight:300;letter-spacing:.06em;
+  padding:.5rem;margin-top:1.6rem;border-bottom:1px solid transparent;
+  transition:color .3s var(--ease),border-color .3s var(--ease);
+}
+.textlink:hover,.textlink:focus-visible{color:var(--gold);border-bottom-color:var(--hair-gold)}
+
+/* ---------- 버튼 ---------- */
+.btn{
+  display:block;width:100%;max-width:19rem;margin:0 auto;cursor:pointer;
+  background:transparent;color:var(--ivory);border:1px solid var(--hair-gold);
+  font-family:var(--serif);font-size:1rem;letter-spacing:.22em;
+  padding:1.05rem 1.4rem;position:relative;overflow:hidden;
+  transition:color .35s var(--ease),border-color .35s var(--ease),background .35s var(--ease),box-shadow .35s var(--ease);
+}
+.btn::after{
+  content:'';position:absolute;inset:0;background:radial-gradient(70% 140% at 50% 0%,rgba(200,164,106,.22),transparent 70%);
+  opacity:0;transition:opacity .35s var(--ease);
+}
+.btn:hover,.btn:focus-visible{color:#fff;border-color:var(--gold);box-shadow:0 0 34px rgba(200,164,106,.14)}
+.btn:hover::after,.btn:focus-visible::after{opacity:1}
+.btn.ghost{border-color:var(--hair);font-size:.86rem;letter-spacing:.14em;padding:.88rem 1.2rem;color:var(--ivory-dim)}
+.btn.ghost:hover,.btn.ghost:focus-visible{color:var(--gold);border-color:var(--hair-gold)}
+
+/* ---------- 질문 ---------- */
+.q-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:0 0 2.4rem}
+.back{
+  background:none;border:0;color:var(--muted);cursor:pointer;font-family:var(--serif);
+  font-size:.8rem;letter-spacing:.1em;padding:.4rem 0;min-width:3.4rem;text-align:left;
+  transition:color .3s var(--ease);
+}
+.back:hover,.back:focus-visible{color:var(--gold)}
+.ticks{display:flex;gap:.3rem}
+.tick{width:.8rem;height:1px;background:rgba(234,230,222,.16);transition:background .45s var(--ease),box-shadow .45s var(--ease)}
+.tick.done{background:rgba(234,230,222,.42)}
+.tick.now{background:var(--gold);box-shadow:0 0 9px rgba(200,164,106,.85)}
+.count{font-size:.76rem;letter-spacing:.14em;color:var(--muted);min-width:3.4rem;text-align:right}
+.q-text{
+  font-size:clamp(1.38rem,5.4vw,1.78rem);font-weight:300;line-height:1.66;
+  margin:0 0 2.3rem;letter-spacing:-.005em;
+}
+.options{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.55rem}
+.option{
+  width:100%;text-align:left;cursor:pointer;background:transparent;
+  border:0;border-top:1px solid var(--hair);color:var(--ivory-dim);
+  font-family:var(--sans);font-weight:300;font-size:.97rem;line-height:1.62;
+  padding:1.1rem 1rem 1.1rem 1.9rem;position:relative;
+  transition:color .3s var(--ease),background .3s var(--ease),padding-left .3s var(--ease);
+}
+.options li:last-child .option{border-bottom:1px solid var(--hair)}
+.option::before{
+  content:'';position:absolute;left:.35rem;top:1.45rem;width:5px;height:5px;
+  background:rgba(234,230,222,.22);transition:all .35s var(--ease);
+}
+.option:hover,.option:focus-visible{color:#fff;background:rgba(200,164,106,.05);padding-left:2.15rem}
+.option:hover::before,.option:focus-visible::before{background:var(--gold);transform:rotate(45deg);box-shadow:0 0 10px rgba(200,164,106,.9)}
+.option.picked{color:#fff;background:rgba(200,164,106,.1)}
+.option.picked::before{background:var(--gold);transform:rotate(45deg)}
+.q-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding-bottom:8vh}
+/* 숫자키 힌트는 키보드가 있는 화면에서만 */
+.option .key{display:none}
+@media (hover:hover) and (pointer:fine){
+  .option .key{display:block;position:absolute;right:.55rem;top:50%;transform:translateY(-50%);
+    font-family:var(--serif);font-size:.68rem;color:rgba(234,230,222,.18)}
+}
+
+/* ---------- 결과 ---------- */
+.result{align-items:center;text-align:center}
+.lamp{
+  width:min(20rem,78vw);height:4.6rem;margin:-1.2rem auto -2rem;
+  background:radial-gradient(58% 100% at 50% 0%,rgba(200,164,106,.5),rgba(200,164,106,.1) 46%,transparent 72%);
+  filter:blur(7px);animation:fade 1.3s var(--ease) both;
+}
+.panel{
+  width:min(22rem,94vw);background:linear-gradient(180deg,#131315 0%,var(--card) 42%,#09090a 100%);
+  border:1px solid var(--hair-gold);padding:2.4rem 1.5rem 2rem;
+  box-shadow:0 30px 80px rgba(0,0,0,.8),inset 0 1px 0 rgba(200,164,106,.16);
+  animation:rise .85s var(--ease) both;position:relative;
+}
+.sin-mark{width:clamp(88px,27vw,108px);height:auto;color:var(--ivory);opacity:.92;display:block;margin:0 auto .2rem}
+.glass-mark{width:clamp(56px,17vw,68px);height:auto;color:var(--gold);opacity:.9;display:block;margin:0 auto 1.4rem}
+.result-kicker{font-family:var(--sans);font-size:.68rem;letter-spacing:.24em;color:var(--muted);margin:0 0 .6rem;font-weight:300}
+.sin-en{font-size:clamp(2.2rem,10.5vw,2.95rem);font-weight:300;letter-spacing:.1em;margin:0;line-height:1;color:#fff}
+.sin-ko{font-family:var(--sans);font-size:.9rem;letter-spacing:.38em;color:var(--muted);margin:.8rem 0 0;font-weight:300}
+.panel-rule{height:1px;background:var(--hair);margin:1.4rem auto;width:72%}
+.latin{font-style:italic;font-size:.99rem;line-height:1.72;color:var(--ivory-dim);margin:0 0 .55rem}
+.latin-tr{font-family:var(--sans);font-size:.74rem;line-height:1.8;color:var(--muted);margin:0;font-weight:300}
+.verdict{font-family:var(--sans);font-weight:300;font-size:.9rem;line-height:2.05;color:var(--ivory-dim);margin:1.5rem 0 .2rem;text-align:left}
+.tasting{list-style:none;margin:1.6rem 0 0;padding:1.3rem 0 0;border-top:1px solid var(--hair);text-align:left}
+.tasting li{display:flex;align-items:baseline;gap:1rem;padding:.44rem 0;font-family:var(--sans);font-size:.85rem;font-weight:300;color:var(--ivory)}
+.tasting .k{flex:0 0 3.1rem;color:var(--muted);letter-spacing:.18em;font-size:.72rem}
+.tasting .v{flex:1}
+.pips{display:inline-flex;gap:.26rem;align-items:center;margin-left:.2rem}
+.pip{width:13px;height:1px;background:rgba(234,230,222,.2)}
+.pip.on{background:var(--gold);box-shadow:0 0 6px rgba(200,164,106,.5)}
+.order{margin:1.7rem 0 0;padding-top:1.3rem;border-top:1px solid var(--hair)}
+.order .k{font-family:var(--sans);font-size:.68rem;letter-spacing:.22em;color:var(--muted);margin:0 0 .55rem;font-weight:300}
+.order .v{font-size:1.2rem;color:#fff;margin:0;letter-spacing:.03em}
+.second{font-family:var(--sans);font-size:.76rem;color:var(--muted);margin:1.5rem 0 0;letter-spacing:.05em;font-weight:300}
+.second b{color:var(--ivory);font-weight:400;letter-spacing:.18em}
+.actions{display:flex;flex-direction:column;gap:.55rem;width:min(22rem,94vw);margin:1.8rem auto 0}
+
+/* 결과에 붙는 "같은 죄의 위스키" */
+.pair{width:min(22rem,94vw);margin:2.2rem auto 0;text-align:left}
+.pair-head{font-family:var(--sans);font-size:.68rem;letter-spacing:.22em;color:var(--muted);margin:0 0 .9rem;font-weight:300;text-align:center}
+.pair-label{font-size:1.06rem;color:var(--gold);margin:0 0 .7rem;text-align:center;letter-spacing:.04em}
+
+/* ---------- 메뉴 ---------- */
+.menu{padding-top:.5rem;animation:rise .6s var(--ease) both}
+.menu-title{text-align:center;font-size:clamp(1.5rem,7vw,2rem);font-weight:300;letter-spacing:.42em;margin:0 0 .4rem;text-indent:.42em}
+.menu-sub{text-align:center;font-family:var(--sans);font-size:.74rem;color:var(--muted);letter-spacing:.12em;margin:0 0 2.6rem;font-weight:300}
+.sec{margin:0 0 2.7rem}
+.sec-h{
+  display:flex;align-items:center;gap:.9rem;margin:0 0 1.1rem;
+  font-size:.78rem;letter-spacing:.3em;color:var(--ivory);font-weight:400;
+}
+.sec-h::after{content:'';flex:1;height:1px;background:var(--hair)}
+.sec-note{font-family:var(--sans);font-size:.72rem;color:var(--muted);margin:-.5rem 0 1.1rem;font-weight:300;letter-spacing:.08em}
+.row{
+  display:flex;align-items:baseline;gap:.8rem;padding:.6rem 0;
+  border-bottom:1px solid rgba(234,230,222,.06);
+}
+.row .n{font-family:var(--sans);font-size:.92rem;font-weight:300;color:var(--ivory)}
+.row .n small{display:block;font-family:var(--serif);font-size:.8rem;color:var(--muted);letter-spacing:.04em;margin-top:.12rem}
+.row .dots{flex:1;border-bottom:1px dotted rgba(234,230,222,.14);transform:translateY(-.25rem)}
+.row .p{font-size:.92rem;color:var(--ivory-dim);letter-spacing:.04em;white-space:nowrap}
+.row .p em{font-style:normal;color:var(--muted);font-size:.74rem;letter-spacing:.1em;margin-right:.2rem}
+.grp{margin:0 0 1.6rem}
+.grp-h{
+  display:flex;align-items:center;justify-content:center;gap:.6rem;
+  font-size:1.02rem;color:var(--gold);margin:1.6rem 0 .7rem;letter-spacing:.03em;text-align:center;
+}
+.grp-h .sin{font-family:var(--sans);font-size:.63rem;letter-spacing:.22em;color:var(--muted)}
+.sig{display:flex;align-items:center;gap:.9rem;padding:.75rem 0;border-bottom:1px solid rgba(234,230,222,.06);width:100%;background:none;border-left:0;border-right:0;border-top:0;cursor:pointer;text-align:left;transition:background .3s var(--ease)}
+.sig:hover,.sig:focus-visible{background:rgba(200,164,106,.05)}
+.sig svg{width:20px;height:auto;color:var(--ivory);opacity:.6;flex:0 0 auto}
+.sig .t{flex:1}
+.sig .t b{display:block;font-family:var(--serif);font-size:.96rem;font-weight:400;letter-spacing:.12em;color:var(--ivory)}
+.sig .t span{display:block;font-family:var(--sans);font-size:.72rem;color:var(--muted);font-weight:300;margin-top:.18rem}
+.sig .p{font-size:.88rem;color:var(--ivory-dim)}
+.info li{font-family:var(--sans);font-size:.8rem;line-height:1.95;color:var(--muted);font-weight:300;margin:0 0 .35rem;list-style:none}
+.info{padding:0;margin:0}
+.final{text-align:center;margin-top:2.4rem;padding-top:1.8rem;border-top:1px solid var(--hair)}
+.final h3{font-size:1rem;letter-spacing:.2em;font-weight:400;margin:0 0 .3rem;color:var(--ivory)}
+
+.toast{
+  position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(10px);
+  background:#15151a;border:1px solid var(--hair-gold);color:var(--ivory);
+  font-family:var(--sans);font-size:.8rem;padding:.65rem 1.1rem;
+  opacity:0;pointer-events:none;z-index:40;transition:opacity .3s var(--ease),transform .3s var(--ease);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.foot{font-family:var(--sans);font-size:.68rem;letter-spacing:.14em;color:#4f4c48;text-align:center;margin:3rem 0 0;font-weight:300}
+.divider{display:flex;align-items:center;gap:1rem;margin:3.4rem 0 2.2rem;color:var(--muted);font-size:.7rem;letter-spacing:.34em}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--hair)}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
