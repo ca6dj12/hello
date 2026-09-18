@@ -61,6 +61,33 @@ node make-qr.js https://<배포주소>
 `public/card.html` 을 브라우저에서 열고 인쇄하세요. A6, 배경 그래픽 켜기, 여백 없음.
 PDF 로 저장해 인쇄소에 넘기면 그대로 테이블 카드가 됩니다.
 
+## 배포
+
+**https://sounds-zeta.vercel.app**  (Vercel 프로젝트 `sounds`)
+
+이 세션의 Vercel 토큰에 새 프로젝트 생성 권한이 없어서(403), 기존 `sounds`
+프로젝트에 덮어썼습니다. 그리고 파일을 인라인으로 올리는 방식은 한 번에
+보낼 수 있는 양에 걸려서, **빌드 단계에서 이 저장소를 그대로 내려받도록**
+설정했습니다. Vercel 프로젝트의 빌드 명령은 다음과 같습니다.
+
+```bash
+curl -sL "https://codeload.github.com/ca6dj12/hello/tar.gz/refs/heads/claude/deadly-sins-cocktail-qr-9ljntg" -o src.tgz \
+  && mkdir -p src && tar xzf src.tgz -C src --strip-components=1 \
+  && rm -rf public && cp -r src/public ./public
+```
+
+즉, **Vercel에서 재배포를 누르면 이 브랜치의 최신 내용을 다시 받아갑니다.**
+GitHub에서 `public/data.js` 만 고치고 재배포해도 반영됩니다.
+
+주의할 점 두 가지:
+
+1. 브랜치 이름이 빌드 명령에 박혀 있습니다. 브랜치를 지우거나 이름을 바꾸면
+   빌드가 실패합니다.
+2. 저장소가 비공개로 바뀌면 내려받기가 실패합니다.
+
+**더 나은 방법**: Vercel 대시보드에서 이 저장소를 직접 연결(Import)하면
+위 우회가 필요 없어지고, 푸시할 때마다 자동 배포됩니다. 1분이면 됩니다.
+
 ## 로컬에서 보기
 
 ```bash
