@@ -6,17 +6,17 @@
   font-family:'Cormorant Garamond','Noto Serif KR',serif;overflow:hidden;position:relative;
   display:flex;flex-direction:column;align-items:center;justify-content:center}
  .glow{position:absolute;inset:0;background:radial-gradient(70% 55% at 50% -6%,rgba(200,164,106,.22),transparent 62%)}
- .frame{position:absolute;inset:34px;border:1px solid rgba(200,164,106,.3)}
- .mark{font-size:20px;letter-spacing:.5em;color:#b6b1a8;margin-bottom:34px;z-index:2}
- .shapes{display:flex;gap:22px;align-items:flex-end;margin-bottom:34px;z-index:2}
- .shapes svg{width:34px;color:#eae6de;opacity:.3}
+ .frame{position:absolute;inset:30px;border:1px solid rgba(200,164,106,.32)}
+ .mark{font-size:19px;letter-spacing:.5em;color:#b6b1a8;text-indent:.5em;z-index:2}
+ .shapes{display:flex;gap:20px;align-items:flex-end;margin:28px 0 30px;z-index:2}
+ .shapes svg{width:32px;color:#eae6de;opacity:.32}
  .shapes svg:nth-child(4){opacity:1;color:#c8a46a}
- h1{font-family:'Noto Serif KR',serif;font-weight:300;font-size:56px;line-height:1.45;text-align:center;z-index:2}
- p{margin-top:28px;font-size:22px;letter-spacing:.14em;color:#c8a46a;font-family:'Noto Serif KR',serif;font-weight:300;z-index:2}
+ h1{font-family:'Noto Serif KR',serif;font-weight:300;font-size:54px;line-height:1.45;text-align:center;z-index:2}
+ p{margin-top:26px;font-size:21px;letter-spacing:.14em;color:#c8a46a;font-family:'Noto Serif KR',serif;font-weight:300;z-index:2}
 </style></head><body>
 <div class="glow"></div><div class="frame"></div>
 <div class="mark">DEADLYSINS</div>
-<div class="shapes" id="s"></div>
+<div class="shapes"><svg class="" viewBox="0 0 120 150" fill="currentColor" aria-hidden="true"><g filter="url(#ink)"><path d="M60 6 L110 52 L60 98 L10 52 Z"/><path d="M58.3 89 C57.9 108 57.2 119 58.1 127 a3.8 4.3 0 1 0 3.8 0 C62.8 119 62.1 108 61.7 89 Z"/></g></svg><svg class="" viewBox="0 0 120 150" fill="currentColor" aria-hidden="true"><g filter="url(#ink)"><path d="M60 8 L104 30 V74 L60 96 L16 74 V30 Z"/><path d="M58.3 87 C57.9 106 57.2 117 58.1 125 a3.8 4.3 0 1 0 3.8 0 C62.8 117 62.1 106 61.7 87 Z"/></g></svg><svg class="" viewBox="0 0 120 150" fill="currentColor" aria-hidden="true"><g filter="url(#ink)"><path d="M60 4 C65 38 82 55 116 60 C82 65 65 82 60 116 C55 82 38 65 4 60 C38 55 55 38 60 4 Z"/><path d="M58.3 105 C57.9 124 57.2 135 58.1 143 a3.8 4.3 0 1 0 3.8 0 C62.8 135 62.1 124 61.7 105 Z"/></g></svg><svg class="" viewBox="0 0 120 150" fill="currentColor" aria-hidden="true"><g filter="url(#ink)"><path d="M14 12 H106 L60 98 Z"/><path d="M58.3 89 C57.9 108 57.2 119 58.1 127 a3.8 4.3 0 1 0 3.8 0 C62.8 119 62.1 108 61.7 89 Z"/></g></svg><svg class="" viewBox="0 0 120 150" fill="currentColor" aria-hidden="true"><g filter="url(#ink)"><path d="M60 10 L104 92 H16 Z"/><path d="M58.3 85 C57.9 104 57.2 115 58.1 123 a3.8 4.3 0 1 0 3.8 0 C62.8 115 62.1 104 61.7 85 Z"/></g></svg><svg class="" viewBox="0 0 120 150" fill="currentColor" aria-hidden="true"><g filter="url(#ink)"><path d="M60 8 A44 44 0 1 1 59.6 8 Z"/><path d="M58.3 89 C57.9 108 57.2 119 58.1 127 a3.8 4.3 0 1 0 3.8 0 C62.8 119 62.1 108 61.7 89 Z"/></g></svg><svg class="" viewBox="0 0 120 150" fill="currentColor" aria-hidden="true"><g filter="url(#ink)"><path d="M20 14 H100 V90 H20 Z"/><path d="M58.3 83 C57.9 102 57.2 113 58.1 121 a3.8 4.3 0 1 0 3.8 0 C62.8 113 62.1 102 61.7 83 Z"/></g></svg></div>
 <h1>오늘 밤,<br>당신은 어떤 죄를 삼키시겠습니까?</h1>
 <p>여기선 착할 필요 없습니다.</p>
 <svg style="position:absolute;width:0;height:0"><defs>
@@ -24,6 +24,4 @@
 <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="7" result="n"/>
 <feDisplacementMap in="SourceGraphic" in2="n" scale="5.5" xChannelSelector="R" yChannelSelector="G"/>
 </filter></defs></svg>
-<script src="http://localhost:8080/data.js"></script>
-<script src="http://localhost:8080/app-shapes.js"></script>
 </body></html>
