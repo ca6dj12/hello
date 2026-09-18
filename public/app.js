@@ -125,7 +125,7 @@
       return '<div class="row"><span class="n">' + txt(it) + '</span><span class="dots"></span>' +
         '<span class="p"><em>G</em>' + it.g + '　<em>B</em>' + it.b + '</span></div>';
     }).join('');
-    return '<div class="pair">' +
+    return '<div class="pair rv" style="--d:1.8s">' +
       '<p class="pair-head">' + t().whiskyForSin + '</p>' +
       '<p class="pair-label">' + txt(sec.label) + '</p>' + rows + '</div>';
   }
@@ -133,29 +133,29 @@
   function renderResult(sinKey, secondKey) {
     var s = SINS[sinKey], u = t();
     var second = secondKey
-      ? '<p class="second">' + u.second + ' · <b>' + SINS[secondKey].en + '</b> ' + SINS[secondKey].ko + '</p>' : '';
+      ? '<p class="second rv" style="--d:1.76s">' + u.second + ' · <b>' + SINS[secondKey].en + '</b> ' + SINS[secondKey].ko + '</p>' : '';
 
     return '<section class="screen result">' +
         '<div class="lamp"></div>' +
         '<article class="panel">' +
           inkShape(s.shape, 'sin-mark') + glassMark(s.glass, 'glass-mark') +
-          '<p class="result-kicker">' + u.resultKicker + '</p>' +
+          '<p class="result-kicker rv" style="--d:.78s">' + u.resultKicker + '</p>' +
           '<h1 class="sin-en">' + s.en + '</h1>' +
-          '<p class="sin-ko">' + s.ko + '</p>' +
+          '<p class="sin-ko rv" style="--d:1.02s">' + s.ko + '</p>' +
           '<div class="panel-rule"></div>' +
-          '<p class="latin">' + s.latin + '</p>' +
-          '<p class="latin-tr">' + txt(s.latinTr) + '</p>' +
-          '<p class="verdict">' + txt(s.verdict) + '</p>' +
-          '<ul class="tasting">' +
+          '<p class="latin rv" style="--d:1.24s">' + s.latin + '</p>' +
+          '<p class="latin-tr rv" style="--d:1.32s">' + txt(s.latinTr) + '</p>' +
+          '<p class="verdict rv" style="--d:1.42s">' + txt(s.verdict) + '</p>' +
+          '<ul class="tasting rv" style="--d:1.5s">' +
             '<li><span class="k">' + u.aroma + '</span><span class="v">' + txt(s.aroma) + '</span></li>' +
             '<li><span class="k">' + u.taste + '</span><span class="v">' + txt(s.taste) + '</span></li>' +
             '<li><span class="k">' + u.finish + '</span><span class="v">' + txt(s.finish) + '</span></li>' +
             '<li><span class="k">' + u.strength + '</span><span class="v">' + txt(s.strength) + pips(s.level) + '</span></li>' +
             '<li><span class="k">' + u.price + '</span><span class="v">' + s.price + u.won + '</span></li>' +
           '</ul>' +
-          '<div class="order"><p class="k">' + u.order + '</p><p class="v">' + u.orderLine(txt(s.drink)) + '</p></div>' +
+          '<div class="order rv" style="--d:1.66s"><p class="k">' + u.order + '</p><p class="v">' + u.orderLine(txt(s.drink)) + '</p></div>' +
         '</article>' + second + whiskyPair(sinKey) +
-        '<div class="actions">' +
+        '<div class="actions rv" style="--d:1.88s">' +
           '<button class="btn ghost" type="button" data-act="share">' + u.share + '</button>' +
           '<button class="btn ghost" type="button" data-act="again">' + u.again + '</button>' +
         '</div>' +
@@ -186,7 +186,7 @@
         return '<div class="row"><span class="n">' + txt(it) + '</span><span class="dots"></span>' +
           '<span class="p"><em>G</em>' + it.g + '　<em>B</em>' + it.b + '</span></div>';
       }).join('');
-      return '<div class="grp"><p class="grp-h">' + txt(w.label) +
+      return '<div class="grp"><p class="grp-h">' + inkShape(SINS[w.sin].shape, '') + txt(w.label) +
         '<span class="sin">' + SINS[w.sin].en + '</span></p>' + items + '</div>';
     }).join('');
 
@@ -221,13 +221,31 @@
       var r = state.browsing ? { top: state.browsing, second: null }
                              : scoreAnswers(state.answers, QUESTIONS, SIN_ORDER);
       html = renderResult(r.top, r.second) +
-        '<div class="divider">' + t().menuTitle + '</div>' + renderMenu(false);
+        '<div class="divider">' + t().menuTitle + '<span class="cue"></span></div>' + renderMenu(false);
     } else if (state.view === 'menu') {
       html = '<section class="screen"><button class="btn" type="button" data-act="start">' + t().start + '</button></section>' +
         '<div class="divider">' + t().menuTitle + '</div>' + renderMenu(false);
     }
     app.innerHTML = html;
     if (!keepScroll) window.scrollTo(0, 0);
+  }
+
+  /* 화면 전환: 나가는 화면을 먼저 걷어내고, 새 화면을 올린다 */
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var busy = false;
+
+  function go(mutate, back) {
+    if (busy) return;
+    if (REDUCED) { mutate(); render(); return; }
+    busy = true;
+    app.classList.add('is-leaving');
+    if (back) app.classList.add('is-back');
+    setTimeout(function () {
+      mutate();
+      render();
+      app.classList.remove('is-leaving', 'is-back');
+      busy = false;
+    }, 170);
   }
 
   function toast(msg) {
@@ -259,22 +277,24 @@
       state.answers[i] = parseInt(pick.getAttribute('data-pick'), 10);
       pick.classList.add('picked');
       setTimeout(function () {
-        if (i + 1 >= QUESTIONS.length) {
-          var r = scoreAnswers(state.answers, QUESTIONS, SIN_ORDER);
-          state.browsing = null; state.view = 'result';
-          history.replaceState(null, '', '#/' + r.top);
-        } else { state.step = i + 1; }
-        render();
-      }, 170);
+        go(function () {
+          if (i + 1 >= QUESTIONS.length) {
+            var r = scoreAnswers(state.answers, QUESTIONS, SIN_ORDER);
+            state.browsing = null; state.view = 'result';
+            history.replaceState(null, '', '#/' + r.top);
+          } else { state.step = i + 1; }
+        });
+      }, 140);
       return;
     }
 
     var sinBtn = e.target.closest('[data-sin]');
     if (sinBtn) {
-      state.browsing = sinBtn.getAttribute('data-sin');
-      state.view = 'result';
-      history.replaceState(null, '', '#/' + state.browsing);
-      render();
+      go(function () {
+        state.browsing = sinBtn.getAttribute('data-sin');
+        state.view = 'result';
+        history.replaceState(null, '', '#/' + state.browsing);
+      });
       return;
     }
 
@@ -283,16 +303,22 @@
     var a = act.getAttribute('data-act');
 
     if (a === 'start' || a === 'again') {
-      newRun(); state.browsing = null; state.view = 'q';
-      history.replaceState(null, '', '#/q'); render();
+      go(function () {
+        newRun(); state.browsing = null; state.view = 'q';
+        history.replaceState(null, '', '#/q');
+      });
     } else if (a === 'back') {
-      if (state.step > 0) { state.step--; render(); }
-      else { state.view = 'intro'; history.replaceState(null, '', '#/'); render(); }
+      go(function () {
+        if (state.step > 0) { state.step--; }
+        else { state.view = 'intro'; history.replaceState(null, '', '#/'); }
+      }, true);
     } else if (a === 'menu') {
-      state.view = 'menu'; history.replaceState(null, '', '#/menu'); render();
+      go(function () { state.view = 'menu'; history.replaceState(null, '', '#/menu'); });
     } else if (a === 'home') {
-      state.view = 'intro'; state.browsing = null;
-      history.replaceState(null, '', '#/'); render();
+      go(function () {
+        state.view = 'intro'; state.browsing = null;
+        history.replaceState(null, '', '#/');
+      }, true);
     } else if (a === 'share') share();
   });
 
@@ -304,7 +330,7 @@
       if (btn) btn.click();
     } else if (e.key === 'Backspace' || e.key === 'ArrowLeft') {
       e.preventDefault();
-      if (state.step > 0) { state.step--; render(); }
+      if (state.step > 0) go(function () { state.step--; }, true);
     }
   });
 
