@@ -77,28 +77,43 @@ PDF 로 저장해 인쇄소에 넘기면 그대로 테이블 카드가 됩니다
 
 **https://sounds-zeta.vercel.app**  (Vercel 프로젝트 `sounds`)
 
-이 세션의 Vercel 토큰에 새 프로젝트 생성 권한이 없어서(403), 기존 `sounds`
-프로젝트에 덮어썼습니다. 그리고 파일을 인라인으로 올리는 방식은 한 번에
-보낼 수 있는 양에 걸려서, **빌드 단계에서 이 저장소를 그대로 내려받도록**
-설정했습니다. Vercel 프로젝트의 빌드 명령은 다음과 같습니다.
+### 지금 어떻게 올라가 있나
+
+이 세션의 Vercel 토큰은 **배포 생성만** 가능하고, 프로젝트를 만들거나
+설정을 바꾸는 건 403으로 막혀 있습니다. 그래서 파일을 직접 올리는 대신
+**배포할 때마다 빌드 명령을 함께 실어 보내고, 그 빌드가 이 저장소를
+내려받는** 방식으로 돌아갑니다. 배포에 실려 가는 빌드 명령은 이것입니다.
 
 ```bash
-curl -sL "https://codeload.github.com/ca6dj12/hello/tar.gz/refs/heads/claude/deadly-sins-cocktail-qr-9ljntg" -o src.tgz \
-  && mkdir -p src && tar xzf src.tgz -C src --strip-components=1 \
-  && rm -rf public && cp -r src/public ./public
+curl -sL https://codeload.github.com/ca6dj12/hello/tar.gz/refs/heads/claude/deadly-sins-cocktail-qr-9ljntg -o s.tgz \
+  && rm -rf public && mkdir public \
+  && tar xzf s.tgz --wildcards --strip-components=2 -C public "*/public/*"
 ```
 
-즉, **Vercel에서 재배포를 누르면 이 브랜치의 최신 내용을 다시 받아갑니다.**
-GitHub에서 `public/data.js` 만 고치고 재배포해도 반영됩니다.
+### ⚠️ 대시보드의 "Redeploy" 버튼을 누르지 마세요
 
-주의할 점 두 가지:
+이 빌드 명령은 **프로젝트에 저장돼 있지 않고 배포 하나하나에만 붙어 있습니다.**
+대시보드에서 Redeploy를 누르면 빌드 명령이 빠진 채로 다시 빌드되고,
+결과물이 비어서 **사이트 전체가 404가 됩니다.** (2026-10-03에 실제로 한 번
+이렇게 내려갔습니다.)
 
-1. 브랜치 이름이 빌드 명령에 박혀 있습니다. 브랜치를 지우거나 이름을 바꾸면
-   빌드가 실패합니다.
-2. 저장소가 비공개로 바뀌면 내려받기가 실패합니다.
+404가 났다면 당황하지 말고, 빌드 명령을 포함한 새 배포를 올리면 바로 복구됩니다.
 
-**더 나은 방법**: Vercel 대시보드에서 이 저장소를 직접 연결(Import)하면
-위 우회가 필요 없어지고, 푸시할 때마다 자동 배포됩니다. 1분이면 됩니다.
+### 제대로 고치는 법 (권장, 1분)
+
+Vercel 대시보드에서 이 저장소를 직접 연결(Import)하세요.
+
+1. vercel.com → 프로젝트 `sounds` → Settings → Git → Connect Git Repository
+2. `ca6dj12/hello` 의 `claude/deadly-sins-cocktail-qr-9ljntg` 브랜치 선택
+3. Build Command 비우기, Output Directory 를 `public` 으로
+
+이렇게 하면 위의 우회가 전부 필요 없어지고, 푸시할 때마다 자동 배포되며,
+Redeploy 버튼도 안전해집니다.
+
+### 그 밖에 알아둘 것
+
+- 브랜치 이름이 빌드 명령에 박혀 있습니다. 브랜치를 지우거나 이름을 바꾸면 깨집니다.
+- 저장소가 비공개로 바뀌면 내려받기가 실패합니다.
 
 ## 로컬에서 보기
 
