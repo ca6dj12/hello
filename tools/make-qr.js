@@ -22,12 +22,23 @@ QRCode.toString(url, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color:
   .then((svg) => {
     fs.writeFileSync(path.join(PUB, 'qr.svg'), svg);
 
-    /* 벽면 도형 7개를 카드에도 얹는다 */
-    const app = fs.readFileSync(path.join(PUB, 'app.js'), 'utf8');
-    const shapes = app.slice(app.indexOf('var SHAPES'), app.indexOf('/* ---------- 잔'));
-    const data = fs.readFileSync(path.join(PUB, 'data.js'), 'utf8');
-    const marks = new Function(data + shapes +
-      '; return SIN_ORDER.map(function(k){return inkShape(SINS[k].shape,"");}).join("");')();
+    /* 벽면 도형 일곱 개 (사이트와 같은 모양) */
+    const SHAPES = [
+      'M60 6 L110 52 L60 98 L10 52 Z',                       // 교만
+      'M60 8 L104 30 V74 L60 96 L16 74 V30 Z',               // 탐욕
+      'M60 4 C65 38 82 55 116 60 C82 65 65 82 60 116 C55 82 38 65 4 60 C38 55 55 38 60 4 Z', // 질투
+      'M14 12 H106 L60 98 Z',                                // 분노
+      'M60 10 L104 92 H16 Z',                                // 색욕
+      'M60 8 A44 44 0 1 1 59.6 8 Z',                         // 탐식
+      'M20 14 H100 V90 H20 Z'                                // 나태
+    ];
+    const DRIPS = [96, 94, 112, 96, 92, 96, 90];
+    const drip = (y) =>
+      `M58.3 ${y - 7} C57.9 ${y + 12} 57.2 ${y + 23} 58.1 ${y + 31}` +
+      ` a3.8 4.3 0 1 0 3.8 0 C62.8 ${y + 23} 62.1 ${y + 12} 61.7 ${y - 7} Z`;
+    const marks = SHAPES.map((d, i) =>
+      `<svg viewBox="0 0 120 150" fill="currentColor" aria-hidden="true">` +
+      `<g filter="url(#ink)"><path d="${d}"/><path d="${drip(DRIPS[i])}"/></g></svg>`).join('');
 
     const inner = svg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
     const vbMatch = svg.match(/viewBox="([^"]+)"/);
