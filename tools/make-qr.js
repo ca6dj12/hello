@@ -66,8 +66,8 @@ QRCode.toString(url, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color:
  .shapes svg{width:4.6mm;color:#eae6de;opacity:.3}
  .shapes svg:nth-child(4){opacity:1;color:#c8a46a}
  h1{font-family:'Noto Serif KR',serif;font-weight:300;font-size:6.2mm;line-height:1.6;text-align:center;z-index:2}
- .qr{background:#fff;padding:3.4mm;margin:7mm 0 4mm;z-index:2;line-height:0}
- .qr svg{width:38mm;height:38mm;display:block}
+ .qr{background:#fff;padding:3.4mm;margin:6mm 0 3.5mm;z-index:2;line-height:0}
+ .qr svg{width:44mm;height:44mm;display:block}
  .cta{font-family:'Noto Serif KR',serif;font-size:3.5mm;letter-spacing:.1em;color:#c8a46a;z-index:2;font-weight:300}
  .sub{font-size:3mm;letter-spacing:.16em;color:#79756e;margin-top:2.5mm;z-index:2;font-family:'Noto Serif KR',serif;font-weight:300}
  @media print{body{background:none;padding:0;min-height:0}.card{box-shadow:none}}

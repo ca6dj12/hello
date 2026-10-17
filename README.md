@@ -12,11 +12,10 @@ public/
   index.html    사이트 전체 (화면·로직·이미지 전부 한 파일)
   og.jpg        공유 링크 미리보기 이미지
   favicon.svg   탭 아이콘
-  qr.svg        테이블 QR
-  card.html     인쇄용 테이블 카드
+print/          QR·테이블 카드 (인쇄용, 사이트에는 올라가지 않음)
 tools/
   simulate.js   결과 쏠림 검증기
-  make-qr.js    테이블 QR 카드 생성
+  make-qr.js    테이블 QR 카드 생성 → print/
 ```
 
 ## 화면 흐름
@@ -75,45 +74,46 @@ PDF 로 저장해 인쇄소에 넘기면 그대로 테이블 카드가 됩니다
 
 ## 배포
 
-**https://sounds-zeta.vercel.app**  (Vercel 프로젝트 `sounds`)
+**https://sounds-e5486fpmt-ca6dj12s-projects.vercel.app**
 
-### 지금 어떻게 올라가 있나
+### 지금 구조 (2026-10-17 기준)
 
-이 세션의 Vercel 토큰은 **배포 생성만** 가능하고, 프로젝트를 만들거나
-설정을 바꾸는 건 403으로 막혀 있습니다. 그래서 파일을 직접 올리는 대신
-**배포할 때마다 빌드 명령을 함께 실어 보내고, 그 빌드가 이 저장소를
-내려받는** 방식으로 돌아갑니다. 배포에 실려 가는 빌드 명령은 이것입니다.
+- Vercel 프로젝트 `sounds` 의 프로덕션 주소(`sounds-zeta.vercel.app`)는 이제
+  **다른 사이트(yantai)** 입니다. Deadly Sins 는 거기 올리면 안 됩니다.
+- 그래서 Deadly Sins 는 `sounds` 안에 **프리뷰 배포**로 따로 올라가 있고,
+  위 주소는 그 배포의 고유 주소입니다. Vercel 배포는 불변이라 이 주소는
+  같은 내용을 계속 서비스합니다.
+- 프리뷰라서 yantai(프로덕션)에는 아무 영향이 없습니다. 배포할 때 프로젝트
+  설정도 넘기지 않았고, 빌드 설정은 그 배포 안의 `vercel.json` 에만 담았습니다.
 
-```bash
-curl -sL https://codeload.github.com/ca6dj12/hello/tar.gz/refs/heads/claude/deadly-sins-cocktail-qr-9ljntg -o s.tgz \
-  && rm -rf public && mkdir public \
-  && tar xzf s.tgz --wildcards --strip-components=2 -C public "*/public/*"
-```
+### 왜 이름이 이렇게 길고 지저분한가
 
-### ⚠️ 대시보드의 "Redeploy" 버튼을 누르지 마세요
+이 세션의 Vercel 권한은 **배포 생성만** 됩니다. 새 프로젝트 만들기,
+`deadly-sins.vercel.app` 같은 주소(alias) 붙이기, 프로젝트 설정 바꾸기는
+전부 403 으로 막혀 있습니다. 그래서 깔끔한 이름은 제가 만들 수 없습니다.
 
-이 빌드 명령은 **프로젝트에 저장돼 있지 않고 배포 하나하나에만 붙어 있습니다.**
-대시보드에서 Redeploy를 누르면 빌드 명령이 빠진 채로 다시 빌드되고,
-결과물이 비어서 **사이트 전체가 404가 됩니다.** (2026-10-03에 실제로 한 번
-이렇게 내려갔습니다.)
+### 알아둘 위험
 
-404가 났다면 당황하지 말고, 빌드 명령을 포함한 새 배포를 올리면 바로 복구됩니다.
+1. `sounds` 프로젝트에서 **옛 배포를 정리(삭제)하면 이 사이트도 사라집니다.**
+   목록에서 `sounds-e5486fpmt…` 는 지우지 마세요.
+2. Vercel 의 배포 보존(Deployment Retention) 정책에 따라 오래된 프리뷰 배포가
+   자동 삭제될 수 있는지는 **확실하지 않습니다.** `sounds` → Settings →
+   Deployment Retention 에서 프리뷰 보존 기간을 확인하세요.
+3. 프리뷰 주소는 `noindex` 라 검색엔진에는 안 잡힙니다. QR 로 들어오는
+   용도에는 상관없습니다.
 
 ### 제대로 고치는 법 (권장, 1분)
 
-Vercel 대시보드에서 이 저장소를 직접 연결(Import)하세요.
+Deadly Sins 전용 프로젝트를 대시보드에서 직접 만드세요.
 
-1. vercel.com → 프로젝트 `sounds` → Settings → Git → Connect Git Repository
-2. `ca6dj12/hello` 의 `claude/deadly-sins-cocktail-qr-9ljntg` 브랜치 선택
-3. Build Command 비우기, Output Directory 를 `public` 으로
+1. vercel.com/new → `ca6dj12/hello` Import
+2. Project Name: `deadly-sins` (→ `deadly-sins.vercel.app`, 이름이 비어 있으면)
+3. Branch 는 `claude/deadly-sins-cocktail-qr-9ljntg`, Output Directory 는
+   저장소의 `vercel.json` 이 이미 `public` 으로 잡아 줍니다
+4. Deploy
 
-이렇게 하면 위의 우회가 전부 필요 없어지고, 푸시할 때마다 자동 배포되며,
-Redeploy 버튼도 안전해집니다.
-
-### 그 밖에 알아둘 것
-
-- 브랜치 이름이 빌드 명령에 박혀 있습니다. 브랜치를 지우거나 이름을 바꾸면 깨집니다.
-- 저장소가 비공개로 바뀌면 내려받기가 실패합니다.
+이러면 깔끔한 주소가 생기고, 푸시마다 자동 배포되고, 위 위험이 전부 사라집니다.
+**주소가 바뀌면 QR 을 반드시 다시 만드세요**(아래 명령).
 
 ## 로컬에서 보기
 
