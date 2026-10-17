@@ -115,4 +115,41 @@ node make-qr.js https://<배포주소>
 
 ## 배포
 
-<!-- DEPLOY -->
+**https://sounds-78ukdhhoo-ca6dj12s-projects.vercel.app**  (2026-10-17, 커밋 `8ebf983`)
+
+### 지금 구조
+
+- Vercel 프로젝트 `sounds` 의 프로덕션 주소(`sounds-zeta.vercel.app`)는 **다른 사이트(yantai)** 입니다.
+  Deadly Sins 는 거기 올리지 않고, `sounds` 안에 **프리뷰 배포**로 따로 올렸습니다.
+  배포할 때마다 `sounds-zeta` 가 여전히 yantai 배포를 가리키는지 확인했습니다.
+- 빌드 설정은 그 배포 안의 `vercel.json` 에만 담았습니다(프로젝트 설정은 안 건드림).
+  빌드는 GitHub 의 **특정 커밋** 압축본을 받아 `public/` 만 꺼내 씁니다.
+- Vercel 배포는 불변이라 이 주소는 같은 내용을 계속 서비스합니다.
+  **대신 새로 배포하면 주소가 바뀌고, QR 도 다시 만들어야 합니다.**
+
+### 왜 주소가 이렇게 길고, 매번 바뀌는가
+
+이 세션의 Vercel 권한은 **배포 생성만** 됩니다. 새 프로젝트 만들기,
+`deadly-sins.vercel.app` 같은 고정 주소(alias) 붙이기, 프로젝트 설정 바꾸기는
+전부 403 으로 막혀 있습니다.
+
+### 알아둘 위험
+
+1. `sounds` 에서 **옛 배포를 정리(삭제)하면 이 사이트도 사라집니다.**
+   `sounds-78ukdhhoo…` 는 지우지 마세요.
+2. Vercel 배포 보존(Deployment Retention) 설정에 따라 오래된 프리뷰가 자동 삭제될 수
+   있는지는 **확실하지 않습니다.** `sounds` → Settings → Deployment Retention 에서 확인하세요.
+3. 프리뷰 주소는 `noindex` 라 검색엔진에는 안 잡힙니다. QR 용도에는 상관없습니다.
+4. 링크 미리보기 이미지(`og:image`)는 GitHub 의 이 브랜치에서 가져옵니다.
+   브랜치를 지우거나 저장소를 비공개로 바꾸면 미리보기 이미지만 사라집니다(사이트는 정상).
+
+### 제대로 고치는 법 (권장, 1분) — 고정 주소
+
+1. vercel.com/new → `ca6dj12/hello` Import
+2. Project Name: `deadly-sins` (→ `deadly-sins.vercel.app`, 비어 있으면)
+3. Branch `claude/deadly-sins-cocktail-qr-9ljntg` (병합 후엔 `main`).
+   Framework 는 Other, 빌드 명령은 비워 두세요. 저장소의 `vercel.json` 이 `public/` 을 그대로 내보냅니다.
+4. Deploy → 생긴 주소로 `node tools/make-qr.js https://deadly-sins.vercel.app`
+
+이러면 주소가 고정되고(가게 도메인을 붙여도 됨), 푸시마다 자동 배포되고,
+**QR 을 다시 인쇄할 일이 없어집니다.** 위 위험도 전부 사라집니다.
