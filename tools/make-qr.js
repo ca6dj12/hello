@@ -3,7 +3,7 @@
    테이블 QR 카드 만들기
      cd tools && npm install
      node make-qr.js https://<배포주소>
-   결과: public/qr.svg (QR만) / public/card.html (인쇄용 카드)
+   결과: print/deadly-sins-qr.svg (QR만) / print/card.html (인쇄용 카드)
    card.html 을 브라우저에서 열고 인쇄 → PDF 로 저장하면 됩니다. (A6, 여백 없음)
    ============================================================= */
 const fs = require('fs');
@@ -16,11 +16,12 @@ if (!url) {
   process.exit(1);
 }
 
-const PUB = path.join(__dirname, '..', 'public');
+const OUT = path.join(__dirname, '..', 'print');
 
 QRCode.toString(url, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#060607', light: '#ffffff' } })
   .then((svg) => {
-    fs.writeFileSync(path.join(PUB, 'qr.svg'), svg);
+    fs.mkdirSync(OUT, { recursive: true });
+    fs.writeFileSync(path.join(OUT, 'deadly-sins-qr.svg'), svg);
 
     /* 벽면 도형 일곱 개 (사이트와 같은 모양) */
     const SHAPES = [
@@ -87,10 +88,10 @@ QRCode.toString(url, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color:
 </filter></defs></svg>
 </body></html>`;
 
-    fs.writeFileSync(path.join(PUB, 'card.html'), card);
+    fs.writeFileSync(path.join(OUT, 'card.html'), card);
     console.log('만들었습니다:');
-    console.log('  public/qr.svg');
-    console.log('  public/card.html   ← 브라우저에서 열고 인쇄(A6, 배경 그래픽 켜기)');
+    console.log('  print/deadly-sins-qr.svg');
+    console.log('  print/card.html   ← 브라우저에서 열고 인쇄(A6, 배경 그래픽 켜기)');
     console.log('  가리키는 주소:', url);
   })
   .catch((e) => { console.error(e); process.exit(1); });
