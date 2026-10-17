@@ -1,97 +1,185 @@
 #!/usr/bin/env node
 /* =============================================================
-   테이블 QR 카드 만들기
+   인쇄물 + 공유 미리보기 이미지 만들기
      cd tools && npm install
      node make-qr.js https://<배포주소>
-   결과: print/deadly-sins-qr.svg (QR만) / print/card.html (인쇄용 카드)
-   card.html 을 브라우저에서 열고 인쇄 → PDF 로 저장하면 됩니다. (A6, 여백 없음)
+     (크롬 경로를 직접 줄 때)  CHROME_PATH=/path/to/chrome node make-qr.js https://…
+
+   만드는 것
+     print/deadly-sins-qr.svg          QR 원본 (벡터)
+     print/deadly-sins-qr.png          QR 1200×1200
+     print/card.html                   테이블 카드 원본 (A6)
+     print/deadly-sins-table-card.pdf  인쇄소용
+     print/deadly-sins-table-card.png  카드 이미지본
+     public/og.jpg                     카톡·인스타 링크 미리보기 (1200×630)
+
+   카드와 미리보기는 사이트 첫 화면 그림을 그대로 씁니다.
+   그림의 위는 순백, 아래는 순흑이고 경계가 748px 줄에서 곧게 떨어지므로,
+   그림을 줄여 놓고 바탕을 같은 높이에서 흰색/검은색으로 나누면 이음매 없이 이어집니다.
+   만든 뒤 카드 PNG 에서 QR 을 실제로 해독해서 주소가 맞는지 확인합니다.
    ============================================================= */
+'use strict';
 const fs = require('fs');
 const path = require('path');
 const QRCode = require('qrcode');
+const { chromium } = require('playwright-core');
+const jsQR = require('jsqr');
+const { PNG } = require('pngjs');
 
 const url = process.argv[2];
-if (!url) {
+if (!/^https?:\/\//.test(url || '')) {
   console.error('주소를 넣어주세요.  예)  node make-qr.js https://deadly-sins.vercel.app');
   process.exit(1);
 }
+const ROOT = path.join(__dirname, '..');
+const OUT = path.join(ROOT, 'print');
+const PUBLIC = path.join(ROOT, 'public');
+fs.mkdirSync(OUT, { recursive: true });
 
-const OUT = path.join(__dirname, '..', 'print');
+/* 사이트에서 첫 화면 그림과 가격을 읽는다 (빌드된 public/index.html 기준) */
+const html = fs.readFileSync(path.join(PUBLIC, 'index.html'), 'utf8');
+const coverSrc = (html.match(/<img class="cover-art" src="([^"]+)"/) || [])[1];
+if (!coverSrc) { console.error('public/index.html 에서 표지 그림을 못 찾음. 먼저 tools/build.py 를 실행하세요.'); process.exit(1); }
+const cover = 'data:image/webp;base64,' + fs.readFileSync(path.join(PUBLIC, coverSrc)).toString('base64');
+const price = Number((fs.readFileSync(path.join(PUBLIC, 'data.js'), 'utf8').match(/signaturePrice:\s*(\d+)/) || [])[1]);
+if (!price) { console.error('public/data.js 에서 signaturePrice 를 못 찾음'); process.exit(1); }
+const priceText = price.toLocaleString('ko-KR');
 
-QRCode.toString(url, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#060607', light: '#ffffff' } })
-  .then((svg) => {
-    fs.mkdirSync(OUT, { recursive: true });
-    fs.writeFileSync(path.join(OUT, 'deadly-sins-qr.svg'), svg);
+/* 표지 그림의 기준점 (원본 1024×1536 px) */
+const ART = { w: 1024, h: 1536, horizon: 748 };
 
-    /* 벽면 도형 일곱 개 (사이트와 같은 모양) */
-    const SHAPES = [
-      'M60 6 L110 52 L60 98 L10 52 Z',                       // 교만
-      'M60 8 L104 30 V74 L60 96 L16 74 V30 Z',               // 탐욕
-      'M60 4 C65 38 82 55 116 60 C82 65 65 82 60 116 C55 82 38 65 4 60 C38 55 55 38 60 4 Z', // 질투
-      'M14 12 H106 L60 98 Z',                                // 분노
-      'M60 10 L104 92 H16 Z',                                // 색욕
-      'M60 8 A44 44 0 1 1 59.6 8 Z',                         // 탐식
-      'M20 14 H100 V90 H20 Z'                                // 나태
-    ];
-    const DRIPS = [96, 94, 112, 96, 92, 96, 90];
-    const drip = (y) =>
-      `M58.3 ${y - 7} C57.9 ${y + 12} 57.2 ${y + 23} 58.1 ${y + 31}` +
-      ` a3.8 4.3 0 1 0 3.8 0 C62.8 ${y + 23} 62.1 ${y + 12} 61.7 ${y - 7} Z`;
-    const marks = SHAPES.map((d, i) =>
-      `<svg viewBox="0 0 120 150" fill="currentColor" aria-hidden="true">` +
-      `<g filter="url(#ink)"><path d="${d}"/><path d="${drip(DRIPS[i])}"/></g></svg>`).join('');
+const FONTS = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gelasio:wght@500;700&family=Noto+Sans+KR:wght@500;700;900&display=block">';
 
-    const inner = svg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
-    const vbMatch = svg.match(/viewBox="([^"]+)"/);
-    const viewBox = vbMatch ? vbMatch[1] : '0 0 45 45';
-
-    const card = `<!doctype html>
+function cardHtml(qrSvg) {
+  // A6 105×148mm. 그림 폭 88mm, 경계선은 위에서 40mm.
+  const W = 88, HORIZON = 40, s = W / ART.w, top = HORIZON - ART.horizon * s;
+  return `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <title>DEADLY SINS — 테이블 카드</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Serif+KR:wght@300;400&display=swap">
+${FONTS}
 <style>
- @page{size:A6;margin:0}
+ @page{size:105mm 148mm;margin:0}
  *{margin:0;padding:0;box-sizing:border-box}
- body{background:#2a2a2c;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+ html,body{background:#3a3a3a}
+ body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
  .card{
-   width:105mm;height:148mm;background:#060607;color:#eae6de;position:relative;
-   font-family:'Cormorant Garamond','Noto Serif KR',serif;
-   display:flex;flex-direction:column;align-items:center;justify-content:center;
-   padding:12mm 9mm;overflow:hidden;
+   width:105mm;height:148mm;position:relative;overflow:hidden;
+   background:linear-gradient(#fff 0 ${HORIZON}mm,#000 ${HORIZON}mm);
+   -webkit-print-color-adjust:exact;print-color-adjust:exact;
  }
- .glow{position:absolute;inset:0;background:radial-gradient(72% 46% at 50% -4%,rgba(200,164,106,.24),transparent 62%)}
- .frame{position:absolute;inset:5mm;border:.4mm solid rgba(200,164,106,.34)}
- .mark{font-size:3.4mm;letter-spacing:.52em;color:#b6b1a8;z-index:2;text-indent:.52em}
- .shapes{display:flex;gap:2.6mm;align-items:flex-end;margin:6mm 0 5mm;z-index:2}
- .shapes svg{width:4.6mm;color:#eae6de;opacity:.3}
- .shapes svg:nth-child(4){opacity:1;color:#c8a46a}
- h1{font-family:'Noto Serif KR',serif;font-weight:300;font-size:6.2mm;line-height:1.6;text-align:center;z-index:2}
- .qr{background:#fff;padding:3.4mm;margin:6mm 0 3.5mm;z-index:2;line-height:0}
- .qr svg{width:44mm;height:44mm;display:block}
- .cta{font-family:'Noto Serif KR',serif;font-size:3.5mm;letter-spacing:.1em;color:#c8a46a;z-index:2;font-weight:300}
- .sub{font-size:3mm;letter-spacing:.16em;color:#79756e;margin-top:2.5mm;z-index:2;font-family:'Noto Serif KR',serif;font-weight:300}
- @media print{body{background:none;padding:0;min-height:0}.card{box-shadow:none}}
+ .art{position:absolute;width:105mm;left:0;top:${top.toFixed(2)}mm}
+ .kicker{
+   position:absolute;top:7.2mm;left:0;right:0;text-align:center;
+   font:500 2.5mm/1 'Gelasio',Georgia,serif;letter-spacing:.42em;text-indent:.42em;color:#000;
+ }
+ .bottom{position:absolute;top:80mm;left:0;right:0;display:flex;flex-direction:column;align-items:center}
+ .qr{background:#fff;padding:3mm;border-radius:2.2mm;line-height:0}
+ .qr svg{width:30mm;height:30mm;display:block;shape-rendering:crispEdges}
+ .cta{margin-top:5mm;font:900 4.1mm/1.3 'Noto Sans KR',sans-serif;letter-spacing:-.04em;color:#f7f5f3}
+ .price{margin-top:2.2mm;font:700 2.7mm/1 'Noto Sans KR',sans-serif;letter-spacing:.08em;color:#c84a50}
+ .en{margin-top:2.6mm;font:500 2.2mm/1 'Gelasio',Georgia,serif;letter-spacing:.3em;text-indent:.3em;color:rgba(247,245,243,.45)}
+ @media print{html,body{background:none}body{padding:0;min-height:0;display:block}}
 </style></head><body>
 <div class="card">
-  <div class="glow"></div><div class="frame"></div>
-  <div class="mark">DEADLYSINS</div>
-  <div class="shapes">${marks}</div>
-  <h1>오늘 밤,<br>당신은 어떤 죄를<br>삼키시겠습니까?</h1>
-  <div class="qr"><svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">${inner}</svg></div>
-  <p class="cta">QR을 찍고, 당신의 죄를 고르세요</p>
-  <p class="sub">일곱 개의 잔 · 각 16,000원</p>
+  <canvas class="art" width="${Math.round(ART.w * 105 / W)}" height="${ART.h}" aria-label="Deadly Sins"></canvas>
+  <p class="kicker">SEVEN QUESTIONS · SEVEN GLASSES</p>
+  <div class="bottom">
+    <div class="qr">${qrSvg}</div>
+    <p class="cta">QR을 찍고, 당신의 죄를 찾으세요</p>
+    <p class="price">일곱 개의 잔 · 각 ${priceText}원</p>
+    <p class="en">FIND YOUR SIN</p>
+  </div>
 </div>
-<svg style="position:absolute;width:0;height:0"><defs>
-<filter id="ink" x="-25%" y="-25%" width="150%" height="160%">
-<feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="7" result="n"/>
-<feDisplacementMap in="SourceGraphic" in2="n" scale="5.5" xChannelSelector="R" yChannelSelector="G"/>
-</filter></defs></svg>
+<script>
+/* 그림 좌우를 같은 흰색/검은색으로 넓혀 카드 폭을 채운다 (그림과 바탕 사이 이음매가 생기지 않게) */
+const img = new Image();
+img.onload = () => {
+  const c = document.querySelector('canvas.art'), x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, ${ART.horizon});
+  x.fillStyle = '#000'; x.fillRect(0, ${ART.horizon}, c.width, c.height - ${ART.horizon});
+  x.drawImage(img, (c.width - img.width) / 2, 0);
+  document.body.dataset.ready = '1';
+};
+img.src = '${cover}';
+</script>
 </body></html>`;
+}
 
-    fs.writeFileSync(path.join(OUT, 'card.html'), card);
-    console.log('만들었습니다:');
-    console.log('  print/deadly-sins-qr.svg');
-    console.log('  print/card.html   ← 브라우저에서 열고 인쇄(A6, 배경 그래픽 켜기)');
-    console.log('  가리키는 주소:', url);
-  })
-  .catch((e) => { console.error(e); process.exit(1); });
+function ogHtml() {
+  // 1200×630. 그림 배율 0.62, 경계선 y=300. 왼쪽에 로고, 오른쪽에 글.
+  const s = 0.62, HORIZON = 300, top = HORIZON - ART.horizon * s;
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8">${FONTS}
+<style>
+ *{margin:0;padding:0;box-sizing:border-box}
+ body{width:1200px;height:630px;overflow:hidden;position:relative;background:linear-gradient(#fff 0 ${HORIZON}px,#000 ${HORIZON}px)}
+ .art{position:absolute;width:${ART.w * s}px;left:10px;top:${top}px}
+ .kicker{position:absolute;left:660px;top:228px;font:500 19px/1 'Gelasio',Georgia,serif;letter-spacing:.36em;color:#000}
+ h1{position:absolute;left:656px;top:352px;font:900 58px/1.28 'Noto Sans KR',sans-serif;letter-spacing:-.055em;color:#f7f5f3}
+ .sub{position:absolute;left:660px;top:530px;font:700 20px/1 'Noto Sans KR',sans-serif;letter-spacing:.06em;color:#c84a50}
+</style></head><body>
+<img class="art" src="${cover}" alt="">
+<p class="kicker">SEVEN QUESTIONS<br><br>SEVEN GLASSES</p>
+<h1>당신의 욕망을<br>채워주세요</h1>
+<p class="sub">일곱 개의 질문 · 일곱 개의 잔</p>
+</body></html>`;
+}
+
+function decode(file) {
+  const png = PNG.sync.read(fs.readFileSync(file));
+  const r = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
+  return r ? r.data : null;
+}
+
+(async () => {
+  const qrSvg = await QRCode.toString(url, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } });
+  fs.writeFileSync(path.join(OUT, 'deadly-sins-qr.svg'), qrSvg);
+  await QRCode.toFile(path.join(OUT, 'deadly-sins-qr.png'), url, { width: 1200, margin: 4, errorCorrectionLevel: 'M' });
+  fs.writeFileSync(path.join(OUT, 'card.html'), cardHtml(qrSvg.replace(/<\?xml[^>]*>/, '')));
+
+  const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
+  try {
+    // 카드: PNG(약 600dpi 상당) + PDF
+    const ctx = await browser.newContext({ viewport: { width: 520, height: 700 }, deviceScaleFactor: 6, ignoreHTTPSErrors: true });
+    const page = await ctx.newPage();
+    await page.goto('file://' + path.join(OUT, 'card.html'), { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForSelector('body[data-ready="1"]');
+    const fontsOk = await page.evaluate(() => document.fonts.check('900 16px "Noto Sans KR"') && document.fonts.check('500 16px Gelasio'));
+    if (!fontsOk) console.warn('주의: 웹폰트를 못 받아서 기본 글꼴로 그렸습니다 (인터넷 연결 확인).');
+    // 카드 폭(105mm)이 정수 픽셀이 아니라 가장자리에 바탕색 실선이 끼므로 안쪽으로 반올림해서 자른다
+    const b = await page.locator('.card').boundingBox();
+    const x = Math.ceil(b.x), y = Math.ceil(b.y);
+    await page.screenshot({ path: path.join(OUT, 'deadly-sins-table-card.png'),
+      clip: { x, y, width: Math.floor(b.x + b.width) - x, height: Math.floor(b.y + b.height) - y } });
+    await ctx.close();
+
+    // PDF: 크롬이 한글 웹폰트를 PDF 에 넣으면 글자마다 굵기가 섞여 나오는 문제가 있어서,
+    // 위 PNG(약 575dpi)를 한 장 그대로 깐 PDF 로 만든다. 인쇄 품질엔 충분하다.
+    const pdfCtx = await browser.newContext();
+    const pdfPage = await pdfCtx.newPage();
+    const png = fs.readFileSync(path.join(OUT, 'deadly-sins-table-card.png')).toString('base64');
+    await pdfPage.setContent(`<!doctype html><style>@page{size:105mm 148mm;margin:0}*{margin:0}
+      img{display:block;width:105mm;height:148mm}</style><img src="data:image/png;base64,${png}">`, { waitUntil: 'load' });
+    await pdfPage.pdf({ path: path.join(OUT, 'deadly-sins-table-card.pdf'), width: '105mm', height: '148mm', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
+    await pdfCtx.close();
+
+    // 링크 미리보기
+    const og = await browser.newContext({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1, ignoreHTTPSErrors: true });
+    const p2 = await og.newPage();
+    await p2.setContent(ogHtml(), { waitUntil: 'networkidle' });
+    await p2.evaluate(() => document.fonts.ready);
+    await p2.screenshot({ path: path.join(PUBLIC, 'og.jpg'), type: 'jpeg', quality: 82 });
+    await og.close();
+  } finally {
+    await browser.close();
+  }
+
+  const read = decode(path.join(OUT, 'deadly-sins-table-card.png'));
+  const readQr = decode(path.join(OUT, 'deadly-sins-qr.png'));
+  console.log('만들었습니다 →', url);
+  ['deadly-sins-qr.svg', 'deadly-sins-qr.png', 'card.html', 'deadly-sins-table-card.pdf', 'deadly-sins-table-card.png']
+    .forEach((f) => console.log('  print/' + f));
+  console.log('  public/og.jpg');
+  console.log(`QR 해독: 카드 ${read === url ? '✓' : '✗ (' + read + ')'} · QR PNG ${readQr === url ? '✓' : '✗ (' + readQr + ')'}`);
+  if (read !== url || readQr !== url) process.exitCode = 1;
+})().catch((e) => { console.error(e); process.exit(1); });

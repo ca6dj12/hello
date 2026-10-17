@@ -1,0 +1,40 @@
+# 푸시할 때마다 자동 점검: 빌드 → 결과 쏠림 시뮬레이션 → 실제 브라우저로 끝까지 눌러 보기
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow
+      - name: 빌드 결과가 커밋된 것과 같은지 (source 만 바꾸고 빌드를 안 돌렸으면 실패)
+        run: |
+          python tools/build.py
+          git diff --exit-code -- public/index.html
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --prefix tools
+      - name: 결과 쏠림 (어떤 죄도 25% 초과 / 7% 미만이면 실패)
+        run: node tools/simulate.js
+      - name: 브라우저 설치
+        working-directory: tools
+        run: npx playwright-core install --with-deps chromium
+      - name: 한국어 · 영어 · 화면 크기별로 끝까지 눌러 보기
+        run: node tools/e2e.js --shots e2e-shots
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-shots
+          path: e2e-shots
+          if-no-files-found: ignore

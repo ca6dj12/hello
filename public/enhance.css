@@ -1,0 +1,203 @@
+/* =============================================================
+   DEADLY SINS — 개선 레이어 스타일
+   원본의 색·글꼴·카드 질감을 그대로 따릅니다.
+     빨강 라벨 #c84a50 · 카드 그라데이션 · 1px rgba(255,255,255,.11) · 모서리 10px
+     영문 Georgia · 국문 Apple SD Gothic Neo
+   ============================================================= */
+:root {
+  --ds-red: #c84a50;
+  --ds-line: rgba(255, 255, 255, .11);
+  --ds-card: linear-gradient(110deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .018));
+  --ds-soft: rgba(247, 245, 243, .72);
+  --ds-dim: rgba(247, 245, 243, .5);
+  --ds-serif: Georgia, 'Times New Roman', serif;
+  --ds-sans: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+}
+
+/* ---------- 표지 상단: MENU / 언어 ---------- */
+.ds-top {
+  position: fixed; z-index: 40;
+  top: calc(env(safe-area-inset-top, 0px) + 12px); right: 14px;
+  display: none; gap: 8px;
+}
+body[data-ds-screen="cover"] .ds-top { display: flex; }
+.ds-pill {
+  min-height: 34px; padding: 0 13px;
+  background: #000; color: #f7f5f3;          /* 표지 그림이 흰 바탕이라 검은 알약으로 */
+  border: 1px solid #000; border-radius: 24px;
+  font: 700 11px/1 var(--ds-sans); letter-spacing: .08em;
+  cursor: pointer;
+}
+.ds-pill:active { transform: scale(.97); }
+
+/* 영어 모드에서는 이름이 이미 영어라 아래 작은 영문 표기가 겹친다 */
+html[lang="en"] .meter-en { display: none; }
+
+/* ---------- 시그니처 이름 화면: 스크롤 + 제목 비침 방지 ---------- */
+/* 내용이 길어져도 위아래가 잘리지 않게: 위·아래 auto 여백으로 가운데 정렬 + 넘치면 스크롤 */
+/* 원본 <style> 이 이 파일보다 뒤에 있어서, 같은 !important 끼리는 원본이 이긴다 → 선택자를 한 단계 높인다 */
+#signature #signatureNameReveal {
+  justify-content: flex-start !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 56px) !important;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px) !important;
+}
+#signature #signatureNameReveal::-webkit-scrollbar { display: none; }
+#signature #signatureNameReveal > :first-child { margin-top: auto !important; }
+#signature #signatureNameReveal > :last-child { margin-bottom: auto !important; }
+
+/* "당신의 욕망을 채워주세요" 가 이름 뒤로 비쳐 보이던 것 */
+#signature.ds-revealed .signature-intro,
+#signature:has(.signature-name-reveal.visible) .signature-intro { visibility: hidden; }
+
+/* 스크롤하면 ← 버튼이 글 위에 겹치므로 바탕을 깐다 */
+#signature.ds-revealed .signature-back-only {
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .62);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+
+/* ---------- 이름 아래 추가 블록 ---------- */
+.ds-extra {
+  width: min(92vw, 430px);
+  display: grid; gap: 10px;
+  margin-top: 6px;
+  text-align: left;
+  font-family: var(--ds-sans);
+  word-break: keep-all;
+}
+.ds-extra:empty { display: none; }
+
+.ds-card {
+  padding: 13px 13px 12px;
+  border: 1px solid var(--ds-line); border-radius: 10px;
+  background: var(--ds-card);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.ds-card-head {
+  margin: 0 0 9px;
+  color: var(--ds-red);
+  font-size: 12.5px; font-weight: 850; letter-spacing: -.02em;
+}
+.ds-card-head span { color: var(--ds-dim); font-weight: 700; margin-left: 4px; }
+
+.ds-line {
+  margin: 0 0 11px;
+  font: italic 500 clamp(13px, 3.4vw, 15px)/1.55 var(--ds-serif);
+  color: rgba(255, 255, 255, .9);
+  letter-spacing: -.01em;
+}
+html[lang="ko"] .ds-line { font-family: var(--ds-sans); font-style: normal; font-weight: 600; letter-spacing: -.03em; }
+
+.ds-taste dl {
+  margin: 0;
+  display: grid; grid-template-columns: 64px 1fr; gap: 6px 10px;
+  font-size: clamp(12px, 3.15vw, 14px); line-height: 1.5;
+}
+.ds-taste dt { color: var(--ds-dim); font-weight: 700; }
+.ds-taste dd { margin: 0; color: rgba(255, 255, 255, .88); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.ds-pips { display: inline-flex; gap: 3px; }
+.ds-pips i {
+  width: 9px; height: 9px;
+  clip-path: polygon(50% 0, 89% 19%, 98% 61%, 72% 95%, 28% 95%, 2% 61%, 11% 19%);   /* 원본 칠각형 */
+  background: rgba(255, 255, 255, .18);
+}
+.ds-pips i.on { background: var(--ds-red); }
+.ds-price { font: 700 clamp(14px, 3.7vw, 16px)/1.3 var(--ds-serif) !important; color: #fff !important; letter-spacing: .02em; }
+
+.ds-row {
+  margin: 0; padding: 6px 0;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  font-size: clamp(12px, 3.15vw, 14px); line-height: 1.45;
+  color: rgba(255, 255, 255, .86);
+  border-top: 1px solid rgba(255, 255, 255, .06);
+}
+.ds-card-head + .ds-row, .ds-group-head + .ds-row, .ds-sig .ds-row { border-top: 0; }
+.ds-row > span:last-child { flex: none; color: var(--ds-soft); font-family: var(--ds-serif); font-size: .92em; white-space: nowrap; }
+.ds-row small { display: block; margin-top: 1px; color: var(--ds-dim); font-size: .84em; }
+
+.ds-order-btn { margin-top: 6px; }
+.ds-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.ds-actions button {
+  min-height: 44px; padding: 6px 4px;
+  background: rgba(0, 0, 0, .4); color: #f0f0f0;
+  border: 1px solid rgba(255, 255, 255, .16); border-radius: 12px;
+  font: 700 11.5px/1.25 var(--ds-sans); letter-spacing: -.01em;
+  cursor: pointer;
+}
+.ds-actions button:active { transform: scale(.98); }
+
+@media (max-height: 700px) {
+  .ds-card { padding: 10px 11px; }
+  .ds-taste dl { gap: 4px 9px; }
+}
+
+/* ---------- 전체 화면 레이어 (주문 · 메뉴) ---------- */
+.ds-layer {
+  position: fixed; inset: 0; z-index: 60;
+  background: #000; color: var(--white, #f7f5f3);
+  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  padding: calc(env(safe-area-inset-top, 0px) + 64px) 22px calc(env(safe-area-inset-bottom, 0px) + 40px);
+  box-sizing: border-box;
+  opacity: 0; transform: translateY(14px);
+  transition: opacity .22s ease, transform .3s cubic-bezier(.19, 1, .22, 1);
+  font-family: var(--ds-sans);
+}
+.ds-layer.open { opacity: 1; transform: none; }
+.ds-layer .ds-close {
+  position: fixed; z-index: 2;
+  top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
+}
+
+/* 주문 화면: 바텐더가 한눈에 읽게 크게 */
+.ds-order {
+  min-height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 10px;
+}
+.ds-kicker { margin: 0; font: 700 11px/1 var(--ds-serif); letter-spacing: .32em; color: var(--ds-red); }
+.ds-order-art {
+  width: auto; height: min(42dvh, 360px); margin: 4px 0 0;
+  filter: invert(1); mix-blend-mode: screen; background: #000;
+}
+.ds-order-en { margin: 0; font: 700 clamp(46px, 14vw, 72px)/1 var(--ds-serif); letter-spacing: .01em; }
+.ds-order-ko { margin: 0; font-size: clamp(26px, 8vw, 38px); font-weight: 850; letter-spacing: -.045em; line-height: 1.25; }
+.ds-order-ko span { font-size: .5em; font-weight: 700; color: var(--ds-soft); letter-spacing: 0; }
+.ds-order-price { margin: 6px 0 0; font: 700 22px/1 var(--ds-serif); color: #fff; }
+.ds-order-note { margin: 14px 0 0; font-size: 12px; color: var(--ds-dim); letter-spacing: .02em; }
+
+/* 메뉴 */
+.ds-menu { width: min(100%, 460px); margin: 0 auto; }
+.ds-menu h2 {
+  margin: 0 0 22px; text-align: center;
+  font: 700 30px/1 var(--ds-serif); letter-spacing: .34em; padding-left: .34em;
+}
+.ds-menu section { margin: 0 0 26px; }
+.ds-menu h3 {
+  margin: 0 0 4px; padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, .16);
+  font: 700 13px/1.2 var(--ds-serif); letter-spacing: .22em; color: #fff;
+}
+.ds-menu .ds-note { margin: 8px 0 10px; font-size: 11.5px; color: var(--ds-dim); line-height: 1.5; }
+.ds-menu .ds-sig, .ds-menu .ds-group {
+  position: relative;
+  margin: 0 -10px; padding: 2px 10px;
+  border: 1px solid transparent; border-radius: 10px;
+}
+.ds-menu .ds-group { padding-top: 8px; padding-bottom: 6px; }
+.ds-menu .mine { border-color: rgba(200, 74, 80, .55); background: rgba(200, 74, 80, .07); }
+.ds-menu em {
+  font-style: normal; font-size: 10px; font-weight: 800; letter-spacing: .06em;
+  color: var(--ds-red); margin-left: 6px;
+}
+.ds-menu .ds-sig em { position: absolute; top: -7px; right: 10px; background: #000; padding: 0 5px; margin: 0; }
+.ds-group-head { margin: 0 0 2px; font-size: 12.5px; font-weight: 850; color: var(--ds-red); }
+.ds-group-head span { color: var(--ds-dim); font-weight: 700; margin-left: 4px; }
+.ds-info { margin: 8px 0; font-size: 12.5px; line-height: 1.55; color: var(--ds-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-layer { transition: none; transform: none; }
+}
