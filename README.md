@@ -115,7 +115,7 @@ node make-qr.js https://<배포주소>
 
 ## 배포
 
-**https://sounds-78ukdhhoo-ca6dj12s-projects.vercel.app**  (2026-10-17, 커밋 `8ebf983`)
+**https://sounds-8kvdl1zbk-ca6dj12s-projects.vercel.app**  (2026-10-17, 커밋 `61322a9`)
 
 ### 지금 구조
 
@@ -126,6 +126,7 @@ node make-qr.js https://<배포주소>
   빌드는 GitHub 의 **특정 커밋** 압축본을 받아 `public/` 만 꺼내 씁니다.
 - Vercel 배포는 불변이라 이 주소는 같은 내용을 계속 서비스합니다.
   **대신 새로 배포하면 주소가 바뀌고, QR 도 다시 만들어야 합니다.**
+  가격 하나(`data.js`)만 고쳐도 새 배포라서 마찬가지입니다. → 아래 "고정 주소" 를 먼저 하세요.
 
 ### 왜 주소가 이렇게 길고, 매번 바뀌는가
 
@@ -136,7 +137,7 @@ node make-qr.js https://<배포주소>
 ### 알아둘 위험
 
 1. `sounds` 에서 **옛 배포를 정리(삭제)하면 이 사이트도 사라집니다.**
-   `sounds-78ukdhhoo…` 는 지우지 마세요.
+   `sounds-8kvdl1zbk…` 는 지우지 마세요.
 2. Vercel 배포 보존(Deployment Retention) 설정에 따라 오래된 프리뷰가 자동 삭제될 수
    있는지는 **확실하지 않습니다.** `sounds` → Settings → Deployment Retention 에서 확인하세요.
 3. 프리뷰 주소는 `noindex` 라 검색엔진에는 안 잡힙니다. QR 용도에는 상관없습니다.

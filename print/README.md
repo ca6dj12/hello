@@ -1,11 +1,12 @@
 # 인쇄용 파일
 
-전부 **https://sounds-78ukdhhoo-ca6dj12s-projects.vercel.app** 를 가리킵니다.
+전부 **https://sounds-8kvdl1zbk-ca6dj12s-projects.vercel.app** 를 가리킵니다.
 (만든 뒤 카드 이미지와 PDF 에서 QR 을 실제로 해독해 확인했고, 카드를 폭 166px 까지 줄여도 읽힙니다.)
 
 > **예전에 드린 QR 은 전부 폐기하세요.**
 > `sounds-zeta.vercel.app` (10/03) 은 이제 yantai 로 열리고,
 > `sounds-e5486fpmt…` (10/17 오전) 는 예전 14문항 버전입니다.
+> 그 사이 잠깐 있던 `sounds-cwpcbhbom…`, `sounds-78ukdhhoo…` 도 쓰지 마세요.
 
 | 파일 | 쓸 곳 |
 |---|---|
