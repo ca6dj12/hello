@@ -79,7 +79,7 @@ QRCode.toString(url, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color:
   <h1>오늘 밤,<br>당신은 어떤 죄를<br>삼키시겠습니까?</h1>
   <div class="qr"><svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">${inner}</svg></div>
   <p class="cta">QR을 찍고, 당신의 죄를 고르세요</p>
-  <p class="sub">일곱 개의 잔 · 각 18,000원</p>
+  <p class="sub">일곱 개의 잔 · 각 16,000원</p>
 </div>
 <svg style="position:absolute;width:0;height:0"><defs>
 <filter id="ink" x="-25%" y="-25%" width="150%" height="160%">
