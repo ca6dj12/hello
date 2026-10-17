@@ -140,10 +140,12 @@ async function run(browser, base, lang) {
     en: document.getElementById('signatureNameEn').textContent,
     intro: getComputedStyle(document.querySelector('.signature-intro')).visibility,
     extra: document.querySelector('.ds-extra').textContent,
-    label: (document.querySelector('#signatureTrait .trait-label') || {}).textContent
+    label: (document.querySelector('#signatureTrait .trait-label') || {}).textContent,
+    glassTop: Math.round(document.querySelector('.signature-glass-crop').getBoundingClientRect().top)
   }));
   check(sig.en === SIGNATURE_EN[sig.k], '시그니처 술 = 결과의 죄', sig);
   check(sig.intro === 'hidden', '이름 화면 뒤로 제목이 비치지 않음', sig.intro);
+  check(sig.glassTop >= 0, '시그니처 화면 위쪽이 잘리지 않음', sig.glassTop);
   check(lang === 'en' ? sig.extra.includes('16,000 KRW') : sig.extra.includes('16,000원'), '가격 16,000원 표시');
   check(lang === 'en' ? sig.label === 'Love' : sig.label === '연애 성향', '성향 라벨 언어', sig.label);
   await shot(page, lang + '-signature');

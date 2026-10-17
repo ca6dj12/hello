@@ -171,6 +171,15 @@
   };
   document.body.dataset.dsScreen = 'cover';
 
+  // #app 은 overflow:hidden 이라 손가락으로는 안 밀리지만, 포커스나 scrollIntoView 같은
+  // 프로그램 동작에 통째로 밀려 올라가 화면 위가 잘린 채로 남을 수 있다. 늘 제자리로 되돌린다.
+  const appRoot = el('app');
+  if (appRoot) {
+    appRoot.addEventListener('scroll', () => {
+      if (appRoot.scrollTop || appRoot.scrollLeft) { appRoot.scrollTop = 0; appRoot.scrollLeft = 0; }
+    });
+  }
+
   /* -----------------------------------------------------------
      4. 폰 뒤로가기 = 앱 안의 뒤로가기
         앞으로 가는 동작(클릭)마다 기록을 하나씩 쌓고,
