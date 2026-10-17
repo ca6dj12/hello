@@ -425,6 +425,6 @@ window.DS_DATA = {
   },
 
   /* 결과 · 오류 익명 수집. url 과 key 가 비어 있으면 아무것도 보내지 않습니다.
-     켜는 법은 README 의 "데이터 수집" 항목 참고. */
+     켜는 법은 README 의 "결과 · 오류 수집" 항목과 supabase/deadly_sins_events.sql 참고. */
   collect: { url: '', key: '' }
 };
