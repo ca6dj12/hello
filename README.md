@@ -102,7 +102,8 @@ python3 -m http.server 8080 --directory public   # http://localhost:8080
 ### 연결 (한 번만, 대시보드에서)
 
 1. Vercel → `deadly-sins` 프로젝트 → **Storage** → **Create Database** → **Neon** → 무료(Free) 요금제
-2. 지역은 서울과 가까운 곳(예: Singapore 또는 Tokyo — 목록에 있는 것), 이름은 아무거나
+2. 지역은 **US East (N. Virginia, aws-us-east-1)** — 기록 함수가 Vercel 의 미국 동부(iad1)에서 돌아서
+   DB 도 같은 곳이 가장 빠릅니다. 손님 화면은 기록을 기다리지 않으니 한국에서 써도 느려지지 않습니다. 이름은 아무거나
 3. **Connect to project** 에서 `deadly-sins`, 환경은 Production(과 Preview) 선택 → `DATABASE_URL` 이 자동으로 들어감
 4. 환경 변수는 **다음 배포부터** 적용되므로 Deployments → 최신 배포 → **Redeploy** 한 번
 5. https://deadly-sins-mu.vercel.app/api/track 을 열어 `{"db":true,...}` 가 나오면 끝
