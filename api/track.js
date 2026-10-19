@@ -1,0 +1,126 @@
+/* =============================================================
+   결과 기록 → Neon (Postgres)
+     POST /api/track   사이트가 보내는 기록 한 건을 저장
+     GET  /api/track   연결 상태 확인 ({ db, events })
+
+   Vercel 프로젝트에 Neon 을 연결하면 생기는 DATABASE_URL 을 쓴다.
+   연결 전에는 받은 기록을 조용히 버린다 (사이트는 아무 영향 없음).
+   테이블은 처음 호출될 때 스스로 만든다.
+
+   손님 브라우저는 DB 주소도 키도 모른다. 이 함수만 DB 에 쓴다.
+   누구나 POST 할 수 있는 주소라서 종류 · 길이 · 죄 이름을 여기서 검사한다.
+   ============================================================= */
+'use strict';
+const { neon } = require('@neondatabase/serverless');
+
+const TYPES = ['start', 'result', 'signature', 'order', 'menu', 'share', 'restart', 'lang', 'error'];
+const SINS = ['교만', '질투', '분노', '나태', '탐욕', '탐식', '색욕'];
+const KNOWN = ['sid', 'type', 'lang', 'v', 'sin', 'second', 'tie', 'points', 'picks'];
+
+const SCHEMA = [
+  `create table if not exists deadly_sins_events (
+     id         bigint generated always as identity primary key,
+     created_at timestamptz not null default now(),
+     sid        text not null,
+     type       text not null,
+     lang       text,
+     sin        text,
+     second     text,
+     tie        boolean,
+     points     text,
+     picks      text,
+     extra      jsonb,
+     version    text
+   )`,
+  // 결과는 세션마다 한 줄: 손님이 뒤로 가서 답을 바꾸면 덮어쓴다
+  `create unique index if not exists deadly_sins_one_result
+     on deadly_sins_events (sid) where type = 'result'`,
+  `create index if not exists deadly_sins_created_at on deadly_sins_events (created_at desc)`
+];
+
+let ready = null;   // 함수 인스턴스마다 한 번만 스키마 확인
+function db() {
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!url) return null;
+  const sql = neon(url);
+  if (!ready) {
+    ready = SCHEMA.reduce((p, q) => p.then(() => sql.query(q)), Promise.resolve())
+      .catch((e) => { ready = null; throw e; });
+  }
+  return sql;
+}
+
+const cut = (v, n) => (v === undefined || v === null || v === '') ? null : String(v).slice(0, n);
+const sin = (v) => (SINS.includes(v) ? v : null);
+
+// 받은 값 → 저장할 한 줄. 받으면 안 되는 값이면 null.
+function toRow(d) {
+  if (!d || typeof d !== 'object' || !TYPES.includes(d.type)) return null;
+  const sid = cut(d.sid, 16);
+  if (!sid) return null;
+  if (d.type === 'result' && !sin(d.sin)) return null;
+  const extra = {};
+  Object.keys(d).forEach((k) => { if (!KNOWN.includes(k)) extra[k] = d[k]; });
+  const extraJson = Object.keys(extra).length ? JSON.stringify(extra).slice(0, 1000) : null;
+  return {
+    sid,
+    type: d.type,
+    lang: d.lang === 'en' ? 'en' : 'ko',
+    sin: sin(d.sin),
+    second: sin(d.second),
+    tie: d.tie === true ? true : (d.type === 'result' ? false : null),
+    points: cut(d.points, 160),
+    picks: cut(d.picks, 60),
+    // 잘린 JSON 은 jsonb 에 못 들어가므로 그때는 글자로 감싼다
+    extra: extraJson && (() => { try { JSON.parse(extraJson); return extraJson; } catch (e) { return JSON.stringify({ raw: extraJson }); } })(),
+    version: cut(d.v, 20)
+  };
+}
+
+async function save(sql, r) {
+  const values = [r.sid, r.type, r.lang, r.sin, r.second, r.tie, r.points, r.picks, r.extra, r.version];
+  if (r.type === 'result') {
+    await sql.query(
+      `insert into deadly_sins_events (sid, type, lang, sin, second, tie, points, picks, extra, version)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10)
+       on conflict (sid) where type = 'result' do update set
+         created_at = now(), lang = excluded.lang, sin = excluded.sin, second = excluded.second,
+         tie = excluded.tie, points = excluded.points, picks = excluded.picks,
+         extra = excluded.extra, version = excluded.version`, values);
+  } else {
+    await sql.query(
+      `insert into deadly_sins_events (sid, type, lang, sin, second, tie, points, picks, extra, version)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10)`, values);
+  }
+}
+
+module.exports = async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  try {
+    const sql = db();
+    if (req.method === 'GET') {
+      if (!sql) return res.status(200).json({ db: false });
+      await ready;
+      const [{ n }] = await sql.query('select count(*)::int as n from deadly_sins_events');
+      return res.status(200).json({ db: true, events: n });
+    }
+    if (req.method !== 'POST') return res.status(405).end();
+    if (!sql) return res.status(204).end();
+
+    let d = req.body;
+    if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { return res.status(400).end(); } }
+    if (Buffer.isBuffer(d)) { try { d = JSON.parse(d.toString('utf8')); } catch (e) { return res.status(400).end(); } }
+    const row = toRow(d);
+    if (!row) return res.status(400).end();
+
+    await ready;
+    await save(sql, row);
+    return res.status(204).end();
+  } catch (e) {
+    console.error('[track]', e && e.message);
+    return res.status(500).end();
+  }
+};
+module.exports.toRow = toRow;      // 테스트용
+module.exports.SCHEMA = SCHEMA;
+module.exports.save = save;

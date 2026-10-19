@@ -424,7 +424,7 @@ window.DS_DATA = {
     ]
   },
 
-  /* 결과 · 오류 익명 기록 → 구글 시트. 비어 있으면 아무것도 보내지 않습니다.
-     켜는 법: README 의 "결과 기록 (구글 시트)" — 시트에서 배포한 웹 앱 주소(…/exec)를 넣으면 됩니다. */
-  collect: { sheet: '' }
+  /* 결과 · 오류 익명 기록 (→ /api/track → Neon). 끄려면 false.
+     Neon 이 Vercel 프로젝트에 연결되기 전에는 서버가 받은 기록을 그냥 버립니다. README 의 "결과 기록" 참고. */
+  collect: { enabled: true }
 };

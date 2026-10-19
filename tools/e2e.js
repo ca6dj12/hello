@@ -27,9 +27,19 @@ const PUBLIC = path.join(__dirname, '..', 'public');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css',
   '.webp': 'image/webp', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png' };
+const BEACONS = [];   // 로컬 서버가 받은 /api/track 기록 (실제 서버 대신)
 function serve() {
   return new Promise((resolve) => {
     const srv = http.createServer((req, res) => {
+      if (req.url.split('?')[0] === '/api/track') {
+        let body = '';
+        req.on('data', (c) => { body += c; });
+        req.on('end', () => {
+          if (req.method === 'POST') { try { BEACONS.push({ ct: req.headers['content-type'] || '', body: JSON.parse(body) }); } catch (e) { BEACONS.push({ bad: true }); } }
+          res.writeHead(req.method === 'POST' ? 204 : 200); res.end(req.method === 'POST' ? '' : '{"db":false}');
+        });
+        return;
+      }
       const rel = decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/, '') || 'index.html';
       const file = path.join(PUBLIC, rel);
       if (!file.startsWith(PUBLIC) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end(); return; }
@@ -274,31 +284,22 @@ async function sizes(browser, base) {
   }
 }
 
-/* 결과 기록: 가짜 구글 시트 주소를 넣고, 보내는 내용이 맞는지 */
+/* 결과 기록: 사이트가 /api/track 으로 보내는 내용이 맞는지 (로컬 서버가 대신 받음) */
 async function collect(browser, base) {
-  console.log('\n■ 결과 기록 (구글 시트)');
-  const FAKE = 'https://script.google.com/macros/s/E2E/exec';
+  console.log('\n■ 결과 기록 (/api/track)');
+  BEACONS.length = 0;
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ko-KR' });
   const page = await ctx.newPage();
-  const sent = [];
-  await page.route('**/data.js', async (route) => {
-    const r = await route.fetch();
-    route.fulfill({ response: r, body: (await r.text()).replace("collect: { sheet: '' }", `collect: { sheet: '${FAKE}' }`) });
-  });
-  await page.route('https://script.google.com/**', (route) => {
-    const q = route.request();
-    try { sent.push({ ct: q.headers()['content-type'] || '', body: JSON.parse(q.postData()) }); } catch (e) { sent.push({ bad: true }); }
-    route.fulfill({ status: 200, body: 'ok' });
-  });
   await page.goto(base, { waitUntil: 'networkidle' });
-  check(await page.evaluate(() => DS_ENHANCE.collect), '주소를 넣으면 기록이 켜짐');
+  check(await page.evaluate(() => DS_ENHANCE.collect), '기본값: 기록 켜짐');
   await page.click('#start');
   await page.waitForSelector('#quiz.active', { timeout: 8000 });
   await page.waitForFunction(() => !coverTransitionBusy, null, { timeout: 8000 });
   await answerAll(page);
   await page.click('#toDesire');
   await page.waitForSelector('#signatureNameReveal.visible', { timeout: 20000 });
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(600);
+  const sent = BEACONS.slice();
   const types = sent.map((x) => x.body && x.body.type);
   const result = (sent.find((x) => x.body && x.body.type === 'result') || {}).body || {};
   const sig = (sent.find((x) => x.body && x.body.type === 'signature') || {}).body || {};
@@ -306,18 +307,21 @@ async function collect(browser, base) {
   check(['start', 'result', 'signature'].every((t) => types.includes(t)), '시작 · 결과 · 시그니처를 보냄', types);
   check(SINS_KO.includes(result.sin) && result.sin === sig.sin, '결과의 죄 = 시그니처의 죄 (한국어 이름)', [result.sin, sig.sin]);
   check(/^(Q\d[ABCD] ?){7}$/.test(result.picks || ''), '고른 보기 7개를 원본 순서로 (Q1B …)', result.picks);
-  check(sent.every((x) => !x.bad && /^text\/plain/.test(x.ct)), 'text/plain 으로 보냄 (CORS 사전 요청 없음)');
+  check(sent.every((x) => !x.bad && x.body.sid === sent[0].body.sid), '한 세션은 같은 세션 값');
   await ctx.close();
 
-  // 기본값(주소 없음)이면 아무것도 안 보냄
+  // data.js 에서 끄면 아무것도 안 보냄
+  BEACONS.length = 0;
   const ctx2 = await browser.newContext({ locale: 'ko-KR' });
   const p2 = await ctx2.newPage();
-  let leaked = 0;
-  await p2.route('https://script.google.com/**', (route) => { leaked++; route.abort(); });
+  await p2.route('**/data.js', async (route) => {
+    const r = await route.fetch();
+    route.fulfill({ response: r, body: (await r.text()).replace('collect: { enabled: true }', 'collect: { enabled: false }') });
+  });
   await p2.goto(base, { waitUntil: 'networkidle' });
   await p2.click('#start');
-  await p2.waitForTimeout(500);
-  check(!(await p2.evaluate(() => DS_ENHANCE.collect)) && leaked === 0, '주소가 비어 있으면 아무것도 안 보냄');
+  await p2.waitForTimeout(600);
+  check(!(await p2.evaluate(() => DS_ENHANCE.collect)) && BEACONS.length === 0, 'enabled:false 면 아무것도 안 보냄', BEACONS.length);
   await ctx2.close();
 }
 
@@ -335,7 +339,7 @@ let SIGNATURE_EN = {};
     await run(browser, base, 'ko');
     await run(browser, base, 'en');
     await sizes(browser, base);
-    if (!TARGET) await collect(browser, base);   // data.js 를 바꿔 끼우는 검사라 로컬에서만
+    if (!TARGET) await collect(browser, base);   // 로컬 서버가 /api/track 을 대신 받는 검사라 로컬에서만
   } catch (e) {
     check(false, '테스트 진행 중 예외', String(e).slice(0, 300));
   } finally {

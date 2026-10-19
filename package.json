@@ -1,0 +1,8 @@
+{
+  "name": "deadly-sins",
+  "private": true,
+  "description": "사이트는 public/ 의 정적 파일. 이 파일은 api/track.js (결과 기록 → Neon) 의 의존성만 담는다.",
+  "dependencies": {
+    "@neondatabase/serverless": "1.1.0"
+  }
+}

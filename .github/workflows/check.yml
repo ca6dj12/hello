@@ -24,7 +24,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - run: npm ci
       - run: npm ci --prefix tools
+      - name: 결과 기록 API (api/track.js) 를 진짜 Postgres(PGlite) 위에서
+        run: node tools/test-api.js
       - name: 결과 쏠림 (어떤 죄도 25% 초과 / 7% 미만이면 실패)
         run: node tools/simulate.js
       - name: 브라우저 설치

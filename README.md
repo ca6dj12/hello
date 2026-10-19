@@ -19,11 +19,13 @@ public/                   실제로 배포되는 사이트 (빌드 결과, 커�
   enhance.js / .css       개선 레이어
   og.jpg / favicon.svg    링크 미리보기 · 탭 아이콘
 print/                    QR · 테이블 카드 (인쇄용, 사이트에는 안 올라감)
-collect/google-sheets.gs  결과 기록용 구글 시트 스크립트 (무료)
+api/track.js              결과 기록 API → Neon(Postgres). 사이트에서 유일한 서버 코드
+package.json              위 API 의 의존성(Neon 드라이버)만
 tools/
   build.py                source → public
   simulate.js             결과 쏠림 검증 (실패하면 종료 코드 1)
   e2e.js                  실제 브라우저로 끝까지 눌러 보는 점검
+  test-api.js             api/track.js 를 진짜 Postgres(PGlite) 위에서 점검
   make-qr.js              QR · 테이블 카드 · 링크 미리보기 이미지 생성
 .github/workflows/check.yml   푸시마다 위 세 가지 자동 실행
 ```
@@ -34,6 +36,7 @@ python3 tools/build.py              # source → public
 cd tools && npm install && cd ..
 node tools/simulate.js              # 결과 쏠림
 node tools/e2e.js                   # 브라우저 점검 (크롬 필요, CHROME_PATH 로 지정 가능)
+npm install && node tools/test-api.js   # 결과 기록 API
 python3 -m http.server 8080 --directory public   # http://localhost:8080
 ```
 
@@ -87,29 +90,72 @@ python3 -m http.server 8080 --directory public   # http://localhost:8080
   전체 메뉴(내 죄 표시), 처음부터 다시
 - 이름이 떠오를 때 뒤에 비치던 "당신의 욕망을 채워주세요" 제목 숨김, 내용이 길면 스크롤
 - 한국어 ⇄ English (표지 오른쪽 위, 폰 언어로 자동 시작)
-- 결과 · 오류 익명 기록 → 구글 시트 (아래, 주소를 넣기 전까지는 꺼짐)
+- 결과 · 오류 익명 기록 → Neon (아래, DB 를 연결하기 전까지는 서버가 그냥 버림)
 - 원본 버그 수정: 없는 `#restart` 요소에 이벤트를 걸다 스크립트가 멈추던 것
 - 용량: 원본 555KB 한 파일 → 첫 화면 약 240KB (그림 분리 · 무손실 WebP · 캐시)
 
-## 결과 기록 (구글 시트, 무료)
+## 결과 기록 (Neon, 무료 요금제)
 
-손님이 어떤 죄가 나왔는지, 끝까지 풀었는지, 바텐더 화면을 열었는지가 구글 시트에 한 줄씩 쌓입니다.
-`collect/google-sheets.gs` 맨 위의 설치 순서대로 하면 됩니다(5분, 한 번만).
+손님 브라우저 → 같은 사이트의 `/api/track` (`api/track.js`) → Neon Postgres.
+브라우저는 DB 주소도 키도 모르고, 이 함수만 DB 에 씁니다. 테이블은 처음 기록이 올 때 스스로 만듭니다.
 
-1. sheets.new 로 빈 시트 → 확장 프로그램 → Apps Script → 파일 내용 붙여 넣기 → 저장
-2. 배포 → 새 배포 → 웹 앱 (실행: 나 / 액세스: 모든 사용자) → 권한 허용
-3. 나오는 웹 앱 URL(`https://script.google.com/macros/s/…/exec`)을 `public/data.js` 의
-   `collect.sheet` 에 넣고 푸시
+### 연결 (한 번만, 대시보드에서)
 
-- **기록** 탭: 시간 · 세션 · 종류(시작/결과/시그니처/바텐더 화면/메뉴/이미지 저장/다시 하기/오류) ·
-  언어 · 죄 · 2위 · 동점 · 점수 · 고른 보기(`Q1B` = 1번 문항의 디자이너 원본 B 보기) · 기타
-- **요약** 탭: 죄별 명수와 비율, 시작 → 완주 → 바텐더 화면 비율. 수식이라 저절로 갱신됩니다.
-- "결과" 는 세션마다 한 줄입니다. 손님이 뒤로 가서 답을 바꾸면 마지막 결과로 덮어씁니다.
-- 개인 정보(이름 · 전화번호 · IP)는 보내지 않습니다. 오류일 때만 브라우저 종류를 같이 보냅니다.
-- 웹 앱 주소는 누구나 보낼 수 있는 주소라, 스크립트가 종류 · 길이 · 죄 이름을 검사하고
-  `=` 로 시작하는 값은 수식으로 실행되지 않게 막습니다.
-- 무료 계정의 Apps Script 사용 한도 안에서 동작합니다. 바 한 곳의 손님 수로는 넉넉할 것으로 보지만,
-  정확한 한도는 구글 정책에 따라 바뀔 수 있습니다.
+1. Vercel → `deadly-sins` 프로젝트 → **Storage** → **Create Database** → **Neon** → 무료(Free) 요금제
+2. 지역은 서울과 가까운 곳(예: Singapore 또는 Tokyo — 목록에 있는 것), 이름은 아무거나
+3. **Connect to project** 에서 `deadly-sins`, 환경은 Production(과 Preview) 선택 → `DATABASE_URL` 이 자동으로 들어감
+4. 환경 변수는 **다음 배포부터** 적용되므로 Deployments → 최신 배포 → **Redeploy** 한 번
+5. https://deadly-sins-mu.vercel.app/api/track 을 열어 `{"db":true,...}` 가 나오면 끝
+
+`{"db":false}` 면 아직 DATABASE_URL 이 안 들어간 것(4번 재배포를 안 했거나 연결 환경이 Production 이 아님).
+
+### 무엇이 쌓이나 (`deadly_sins_events` 테이블)
+
+| 칸 | 내용 |
+|---|---|
+| created_at | 시간 (UTC. 한국 시간은 `created_at at time zone 'Asia/Seoul'`) |
+| sid | 퀴즈를 시작할 때마다 새로 만드는 임의 값 (사람을 특정하지 못함) |
+| type | start · result · signature · order(바텐더 화면) · menu · share(이미지 저장) · restart · lang · error |
+| sin / second / tie | 1위 · 2위 죄(한국어), 동점 여부 — result 일 때 |
+| points / picks | 점수, 고른 보기 (`Q1B` = 1번 문항의 디자이너 원본 B 보기) |
+| extra | 그 밖의 값 (오류 메시지 등) |
+
+- result 는 세션마다 한 줄입니다. 손님이 뒤로 가서 답을 바꾸면 마지막 결과로 덮어씁니다.
+- 개인 정보(이름 · 전화번호 · IP)는 저장하지 않습니다. 오류일 때만 브라우저 종류를 같이 저장합니다.
+- `/api/track` 은 누구나 보낼 수 있는 주소라 종류 · 길이 · 죄 이름을 함수에서 검사합니다.
+- 끄려면 `public/data.js` 의 `collect.enabled` 를 `false` 로.
+- Neon 무료 요금제의 한도(저장 용량 · 계산 시간)는 바뀔 수 있습니다. 바 한 곳 기록은 한 줄이 수백 바이트라
+  넉넉할 것으로 보지만, 정확한 한도는 Neon 요금 페이지를 확인하세요.
+
+### 보는 법 — Neon 콘솔 → SQL Editor 에 붙여 넣기
+
+```sql
+-- 최근 30일 결과 분포 (완전히 고르면 죄마다 약 14%)
+select sin, count(*) as 명, round(100.0 * count(*) / sum(count(*)) over (), 1) as 비율
+from deadly_sins_events
+where type = 'result' and created_at > now() - interval '30 days'
+group by sin order by 명 desc;
+
+-- 손님 흐름: 시작 → 완주 → 시그니처 → 바텐더 화면 → 이미지 저장
+select
+  count(distinct sid) filter (where type = 'start')     as 시작,
+  count(distinct sid) filter (where type = 'result')    as 완주,
+  count(distinct sid) filter (where type = 'signature') as 시그니처,
+  count(distinct sid) filter (where type = 'order')     as 바텐더_화면,
+  count(distinct sid) filter (where type = 'share')     as 이미지_저장
+from deadly_sins_events
+where created_at > now() - interval '30 days';
+
+-- 날짜별 완주 수 (한국 시간)
+select (created_at at time zone 'Asia/Seoul')::date as 날짜, count(*) as 완주
+from deadly_sins_events where type = 'result'
+group by 1 order by 1 desc limit 30;
+
+-- 최근 오류
+select created_at, extra->>'message' as 메시지, extra->>'ua' as 브라우저
+from deadly_sins_events where type = 'error'
+order by created_at desc limit 30;
+```
 
 ## 테이블 QR 카드
 
@@ -128,7 +174,8 @@ node make-qr.js https://<배포주소>
 
 - 이 브랜치(`claude/deadly-sins-cocktail-qr-9ljntg`, 저장소 기본 브랜치)에 **푸시하면 자동으로 이 주소에 배포**됩니다.
   가격(`public/data.js`)을 고치고 푸시하면 몇 초 뒤 반영되고, **주소와 QR 은 그대로**입니다.
-- 빌드 단계는 없습니다. 저장소의 `vercel.json` 이 커밋된 `public/` 을 그대로 내보냅니다.
+- 사이트 빌드 단계는 없습니다. 저장소의 `vercel.json` 이 커밋된 `public/` 을 그대로 내보내고,
+  `api/track.js` 만 Vercel 함수로 올라갑니다(의존성은 루트 `package.json`).
   그래서 `source/` 를 바꿨다면 `python3 tools/build.py` 를 돌린 결과까지 커밋해야 합니다
   (안 돌리면 GitHub 자동 점검이 실패로 알려 줍니다).
 - `deadly-sins.vercel.app` 은 이미 다른 사람이 써서 Vercel 이 `-mu` 를 붙였습니다.

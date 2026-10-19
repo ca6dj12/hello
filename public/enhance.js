@@ -10,7 +10,7 @@
      · 폰 뒤로가기 = 앱 안의 뒤로가기
      · 다시 하기 / 맛·향·강도·가격 / 바텐더용 주문 화면 / 전체 메뉴 / 결과 이미지 공유
      · 한국어 ⇄ English
-     · 결과·오류 익명 기록 → 구글 시트 (data.js 의 collect.sheet 가 채워졌을 때만)
+     · 결과·오류 익명 기록 → /api/track → Neon (data.js 의 collect.enabled 로 끄고 켬)
    ============================================================= */
 (function () {
   'use strict';
@@ -27,13 +27,13 @@
   const el = (id) => document.getElementById(id);
 
   /* -----------------------------------------------------------
-     0. 기록 → 구글 시트 (꺼져 있으면 아무 일도 안 함)
-        collect/google-sheets.gs 를 시트의 Apps Script 웹 앱으로 배포하고
-        그 주소를 data.js 의 collect.sheet 에 넣으면 켜진다.
-        text/plain 으로 보내야 CORS 사전 요청 없이 바로 간다(응답은 읽지 않음).
+     0. 기록 → 같은 사이트의 /api/track (api/track.js 가 Neon 에 저장)
+        DB 가 아직 연결 안 돼 있으면 서버가 조용히 버린다.
+        sendBeacon 은 페이지를 닫는 순간에도 전송이 끝까지 간다. 응답은 읽지 않음.
      ----------------------------------------------------------- */
   const COLLECT = DATA.collect || {};
-  const COLLECT_ON = /^https:\/\/script\.google\.com\//.test(COLLECT.sheet || '');
+  const COLLECT_ON = COLLECT.enabled !== false;
+  const ENDPOINT = 'api/track';
   const newSid = () => Math.random().toString(36).slice(2, 10);
   let SID = newSid();
   let errorBudget = 5;
@@ -43,8 +43,8 @@
     try {
       const body = JSON.stringify(Object.assign({ sid: SID, type, lang, v: VERSION }, data || {}));
       const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
-      if (!(navigator.sendBeacon && navigator.sendBeacon(COLLECT.sheet, blob))) {
-        fetch(COLLECT.sheet, { method: 'POST', mode: 'no-cors', keepalive: true, body: blob }).catch(() => {});
+      if (!(navigator.sendBeacon && navigator.sendBeacon(ENDPOINT, blob))) {
+        fetch(ENDPOINT, { method: 'POST', keepalive: true, body: blob }).catch(() => {});
       }
     } catch (e) { /* 기록 실패가 사이트를 멈추면 안 된다 */ }
   }
@@ -246,7 +246,7 @@
     el('resultTitle').textContent = winner.name;
     // 다음 화면에서 쓸 술 이미지를 미리 받아 둔다
     const img = new Image(); img.src = SIGNATURE_DRINKS[winner.k].image;
-    // 뒤로 가서 답을 바꾸면 다시 보낸다. 시트 쪽에서 같은 세션의 결과 줄을 덮어써서 마지막 결과만 남긴다.
+    // 뒤로 가서 답을 바꾸면 다시 보낸다. 서버가 같은 세션의 결과 줄을 덮어써서 마지막 결과만 남긴다.
     track('result', {
       sin: KO[winner.k],
       second: KO[ranked[1].k],

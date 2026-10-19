@@ -11,5 +11,8 @@
     "playwright-core": "^1.63.0",
     "pngjs": "^7.0.0",
     "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8"
   }
 }
