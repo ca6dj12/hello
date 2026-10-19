@@ -10,7 +10,7 @@
      · 폰 뒤로가기 = 앱 안의 뒤로가기
      · 다시 하기 / 맛·향·강도·가격 / 바텐더용 주문 화면 / 전체 메뉴 / 결과 이미지 공유
      · 한국어 ⇄ English
-     · 결과·오류 익명 수집 (data.js 의 collect 가 채워졌을 때만)
+     · 결과·오류 익명 기록 → 구글 시트 (data.js 의 collect.sheet 가 채워졌을 때만)
    ============================================================= */
 (function () {
   'use strict';
@@ -20,35 +20,33 @@
     return;
   }
 
-  const VERSION = '2026-10-17';
+  const VERSION = '2026-10-19';
   const DATA = window.DS_DATA;
   const I18N = window.DS_I18N;
   const N = QUESTIONS.length;
   const el = (id) => document.getElementById(id);
 
   /* -----------------------------------------------------------
-     0. 수집 (꺼져 있으면 아무 일도 안 함)
+     0. 기록 → 구글 시트 (꺼져 있으면 아무 일도 안 함)
+        collect/google-sheets.gs 를 시트의 Apps Script 웹 앱으로 배포하고
+        그 주소를 data.js 의 collect.sheet 에 넣으면 켜진다.
+        text/plain 으로 보내야 CORS 사전 요청 없이 바로 간다(응답은 읽지 않음).
      ----------------------------------------------------------- */
   const COLLECT = DATA.collect || {};
-  const COLLECT_ON = !!(COLLECT.url && COLLECT.key);
-  const SID = Math.random().toString(36).slice(2, 10);
+  const COLLECT_ON = /^https:\/\/script\.google\.com\//.test(COLLECT.sheet || '');
+  const newSid = () => Math.random().toString(36).slice(2, 10);
+  let SID = newSid();
   let errorBudget = 5;
 
   function track(type, data) {
     if (!COLLECT_ON) return;
     try {
-      fetch(COLLECT.url.replace(/\/$/, '') + '/rest/v1/deadly_sins_events', {
-        method: 'POST',
-        keepalive: true,
-        headers: {
-          apikey: COLLECT.key,
-          Authorization: 'Bearer ' + COLLECT.key,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal'
-        },
-        body: JSON.stringify({ sid: SID, type, lang, version: VERSION, data: data || {} })
-      }).catch(() => {});
-    } catch (e) { /* 수집 실패가 사이트를 멈추면 안 된다 */ }
+      const body = JSON.stringify(Object.assign({ sid: SID, type, lang, v: VERSION }, data || {}));
+      const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
+      if (!(navigator.sendBeacon && navigator.sendBeacon(COLLECT.sheet, blob))) {
+        fetch(COLLECT.sheet, { method: 'POST', mode: 'no-cors', keepalive: true, body: blob }).catch(() => {});
+      }
+    } catch (e) { /* 기록 실패가 사이트를 멈추면 안 된다 */ }
   }
   window.addEventListener('error', (e) => {
     if (errorBudget-- <= 0) return;
@@ -82,6 +80,8 @@
     q.a.forEach((o, j) => { o._id = i + '-' + j; o._ko = o.text; o._en = I18N.en.questions[i].a[j]; });
   });
   const SIN_KO = SINS.map((s) => s.name);
+  const KO = {};
+  SINS.forEach((s, i) => { KO[s.k] = SIN_KO[i]; });
   const REACTIONS_KO = REACTIONS.slice();
   const TRAITS_KO = JSON.parse(JSON.stringify(RESULT_TRAITS));
   const DRINK_KO = {};
@@ -140,6 +140,7 @@
   function newSession() {
     QUESTIONS.forEach((q) => shuffle(q.a));
     tieOrder = shuffle(SINS.map((s) => s.k));
+    SID = newSid();
   }
 
   // 원본 calculate 를 대체. 같은 모양({...sin, points})으로 돌려준다.
@@ -245,12 +246,17 @@
     el('resultTitle').textContent = winner.name;
     // 다음 화면에서 쓸 술 이미지를 미리 받아 둔다
     const img = new Image(); img.src = SIGNATURE_DRINKS[winner.k].image;
+    // 뒤로 가서 답을 바꾸면 다시 보낸다. 시트 쪽에서 같은 세션의 결과 줄을 덮어써서 마지막 결과만 남긴다.
     track('result', {
-      top: winner.k,
-      second: ranked[1].k,
+      sin: KO[winner.k],
+      second: KO[ranked[1].k],
       tie: ranked[0].points === ranked[1].points,
-      points: Object.fromEntries(ranked.map((s) => [s.k, s.points])),
-      picks: QUESTIONS.map((q, i) => (q.a[answers[i]] || {})._id)
+      points: ranked.map((s) => KO[s.k] + ' ' + s.points).join(' · '),
+      // 고른 보기를 "원래" 보기 순서로: Q1B = 1번 문항의 디자이너 원본 B 보기
+      picks: QUESTIONS.map((q, i) => {
+        const o = q.a[answers[i]]; if (!o) return '';
+        return 'Q' + (i + 1) + 'ABCD'[Number(o._id.split('-')[1])];
+      }).join(' ')
     });
   };
 
@@ -319,7 +325,7 @@
       const secret = host.querySelector('.sex-secret'); if (secret) secret.setAttribute('aria-label', t('lockMain'));
     }
     renderExtra(currentSin);
-    track('signature', { sin: currentSin });
+    track('signature', { sin: KO[currentSin] });
   };
 
   // 이름이 떠오르면(오버레이가 덮이면) 뒤에 비치던 "당신의 욕망을 채워주세요" 를 숨긴다
@@ -374,7 +380,7 @@
     if (navigator.wakeLock && navigator.wakeLock.request) {
       navigator.wakeLock.request('screen').then((l) => { wakeLock = l; }).catch(() => {});
     }
-    track('order', { sin: k });
+    track('order', { sin: KO[k] });
   }
 
   function openMenu() {
@@ -516,7 +522,7 @@
         if (btn) btn.textContent = t('saved');
         await new Promise((r) => setTimeout(r, 1400));
       }
-      track('share', { sin: k });
+      track('share', { sin: KO[k] });
     } catch (e) {
       track('error', { message: 'share: ' + String(e && e.message || e).slice(0, 200) });
     } finally {

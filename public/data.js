@@ -424,7 +424,7 @@ window.DS_DATA = {
     ]
   },
 
-  /* 결과 · 오류 익명 수집. url 과 key 가 비어 있으면 아무것도 보내지 않습니다.
-     켜는 법은 README 의 "결과 · 오류 수집" 항목과 supabase/deadly_sins_events.sql 참고. */
-  collect: { url: '', key: '' }
+  /* 결과 · 오류 익명 기록 → 구글 시트. 비어 있으면 아무것도 보내지 않습니다.
+     켜는 법: README 의 "결과 기록 (구글 시트)" — 시트에서 배포한 웹 앱 주소(…/exec)를 넣으면 됩니다. */
+  collect: { sheet: '' }
 };
