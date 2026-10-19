@@ -1,12 +1,11 @@
 # 인쇄용 파일
 
-전부 **https://sounds-8kvdl1zbk-ca6dj12s-projects.vercel.app** 를 가리킵니다.
-(만든 뒤 카드 이미지와 PDF 에서 QR 을 실제로 해독해 확인했고, 카드를 폭 166px 까지 줄여도 읽힙니다.)
+전부 **https://deadly-sins-mu.vercel.app** 를 가리킵니다. (고정 주소 — 앞으로 사이트를 고쳐도 바뀌지 않습니다)
+만든 뒤 카드 이미지 · PDF · QR 이미지에서 QR 을 실제로 해독해 이 주소가 나오는 걸 확인했고,
+카드 전체를 폭 166px 까지 줄여도 읽힙니다.
 
-> **예전에 드린 QR 은 전부 폐기하세요.**
-> `sounds-zeta.vercel.app` (10/03) 은 이제 yantai 로 열리고,
-> `sounds-e5486fpmt…` (10/17 오전) 는 예전 14문항 버전입니다.
-> 그 사이 잠깐 있던 `sounds-cwpcbhbom…`, `sounds-78ukdhhoo…` 도 쓰지 마세요.
+> **예전에 드린 QR 은 전부 폐기하세요.** `sounds-…` 로 시작하는 주소는 모두 옛 주소입니다.
+> (`sounds-zeta.vercel.app` 은 yantai 로 열립니다.)
 
 | 파일 | 쓸 곳 |
 |---|---|

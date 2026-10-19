@@ -32,8 +32,9 @@ SRC = ROOT / "source" / "deadly_sins.html"
 OUT = ROOT / "public"
 IMG = OUT / "img"
 
-OG_IMAGE = ("https://raw.githubusercontent.com/ca6dj12/hello/"
-            "claude/deadly-sins-cocktail-qr-9ljntg/public/og.jpg")
+# 링크 미리보기 이미지는 절대 주소여야 한다. Vercel 프로젝트 deadly-sins 의 고정 주소.
+SITE = "https://deadly-sins-mu.vercel.app"
+OG_IMAGE = SITE + "/og.jpg"
 
 # ---------------------------------------------------------------------------
 # 배점 조정표.  (문항 번호 1~7, 선택지 원문) → 새 배점
@@ -97,6 +98,7 @@ def apply_rebalance(html: str) -> str:
 HEAD_INJECT = """
 <meta name="description" content="일곱 개의 질문이 끝나면, 일곱 개의 잔 중 하나가 당신을 고릅니다. DEADLY SINS.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="{site}/">
 <meta property="og:title" content="오늘 밤, 당신은 어떤 죄를 삼키시겠습니까?">
 <meta property="og:description" content="일곱 개의 질문이 끝나면, 일곱 개의 잔 중 하나가 당신을 고릅니다.">
 <meta property="og:image" content="{og}">
@@ -140,7 +142,7 @@ def main() -> None:
 
     # 4) 메타 + 개선 레이어
     html = replace_once(html, "</title>",
-                        "</title>" + HEAD_INJECT.format(og=OG_IMAGE, cover=cover.group(1)),
+                        "</title>" + HEAD_INJECT.format(og=OG_IMAGE, site=SITE, cover=cover.group(1)),
                         "head 주입")
     html = replace_once(html, "</body>", BODY_INJECT.strip("\n"), "body 주입")
 
