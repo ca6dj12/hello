@@ -39,10 +39,9 @@ window.DS_DATA = {
     },
     "질": {
       "line": {
-        "ko": "상큼한 ?향이 톡 오며 마음을 간질인다.",
-        "en": "A bright note lands with a spark and teases the heart.",
-        "confirmed": false,
-        "note": "두 번째 단어 첫 글자가 번져서 못 읽음. 실물 확인 후 고치고 confirmed:true 로."
+        "ko": "상큼한 열망이 톡 쏘며, 마음을 간질인다.",
+        "en": "A bright longing fizzes up and tickles the heart.",
+        "confirmed": true
       },
       "aroma": {
         "ko": "베르가못, 오렌지",
