@@ -490,7 +490,7 @@ window.DS_DATA = {
         "ko": "길고 따뜻한 말린 과일과 스파이스",
         "en": "Long and warm, dried fruit and spice"
       },
-      "photo": null,
+      "photo": "img/menu/macallan-18.webp",
       "photoCredit": null
     },
     "blantons": {
@@ -523,7 +523,7 @@ window.DS_DATA = {
         "ko": "중간 길이, 따뜻한 스파이스",
         "en": "Medium, warm spice"
       },
-      "photo": null,
+      "photo": "img/menu/blantons.webp",
       "photoCredit": null
     },
     "dalmore-15": {
@@ -593,7 +593,7 @@ window.DS_DATA = {
         "ko": "길고 묵직",
         "en": "Long and heavy"
       },
-      "photo": null,
+      "photo": "img/menu/aberlour-abunadh.webp",
       "photoCredit": null
     },
     "glenallachie-15": {
@@ -696,7 +696,7 @@ window.DS_DATA = {
         "ko": "실키하고 스파이시",
         "en": "Silky and spicy"
       },
-      "photo": null,
+      "photo": "img/menu/woodford-reserve.webp",
       "photoCredit": null
     },
     "dewars-12": {
@@ -958,7 +958,7 @@ window.DS_DATA = {
         "ko": "따뜻하고 길다",
         "en": "Warm and long"
       },
-      "photo": null,
+      "photo": "img/menu/old-fashioned.webp",
       "photoCredit": null
     }
   },
