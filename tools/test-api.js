@@ -37,7 +37,7 @@ function fakeRes() {
   };
 
   const handler = require(path.join(ROOT, 'api', 'track.js'));
-  const call = async (method, body) => { const res = fakeRes(); await handler({ method, body }, res); return res; };
+  const call = async (method, body, extra) => { const res = fakeRes(); await handler(Object.assign({ method, body, headers: {}, query: {} }, extra || {}), res); return res; };
 
   console.log('■ DB 연결 전 (DATABASE_URL 없음)');
   delete process.env.DATABASE_URL; delete process.env.POSTGRES_URL;
@@ -75,6 +75,25 @@ function fakeRes() {
 
   const get = await call('GET');
   check(get.body.db === true && get.body.events === rows.length, `GET → db:true, events:${rows.length}`, get.body);
+
+  console.log('\n■ 통계 (?stats=1)');
+  process.env.VERCEL_URL = 'deadly-sins-abc123-ca6dj12s-projects.vercel.app';
+  const pub = await call('GET', undefined, { query: { stats: '1' }, headers: { host: 'deadly-sins-mu.vercel.app' } });
+  check(pub.code === 404 && pub.body === undefined, '공개 주소에서는 404 (통계 숨김)');
+  const spoof = await call('GET', undefined, { query: { stats: '1' }, headers: { host: 'evil.example' } });
+  check(spoof.code === 404, '다른 주소도 404');
+  const fwd = await call('GET', undefined, { query: { stats: '1' }, headers: { host: 'deadly-sins-mu.vercel.app', 'x-forwarded-host': 'deadly-sins-abc123-ca6dj12s-projects.vercel.app' } });
+  check(fwd.code === 404, 'x-forwarded-host 를 꾸며 보내도 404');
+  const own = await call('GET', undefined, { query: { stats: '1' }, headers: { host: 'deadly-sins-abc123-ca6dj12s-projects.vercel.app' } });
+  const st = own.body || {};
+  check(own.code === 200 && st.results && st.results.total === 2, '배포 고유 주소에서는 통계 (완주 2)', st.results);
+  check(st.results && st.results.bySin.some((r) => r.sin === '나태' && r.n === 1 && r.pct === 50), '죄별 명수 · 비율', st.results && st.results.bySin);
+  check(Array.isArray(st.days) && st.days.length >= 1 && st.days[0].finished === 2, '날짜별 (한국 시간)', st.days);
+  check(Array.isArray(st.picks) && st.picks.some((r) => r.pick === 'Q1D' && r.n === 1), '보기별 선택 수', st.picks);
+  check(Array.isArray(st.recent) && st.recent.length === rows.length, '최근 기록', st.recent && st.recent.length);
+  check(Array.isArray(st.errors) && st.errors.some((r) => r.message === 'boom'), '최근 오류', st.errors);
+  delete process.env.VERCEL_URL;
+  check((await call('GET', undefined, { query: { stats: '1' }, headers: { host: 'x' } })).code === 404, 'VERCEL_URL 이 없으면 통계 꺼짐');
 
   // 새 인스턴스가 떠도 스키마 만들기가 다시 돌아도 문제없는지 (if not exists)
   delete require.cache[path.join(ROOT, 'api', 'track.js')];

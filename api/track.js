@@ -1,7 +1,10 @@
 /* =============================================================
    결과 기록 → Neon (Postgres)
-     POST /api/track   사이트가 보내는 기록 한 건을 저장
-     GET  /api/track   연결 상태 확인 ({ db, events })
+     POST /api/track          사이트가 보내는 기록 한 건을 저장
+     GET  /api/track          연결 상태 확인 ({ db, events })
+     GET  /api/track?stats=1  통계 — 배포 전용 주소(…-ca6dj12s-projects.vercel.app)에서만.
+                              그 주소는 Vercel 로그인(Deployment Protection) 뒤에 있어서
+                              팀원만 열 수 있다. 손님이 쓰는 공개 주소에서는 404.
 
    Vercel 프로젝트에 Neon 을 연결하면 생기는 DATABASE_URL 을 쓴다.
    연결 전에는 받은 기록을 조용히 버린다 (사이트는 아무 영향 없음).
@@ -77,6 +80,50 @@ function toRow(d) {
   };
 }
 
+// 통계는 Vercel 로그인 뒤에 있는 "이 배포의 고유 주소" 로 들어온 요청에만 보여 준다.
+// VERCEL_URL = 그 고유 주소. 공개 주소(deadly-sins-mu.vercel.app)로 오면 거절.
+function canSeeStats(req) {
+  const own = process.env.VERCEL_URL;
+  // host 만 본다. x-forwarded-host 같은 헤더는 요청하는 쪽이 마음대로 넣을 수 있다.
+  // (host 를 고유 주소로 바꿔 보내면 Vercel 이 그 배포로 보내면서 로그인 검사를 먼저 한다)
+  const host = String((req.headers && req.headers.host) || '').toLowerCase();
+  return !!own && host === own.toLowerCase();
+}
+
+const KST = "(created_at at time zone 'Asia/Seoul')";
+async function stats(sql) {
+  const q = (text) => sql.query(text);
+  const [types, sins, days, picks, recent, errors] = await Promise.all([
+    q(`select type, count(*)::int as n, count(distinct sid)::int as sessions
+       from deadly_sins_events group by type order by n desc`),
+    q(`select sin, count(*)::int as n, count(*) filter (where tie)::int as ties
+       from deadly_sins_events where type = 'result' group by sin order by n desc`),
+    q(`select to_char(${KST}, 'YYYY-MM-DD') as day,
+              count(distinct sid) filter (where type = 'start')::int  as started,
+              count(*)            filter (where type = 'result')::int as finished,
+              count(distinct sid) filter (where type = 'order')::int  as ordered,
+              count(distinct sid) filter (where type = 'share')::int  as shared
+       from deadly_sins_events group by 1 order by 1 desc limit 30`),
+    q(`select p as pick, count(*)::int as n
+       from deadly_sins_events, unnest(string_to_array(picks, ' ')) as p
+       where type = 'result' and p <> '' group by p order by p`),
+    q(`select to_char(${KST}, 'MM-DD HH24:MI') as at, sid, type, lang, sin, second, tie, picks
+       from deadly_sins_events order by id desc limit 40`),
+    q(`select to_char(${KST}, 'MM-DD HH24:MI') as at, extra->>'message' as message, extra->>'ua' as ua
+       from deadly_sins_events where type = 'error' order by id desc limit 10`)
+  ]);
+  const total = sins.reduce((a, r) => a + r.n, 0);
+  return {
+    generatedAt: new Date().toISOString(),
+    results: { total, bySin: sins.map((r) => Object.assign(r, { pct: total ? Math.round(1000 * r.n / total) / 10 : 0 })) },
+    events: types,
+    days,
+    picks,
+    recent,
+    errors
+  };
+}
+
 async function save(sql, r) {
   const values = [r.sid, r.type, r.lang, r.sin, r.second, r.tie, r.points, r.picks, r.extra, r.version];
   if (r.type === 'result') {
@@ -99,8 +146,11 @@ module.exports = async function handler(req, res) {
   try {
     const sql = db();
     if (req.method === 'GET') {
+      const wantStats = !!(req.query && req.query.stats);
+      if (wantStats && !canSeeStats(req)) return res.status(404).end();
       if (!sql) return res.status(200).json({ db: false });
       await ready;
+      if (wantStats) return res.status(200).json(await stats(sql));
       const [{ n }] = await sql.query('select count(*)::int as n from deadly_sins_events');
       return res.status(200).json({ db: true, events: n });
     }

@@ -128,7 +128,17 @@ python3 -m http.server 8080 --directory public   # http://localhost:8080
 - Neon 무료 요금제의 한도(저장 용량 · 계산 시간)는 바뀔 수 있습니다. 바 한 곳 기록은 한 줄이 수백 바이트라
   넉넉할 것으로 보지만, 정확한 한도는 Neon 요금 페이지를 확인하세요.
 
-### 보는 법 — Neon 콘솔 → SQL Editor 에 붙여 넣기
+### 보는 법 ① — 통계 주소 (Vercel 로그인 필요)
+
+Vercel → `deadly-sins` → Deployments → 맨 위(Production) 배포의 고유 주소
+(`deadly-sins-xxxxxxxx-ca6dj12s-projects.vercel.app`) 뒤에 `/api/track?stats=1` 을 붙여 엽니다.
+죄별 분포 · 날짜별 시작/완주/바텐더 화면 · 보기별 선택 수 · 최근 기록 40건 · 최근 오류가 JSON 으로 나옵니다.
+
+- 이 주소는 Deployment Protection(로그인) 뒤에 있어서 팀원만 열립니다.
+  손님이 쓰는 `deadly-sins-mu.vercel.app/api/track?stats=1` 은 404 입니다.
+- Deployment Protection 을 끄면 고유 주소도 공개되므로 통계도 공개됩니다(주소를 아는 사람에 한해).
+
+### 보는 법 ② — Neon 콘솔 → SQL Editor 에 붙여 넣기
 
 ```sql
 -- 최근 30일 결과 분포 (완전히 고르면 죄마다 약 14%)
