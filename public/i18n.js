@@ -33,6 +33,9 @@ window.DS_I18N = {
       menuNote: '가격은 매장 사정에 따라 바뀔 수 있습니다.',
       tapHint: '이름을 누르면 자세한 설명이 나와요',
       bottle: '보틀', cask: '캐스크', nose: '향', palate: '맛', recipe: '재료', photoBy: '사진', photoEdited: '배경 제거 · 크기 조정',
+      learnMore: '이 술에 대해 알아보기', storyHistory: '이야기', storyLayers: '맛의 흐름', storyServe: '이렇게 마셔 보세요',
+      layerLabels: ['첫 향', '첫 모금', '가운데', '여운'], loading: '불러오는 중…',
+      storyError: '불러오지 못했어요. 잠시 뒤 다시 눌러 주세요.',
       detailNote: '일반적인 제품 정보 기준이에요. 매장에 있는 병(배치 · 연도)에 따라 조금 다를 수 있어요.'
     }
   },
@@ -77,6 +80,9 @@ window.DS_I18N = {
       menuNote: 'Prices may change.',
       tapHint: 'Tap a name for details',
       bottle: 'Bottle', cask: 'Cask', nose: 'Nose', palate: 'Palate', recipe: 'Build', photoBy: 'Photo', photoEdited: 'background removed, resized',
+      learnMore: 'Learn more about this drink', storyHistory: 'The story', storyLayers: 'How it tastes', storyServe: 'How to drink it',
+      layerLabels: ['Nose', 'First sip', 'Mid-palate', 'Finish'], loading: 'Loading…',
+      storyError: 'Could not load this. Please try again in a moment.',
       detailNote: 'General product information; the bottle on our shelf (batch or year) may differ slightly.'
     },
 

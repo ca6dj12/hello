@@ -395,7 +395,10 @@
   // 메뉴 한 줄. 설명이 있는 항목은 누를 수 있는 버튼으로.
   function menuRow(name, price, sub, id) {
     const d = id && detailOf(id);
-    const thumb = d && d.photo ? '<img class="ds-thumb" src="' + esc(d.photo) + '" alt="" loading="lazy">' : '';
+    // 시그니처 잔은 그 죄의 상징(마름모 · 별 · 원 …), 나머지는 병 사진
+    const sym = id && id.indexOf('sig:') === 0 && window.DS_SYMBOLS ? window.DS_SYMBOLS[id.slice(4)] : null;
+    const thumb = sym ? '<img class="ds-sym" src="' + esc(sym) + '" alt="" loading="lazy">'
+      : d && d.photo ? '<img class="ds-thumb" src="' + esc(d.photo) + '" alt="" loading="lazy">' : '';
     const inner = thumb + '<span class="ds-row-name">' + esc(name) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>' +
       '<span class="ds-row-price">' + esc(price) + '</span>';
     if (canOpen(id)) {
@@ -442,7 +445,51 @@
     h += '<p class="ds-note">' + esc(t('menuNote')) + '</p></section></div>';
 
     openOverlay(layer('dsMenu', h));
+    ensureStories().catch(() => {});   // 상세를 누르기 전에 미리 받아 둔다
     track('menu', { from: document.body.dataset.dsScreen });
+  }
+
+  /* '이 술에 대해 알아보기' 원문은 stories.js 에 따로 있다 — 첫 화면 용량에 넣지 않고 메뉴판을 열 때 받아 둔다 */
+  let storiesLoading = null;
+  function ensureStories() {
+    if (window.DS_STORIES) return Promise.resolve();
+    if (!storiesLoading) {
+      storiesLoading = new Promise((res, rej) => {
+        const sc = document.createElement('script');
+        sc.src = 'stories.js?v=' + VERSION;
+        sc.onload = () => res();
+        sc.onerror = () => { storiesLoading = null; sc.remove(); rej(new Error('stories.js')); };
+        document.head.appendChild(sc);
+      });
+    }
+    return storiesLoading;
+  }
+  function storyHtml(st) {
+    const labels = t('layerLabels');
+    let h = '<h3 class="ds-story-h">' + esc(t('storyHistory')) + '</h3><p class="ds-story-p">' + esc(st.history[lang]) + '</p>';
+    h += '<h3 class="ds-story-h">' + esc(t('storyLayers')) + '</h3><ol class="ds-layers">';
+    st.layers.forEach((l, i) => { h += '<li><b>' + esc(labels[i] || '') + '</b><span>' + esc(l[lang]) + '</span></li>'; });
+    h += '</ol>';
+    if (st.serve) h += '<h3 class="ds-story-h">' + esc(t('storyServe')) + '</h3><p class="ds-story-p">' + esc(st.serve[lang]) + '</p>';
+    return h;
+  }
+  function toggleStory(btn) {
+    const box = btn.nextElementSibling;
+    if (!box) return;
+    const open = btn.getAttribute('aria-expanded') !== 'true';
+    btn.setAttribute('aria-expanded', String(open));
+    box.hidden = !open;
+    if (!open) return;
+    const id = btn.getAttribute('data-id');
+    track('item', { id, more: true });
+    if (box.dataset.ready) return;
+    box.innerHTML = '<p class="ds-note">' + esc(t('loading')) + '</p>';
+    ensureStories().then(() => {
+      const st = (window.DS_STORIES || {})[id];
+      box.innerHTML = st ? storyHtml(st) : '<p class="ds-note">' + esc(t('storyError')) + '</p>';
+      if (st) box.dataset.ready = '1';
+      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }).catch(() => { box.innerHTML = '<p class="ds-note">' + esc(t('storyError')) + '</p>'; });
   }
 
   /* 항목 상세 (메뉴판에서 한 줄을 누르면) */
@@ -493,6 +540,10 @@
       '<p class="ds-about">' + esc(L(d.about)) + '</p>' +
       noteList([[t('recipe'), L(d.recipe)], [t('cask'), L(d.cask)], [t('nose'), L(d.nose)], [t('palate'), L(d.palate)], [t('finish'), L(d.finish)]]) +
       (prices ? '<div class="ds-prices">' + prices + '</div>' : '') +
+      (ref.kind === 'whisky' || ref.kind === 'cocktails'
+        ? '<button type="button" class="ds-more" data-ds="more" data-id="' + esc(id) + '" aria-expanded="false">' +
+            esc(t('learnMore')) + '<i aria-hidden="true">↓</i></button><div class="ds-story" hidden></div>'
+        : '') +
       '<p class="ds-note">' + esc(t('detailNote')) + '</p>' +
     '</div>';
   }
@@ -638,6 +689,7 @@
     if (a === 'order') openOrder();
     else if (a === 'menu') openMenu();
     else if (a === 'item') openItem(b.getAttribute('data-id'));
+    else if (a === 'more') toggleStory(b);
     else if (a === 'share') shareResult();
     else if (a === 'restart') restart();
     else if (a === 'close') { if (depth > 0) history.back(); else closeTopOverlay(); }

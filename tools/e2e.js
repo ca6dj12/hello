@@ -189,6 +189,8 @@ async function run(browser, base, lang) {
     rows: document.querySelectorAll('#dsMenu .ds-row').length
   }));
   check(menu.sig === 7 && menu.mine >= 1 && menu.rows > 20, '메뉴: 일곱 잔 + 내 죄 표시 + 전체 품목', menu);
+  const syms = await page.evaluate(() => [...document.querySelectorAll('#dsMenu .ds-sig .ds-sym')].map((i) => i.complete && i.naturalWidth));
+  check(syms.length === 7 && syms.every((w) => w > 0), '일곱 잔 이름 옆에 상징 아이콘', syms);
   await shot(page, lang + '-menu');
 
   // 메뉴 항목 누르기 → 상세 → 폰 뒤로가기는 상세만 닫음
@@ -206,6 +208,20 @@ async function run(browser, base, lang) {
   check(item.en === 'Lagavulin 16' && item.chips.includes('43%') && item.about > 10 &&
     item.prices.length === 2 && item.prices.every((p) => /\d/.test(p)), '위스키 상세: 이름 · 도수 · 설명 · 글라스/보틀 가격', item);
   await shot(page, lang + '-menu-item');
+
+  // 이 술에 대해 알아보기 → 펼침 / 다시 누르면 접힘
+  await page.click('#dsItem [data-ds="more"]');
+  await page.waitForSelector('#dsItem .ds-story .ds-layers li', { timeout: 5000 });
+  await page.waitForTimeout(500);
+  const story = await page.evaluate(() => ({
+    layers: document.querySelectorAll('#dsItem .ds-layers li').length,
+    text: document.querySelector('#dsItem .ds-story').textContent.length,
+    expanded: document.querySelector('#dsItem [data-ds="more"]').getAttribute('aria-expanded')
+  }));
+  check(story.layers === 4 && story.text > 150 && story.expanded === 'true', '알아보기: 이야기 · 맛의 흐름 4단계 · 마시는 법', story);
+  await shot(page, lang + '-menu-item-story');
+  await page.click('#dsItem [data-ds="more"]');
+  check(await page.evaluate(() => document.querySelector('#dsItem .ds-story').hidden), '다시 누르면 접힘');
   await page.goBack();
   await page.waitForTimeout(400);
   check(!(await page.$('#dsItem')) && !!(await page.$('#dsMenu.open')), '폰 뒤로가기 → 상세만 닫히고 메뉴는 그대로');
