@@ -556,7 +556,7 @@ window.DS_DATA = {
         "ko": "부드럽고 달콤한 향신료",
         "en": "Smooth, sweet spice"
       },
-      "photo": null,
+      "photo": "img/menu/dalmore-15.webp",
       "photoCredit": null
     },
     "aberlour-abunadh": {
