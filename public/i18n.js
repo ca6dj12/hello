@@ -32,7 +32,7 @@ window.DS_I18N = {
       menuBites: 'BITES', menuCocktails: 'COCKTAILS', menuBeverages: 'BEVERAGES', menuInfo: 'INFORMATION',
       menuNote: '가격은 매장 사정에 따라 바뀔 수 있습니다.',
       tapHint: '이름을 누르면 자세한 설명이 나와요',
-      bottle: '보틀', cask: '캐스크', nose: '향', palate: '맛', recipe: '재료', photoBy: '사진',
+      bottle: '보틀', cask: '캐스크', nose: '향', palate: '맛', recipe: '재료', photoBy: '사진', photoEdited: '배경 제거 · 크기 조정',
       detailNote: '일반적인 제품 정보 기준이에요. 매장에 있는 병(배치 · 연도)에 따라 조금 다를 수 있어요.'
     }
   },
@@ -76,7 +76,7 @@ window.DS_I18N = {
       menuBites: 'BITES', menuCocktails: 'COCKTAILS', menuBeverages: 'BEVERAGES', menuInfo: 'INFORMATION',
       menuNote: 'Prices may change.',
       tapHint: 'Tap a name for details',
-      bottle: 'Bottle', cask: 'Cask', nose: 'Nose', palate: 'Palate', recipe: 'Build', photoBy: 'Photo',
+      bottle: 'Bottle', cask: 'Cask', nose: 'Nose', palate: 'Palate', recipe: 'Build', photoBy: 'Photo', photoEdited: 'background removed, resized',
       detailNote: 'General product information; the bottle on our shelf (batch or year) may differ slightly.'
     },
 

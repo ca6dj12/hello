@@ -626,8 +626,8 @@ window.DS_DATA = {
         "ko": "길고 달콤한 스파이스",
         "en": "Long, sweet spice"
       },
-      "photo": null,
-      "photoCredit": null
+      "photo": "img/menu/glenallachie-15.webp",
+      "photoCredit": {"author": "Keeezawa", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Glen_allachie_15yo.jpg"}
     },
     "glendronach-12": {
       "kind": {
@@ -795,8 +795,8 @@ window.DS_DATA = {
         "ko": "아주 길고 스모키",
         "en": "Very long and smoky"
       },
-      "photo": null,
-      "photoCredit": null
+      "photo": "img/menu/lagavulin-16.webp",
+      "photoCredit": {"author": "Céréales Killer", "license": "CC BY-SA 3.0", "url": "https://commons.wikimedia.org/wiki/File:Lagavulin_Single_Islay_Malt_16.jpg"}
     },
     "ardbeg-10": {
       "kind": {
@@ -828,8 +828,8 @@ window.DS_DATA = {
         "ko": "길고 스모키",
         "en": "Long and smoky"
       },
-      "photo": null,
-      "photoCredit": null
+      "photo": "img/menu/ardbeg-10.webp",
+      "photoCredit": {"author": "DYVER", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Ardbeg_10_Jahre_Flasche.jpg"}
     },
     "glenmorangie-nectar-dor": {
       "kind": {

@@ -1,1 +1,26 @@
-{}
+{
+  "ardbeg-10": {
+    "author": "DYVER",
+    "license": "CC BY-SA 4.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Ardbeg_10_Jahre_Flasche.jpg",
+    "source": "File:Ardbeg 10 Jahre Flasche.jpg"
+  },
+  "lagavulin-16": {
+    "author": "Céréales Killer",
+    "license": "CC BY-SA 3.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Lagavulin_Single_Islay_Malt_16.jpg",
+    "source": "File:Lagavulin Single Islay Malt 16.jpg",
+    "crop": [
+      0.54,
+      0,
+      0.99,
+      1
+    ]
+  },
+  "glenallachie-15": {
+    "author": "Keeezawa",
+    "license": "CC BY-SA 4.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Glen_allachie_15yo.jpg",
+    "source": "File:Glen allachie 15yo.jpg"
+  }
+}
