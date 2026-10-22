@@ -8,7 +8,9 @@
   photos/src/<메뉴 id>.(jpg|jpeg|png|webp)   원본 사진 (파일 이름 = data.js 의 menu id)
   photos/credits.json                         사진 출처 (자유 이용 허가 사진이면 반드시 적는다)
       { "lagavulin-16": { "author": "홍길동", "license": "CC BY-SA 4.0",
-                          "url": "https://commons.wikimedia.org/wiki/File:..." } }
+                          "url": "https://commons.wikimedia.org/wiki/File:...",
+                          "crop": [0.55, 0, 1, 1] } }
+      crop 은 선택: 원본에서 병만 남길 영역 (왼쪽, 위, 오른쪽, 아래 — 0~1 비율). 상자나 다른 병이 같이 찍혔을 때.
 
   → public/img/menu/<id>.webp   배경을 지운 투명 사진, 800×1000 같은 틀 · 같은 크기 · 같은 바닥선 + 바닥 반사
   → public/data.js 의 details[id].photo / photoCredit 를 채운다
@@ -109,7 +111,7 @@ def update_data(done, credits):
         nxt = entry.search(s, m.end())
         end = nxt.start() if nxt else s.find("\n  },", m.end())
         part = s[m.start():end]
-        c = credits.get(mid)
+        c = {k: v for k, v in (credits.get(mid) or {}).items() if k in ("author", "license", "url")} or None
         part = re.sub(r'"photo": (null|"[^"]*")', '"photo": "img/menu/' + mid + '.webp"', part, count=1)
         part = re.sub(r'"photoCredit": (null|\{[^}]*\})', '"photoCredit": ' + (json.dumps(c, ensure_ascii=False) if c else "null"), part, count=1)
         s = s[:m.start()] + part + s[end:]
@@ -131,6 +133,10 @@ def main():
         im = Image.open(p)
         im.load()
         im = im.convert("RGB")
+        box = (credits.get(p.stem) or {}).get("crop")
+        if box:
+            im = im.crop((round(box[0] * im.width), round(box[1] * im.height),
+                          round(box[2] * im.width), round(box[3] * im.height)))
         cut = im.convert("RGBA")
         cut.putalpha(mask_of(sess, im))
         out = compose(cut)
