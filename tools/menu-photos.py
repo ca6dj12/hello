@@ -11,6 +11,8 @@
                           "url": "https://commons.wikimedia.org/wiki/File:...",
                           "crop": [0.55, 0, 1, 1] } }
       crop 은 선택: 원본에서 병만 남길 영역 (왼쪽, 위, 오른쪽, 아래 — 0~1 비율). 상자나 다른 병이 같이 찍혔을 때.
+      "scene": true 는 안주처럼 접시 · 받침까지 한 장면인 사진: 배경을 지우지 않고 crop 영역을
+      정사각형 900×900 으로 잘라 그대로 쓴다 (data.js 에 "scene": true 가 붙어 메뉴판이 꽉 찬 사진으로 보여 준다).
 
   → public/img/menu/<id>.webp   배경을 지운 투명 사진, 800×1000 같은 틀 · 같은 크기 · 같은 바닥선 + 바닥 반사
   → public/data.js 의 details[id].photo / photoCredit 를 채운다
@@ -29,7 +31,7 @@ import urllib.request
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "photos" / "src"
@@ -43,6 +45,7 @@ W, H = 800, 1000          # 틀
 MAX_H, MAX_W = 0.80, 0.62  # 물건이 차지할 최대 높이 · 너비 (틀 대비)
 FLOOR = 0.86               # 바닥선 (위에서부터)
 REFLECT = 0.10             # 바닥 반사 길이 (틀 높이 대비)
+SCENE = 900                # "scene" 사진의 한 변
 
 
 def fail(msg):
@@ -97,7 +100,7 @@ def compose(cut):
 
 
 def update_data(done, credits):
-    """details 안에서 그 항목의 "photo" / "photoCredit" 두 칸만 바꾼다."""
+    """details 안에서 그 항목의 "photo" / "photoCredit" 두 칸만 바꾼다 (scene 사진이면 "scene": true 도)."""
     s = DATA.read_text(encoding="utf-8")
     start = s.find("  details: {")
     if start < 0:
@@ -114,6 +117,9 @@ def update_data(done, credits):
         c = {k: v for k, v in (credits.get(mid) or {}).items() if k in ("author", "license", "url")} or None
         part = re.sub(r'"photo": (null|"[^"]*")', '"photo": "img/menu/' + mid + '.webp"', part, count=1)
         part = re.sub(r'"photoCredit": (null|\{[^}]*\})', '"photoCredit": ' + (json.dumps(c, ensure_ascii=False) if c else "null"), part, count=1)
+        part = re.sub(r'\n      "scene": true,', '', part)
+        if (credits.get(mid) or {}).get("scene"):
+            part = part.replace('\n      "photo": ', '\n      "scene": true,\n      "photo": ', 1)
         s = s[:m.start()] + part + s[end:]
     DATA.write_text(s, encoding="utf-8")
 
@@ -137,6 +143,13 @@ def main():
         if box:
             src = src.crop((round(box[0] * src.width), round(box[1] * src.height),
                             round(box[2] * src.width), round(box[3] * src.height)))
+        dst = OUT / (p.stem + ".webp")
+        if (credits.get(p.stem) or {}).get("scene"):
+            out = ImageOps.fit(src.convert("RGB"), (SCENE, SCENE), Image.LANCZOS)
+            out.save(dst, "WEBP", quality=82, method=6)
+            done.append(p.stem)
+            print(f"  {p.name} → {dst.relative_to(ROOT)} ({dst.stat().st_size // 1024}KB, 장면 사진)")
+            continue
         alpha = src.getchannel("A")
         if alpha.getextrema()[0] < 250:
             # 이미 배경이 투명한 사진(제품 컷 PNG 등)은 그 투명도를 쓴다 — 모델보다 정확하다.
@@ -153,7 +166,6 @@ def main():
         if out is None:
             print(f"  ! {p.name}: 물건을 못 찾음, 건너뜀")
             continue
-        dst = OUT / (p.stem + ".webp")
         out.save(dst, "WEBP", quality=86, alpha_quality=90, method=6)
         done.append(p.stem)
         note = "" if p.stem in credits else "   ← photos/credits.json 에 출처 없음"

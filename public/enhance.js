@@ -20,7 +20,7 @@
     return;
   }
 
-  const VERSION = '2026-10-19';
+  const VERSION = '2026-10-22';
   const DATA = window.DS_DATA;
   const I18N = window.DS_I18N;
   const N = QUESTIONS.length;
@@ -392,14 +392,15 @@
   const detailOf = (id) => (DATA.details || {})[id] || null;
   const canOpen = (id) => !!id && (id.indexOf('sig:') === 0 || !!detailOf(id));
 
-  // 메뉴 한 줄. 설명이 있는 항목은 누를 수 있는 버튼으로.
-  function menuRow(name, price, sub, id) {
+  // 메뉴 한 줄. 설명이 있는 항목은 누를 수 있는 버튼으로. desc 는 이름 아래 한 줄 설명 (시그니처 잔).
+  function menuRow(name, price, sub, id, desc) {
     const d = id && detailOf(id);
-    // 시그니처 잔은 그 죄의 상징(마름모 · 별 · 원 …), 나머지는 병 사진
+    // 시그니처 잔은 그 죄의 상징(마름모 · 별 · 원 …), 나머지는 병 · 접시 사진
     const sym = id && id.indexOf('sig:') === 0 && window.DS_SYMBOLS ? window.DS_SYMBOLS[id.slice(4)] : null;
     const thumb = sym ? '<img class="ds-sym" src="' + esc(sym) + '" alt="" loading="lazy">'
-      : d && d.photo ? '<img class="ds-thumb" src="' + esc(d.photo) + '" alt="" loading="lazy">' : '';
-    const inner = thumb + '<span class="ds-row-name">' + esc(name) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>' +
+      : d && d.photo ? '<img class="ds-thumb' + (d.scene ? ' ds-thumb-scene' : '') + '" src="' + esc(d.photo) + '" alt="" loading="lazy">' : '';
+    const inner = thumb + '<span class="ds-row-name">' + esc(name) + (sub ? '<small>' + esc(sub) + '</small>' : '') +
+      (desc ? '<small class="ds-row-desc">' + esc(desc) + '</small>' : '') + '</span>' +
       '<span class="ds-row-price">' + esc(price) + '</span>';
     if (canOpen(id)) {
       return '<button type="button" class="ds-row ds-tap" data-ds="item" data-id="' + esc(id) + '">' + inner + '<i class="ds-chev" aria-hidden="true">›</i></button>';
@@ -415,7 +416,8 @@
     SINS.forEach((s) => {
       const d = DATA.drinks[s.k];
       const name = SIGNATURE_DRINKS[s.k].en + ' · ' + (lang === 'en' ? I18N.en.drinkName[s.k] : DRINK_KO[s.k]);
-      h += '<div class="ds-sig' + (s.k === mine ? ' mine' : '') + '">' + menuRow(name, priceOf(), d ? d.aroma[lang] : '', 'sig:' + s.k) +
+      const sub = d ? (d.style ? d.style[lang] : d.aroma[lang]) : '';
+      h += '<div class="ds-sig' + (s.k === mine ? ' mine' : '') + '">' + menuRow(name, priceOf(), sub, 'sig:' + s.k, d && d.desc ? d.desc[lang] : '') +
         (s.k === mine ? '<em>' + esc(t('yourSin')) + '</em>' : '') + '</div>';
     });
     h += '</section>';
@@ -508,7 +510,9 @@
         '<p class="ds-kicker">' + esc(t('menuSeven')) + (k === currentSin ? ' · ' + esc(t('yourSin')) : '') + '</p>' +
         '<h2 class="ds-item-en">' + esc(drink.en) + '</h2>' +
         '<p class="ds-item-ko">' + esc(lang === 'en' ? I18N.en.drinkName[k] : DRINK_KO[k]) + '</p>' +
-        (d.line && d.line.confirmed ? '<p class="ds-about">' + esc(d.line[lang]) + '</p>' : '') +
+        (d.style ? '<ul class="ds-chips"><li>' + esc(d.style[lang]) + '</li></ul>' : '') +
+        (d.desc ? '<p class="ds-about">' + esc(d.desc[lang]) + '</p>' : '') +
+        (d.line && d.line.confirmed ? '<p class="' + (d.desc ? 'ds-quote' : 'ds-about') + '">' + esc(d.line[lang]) + '</p>' : '') +
         noteList([[t('aroma'), d.aroma[lang]], [t('taste'), d.taste[lang]], [t('finish'), d.finish[lang]], [t('strength'), d.strength[lang]]]) +
         '<div class="ds-prices"><div><span>' + esc(t('glass')) + '</span><b>' + esc(priceOf()) + '</b></div></div>' +
       '</div>';
@@ -526,7 +530,7 @@
     if (it.b) prices += '<div><span>' + esc(t('bottle')) + '</span><b>' + esc(krw(it.b)) + '</b></div>';
     if (it.p) prices += '<div><span>' + esc(t('price')) + '</span><b>' + esc(krw(it.p)) + '</b></div>';
     return '<div class="ds-item">' +
-      (d.photo ? '<div class="ds-photo"><img src="' + esc(d.photo) + '" alt=""></div>' : '') +
+      (d.photo ? '<div class="ds-photo' + (d.scene ? ' ds-photo-scene' : '') + '"><img src="' + esc(d.photo) + '" alt=""></div>' : '') +
       (d.photo && d.photoCredit ? '<p class="ds-credit">' + esc(t('photoBy')) + ': ' +
         (d.photoCredit.url ? '<a href="' + esc(d.photoCredit.url) + '" target="_blank" rel="noopener">' : '') +
         esc([d.photoCredit.author, d.photoCredit.license].filter(Boolean).join(' · ')) +
@@ -538,13 +542,13 @@
       (lang === 'ko' ? '<p class="ds-item-ko">' + esc(it.ko) + '</p>' : '') +
       (chips.length ? '<ul class="ds-chips">' + chips.map((c) => '<li>' + esc(c) + '</li>').join('') + '</ul>' : '') +
       '<p class="ds-about">' + esc(L(d.about)) + '</p>' +
-      noteList([[t('recipe'), L(d.recipe)], [t('cask'), L(d.cask)], [t('nose'), L(d.nose)], [t('palate'), L(d.palate)], [t('finish'), L(d.finish)]]) +
+      noteList([[t('plate'), L(d.plate)], [t('recipe'), L(d.recipe)], [t('cask'), L(d.cask)], [t('nose'), L(d.nose)], [t('palate'), L(d.palate)], [t('finish'), L(d.finish)]]) +
       (prices ? '<div class="ds-prices">' + prices + '</div>' : '') +
       (ref.kind === 'whisky' || ref.kind === 'cocktails'
         ? '<button type="button" class="ds-more" data-ds="more" data-id="' + esc(id) + '" aria-expanded="false">' +
             esc(t('learnMore')) + '<i aria-hidden="true">↓</i></button><div class="ds-story" hidden></div>'
         : '') +
-      '<p class="ds-note">' + esc(t('detailNote')) + '</p>' +
+      (ref.kind === 'whisky' ? '<p class="ds-note">' + esc(t('detailNote')) + '</p>' : '') +   // 병 · 배치 이야기라 위스키에만
     '</div>';
   }
   function openItem(id) {
@@ -712,11 +716,13 @@
 
   // 주소 끝이 #menu 면 메뉴를, #menu/<id> 면 그 항목까지 바로 연다 (메뉴판 전용 QR · 링크 공유용)
   function openFromHash() {
-    const m = /^#menu(?:\/([\w:-]+))?$/.exec(location.hash || '');
+    const m = /^#menu(?:\/([\w:%-]+))?$/.exec(location.hash || '');
     if (!m) return;
     history.replaceState(history.state, '', location.pathname + location.search);
     if (!document.getElementById('dsMenu')) openMenu();
-    if (m[1] && canOpen(decodeURIComponent(m[1]))) openItem(decodeURIComponent(m[1]));
+    let id = '';
+    try { id = decodeURIComponent(m[1] || ''); } catch (e) { /* 깨진 주소면 메뉴판만 */ }
+    if (id && canOpen(id)) openItem(id);   // #menu/sig:교 처럼 한글이 들어가면 %EA… 로 인코딩돼 온다
   }
   openFromHash();
   window.addEventListener('hashchange', openFromHash);

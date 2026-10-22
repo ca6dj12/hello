@@ -191,11 +191,14 @@ async function run(browser, base, lang) {
   check(menu.sig === 7 && menu.mine >= 1 && menu.rows > 20, '메뉴: 일곱 잔 + 내 죄 표시 + 전체 품목', menu);
   const syms = await page.evaluate(() => [...document.querySelectorAll('#dsMenu .ds-sig .ds-sym')].map((i) => i.complete && i.naturalWidth));
   check(syms.length === 7 && syms.every((w) => w > 0), '일곱 잔 이름 옆에 상징 아이콘', syms);
+  const sigDesc = await page.evaluate(() => [...document.querySelectorAll('#dsMenu .ds-sig')].map((r) =>
+    [(r.querySelector('small:not(.ds-row-desc)') || {}).textContent || '', ((r.querySelector('.ds-row-desc') || {}).textContent || '').length]));
+  check(sigDesc.length === 7 && sigDesc.every(([style, n]) => style && n > 15), '일곱 잔: 맛 한마디 + 한 줄 설명', sigDesc);
   await shot(page, lang + '-menu');
 
   // 메뉴 항목 누르기 → 상세 → 폰 뒤로가기는 상세만 닫음
   const taps = await page.evaluate(() => document.querySelectorAll('#dsMenu button.ds-tap').length);
-  check(taps >= 7 + 16, '누를 수 있는 항목 (시그니처 7 + 설명 있는 16)', taps);
+  check(taps >= 7 + 18, '누를 수 있는 항목 (시그니처 7 + 설명 있는 18)', taps);
   await page.click('#dsMenu button[data-id="lagavulin-16"]');
   await page.waitForSelector('#dsItem.open', { timeout: 3000 });
   await page.waitForTimeout(400);
@@ -227,10 +230,30 @@ async function run(browser, base, lang) {
   check(!(await page.$('#dsItem')) && !!(await page.$('#dsMenu.open')), '폰 뒤로가기 → 상세만 닫히고 메뉴는 그대로');
   await page.click('#dsMenu button[data-id^="sig:"]');
   await page.waitForSelector('#dsItem.open', { timeout: 3000 });
-  check(await page.evaluate(() => !!document.querySelector('#dsItem .ds-photo-ink img')), '시그니처 상세: 잉크 그림');
+  const sigItem = await page.evaluate(() => ({
+    ink: !!document.querySelector('#dsItem .ds-photo-ink img'),
+    style: (document.querySelector('#dsItem .ds-chips li') || {}).textContent,
+    about: ((document.querySelector('#dsItem .ds-about') || {}).textContent || '').length
+  }));
+  check(sigItem.ink && sigItem.style && sigItem.about > 15, '시그니처 상세: 잉크 그림 · 맛 한마디 · 설명', sigItem);
   await page.click('#dsItem [data-ds="close"]');
   await page.waitForTimeout(400);
   check(!(await page.$('#dsItem')), '상세 닫기 버튼');
+
+  // 안주: 매장 사진(꽉 찬 장면) + 구성 + 가격, 위스키용 안내 문구는 없음
+  await page.click('#dsMenu button[data-id="cherry-yogurt-cream"]');
+  await page.waitForSelector('#dsItem.open', { timeout: 3000 });
+  await page.waitForFunction(() => { const i = document.querySelector('#dsItem .ds-photo-scene img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 5000 });
+  const bite = await page.evaluate(() => ({
+    w: document.querySelector('#dsItem .ds-photo-scene img').naturalWidth,
+    notes: document.querySelectorAll('#dsItem .ds-notes dd').length,
+    price: (document.querySelector('#dsItem .ds-prices b') || {}).textContent,
+    note: !!document.querySelector('#dsItem .ds-note'),
+    more: !!document.querySelector('#dsItem [data-ds="more"]')
+  }));
+  check(bite.w === 900 && bite.notes === 1 && /\d/.test(bite.price || '') && !bite.note && !bite.more, '안주 상세: 사진 · 구성 · 가격', bite);
+  await page.click('#dsItem [data-ds="close"]');
+  await page.waitForTimeout(400);
 
   await page.click('#dsMenu [data-ds="close"]');
   await page.waitForTimeout(400);
@@ -279,6 +302,12 @@ async function run(browser, base, lang) {
   await page.goBack(); await page.waitForTimeout(300);
   await page.goBack(); await page.waitForTimeout(300);
   check(!(await page.$('#dsMenu')) && await screen(page) === 'cover', '뒤로가기 두 번 → 표지');
+  await page.goto('about:blank');
+  await page.goto(base + '#menu/sig:교', { waitUntil: 'networkidle' });
+  await page.waitForSelector('#dsItem.open', { timeout: 3000 });
+  check(await page.evaluate(() => !!document.querySelector('#dsItem .ds-photo-ink')), '#menu/sig:교 (한글 주소) → 교만 상세');
+  await page.goBack(); await page.waitForTimeout(300);
+  await page.goBack(); await page.waitForTimeout(300);
   await page.evaluate(() => { location.hash = '#menu'; });
   await page.waitForSelector('#dsMenu.open', { timeout: 3000 });
   check(true, '페이지 안에서 #menu 로 바뀌어도 메뉴가 열림');

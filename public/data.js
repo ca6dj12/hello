@@ -11,6 +11,7 @@ window.DS_DATA = {
   signaturePrice: 16000,
 
   /* 시그니처 일곱 잔의 맛 (나무 메뉴판 그대로). level 은 강도 1~5.
+     style · desc 는 사장님이 준 칵테일 설명 (2026-10-22). 메뉴판 목록과 상세에 나온다.
      line.confirmed:false 인 문구는 각인을 확실히 못 읽은 것이라 화면에 나가지 않습니다. */
   drinks: {
     "교": {
@@ -18,6 +19,14 @@ window.DS_DATA = {
         "ko": "은은한 꽃향과 단단한 기품이 입안을 지배한다.",
         "en": "Soft florals and a firm poise take over the palate.",
         "confirmed": true
+      },
+      "style": {
+        "ko": "깊고 우아한",
+        "en": "Deep and elegant"
+      },
+      "desc": {
+        "ko": "깊고 부드러운 맛에 화사한 꽃향을 더해 우아한 느낌을 표현한 칵테일.",
+        "en": "Deep, smooth flavour lifted with bright florals — a cocktail of quiet elegance."
       },
       "aroma": {
         "ko": "꽃 향기, 시트러스",
@@ -43,6 +52,14 @@ window.DS_DATA = {
         "en": "A bright longing fizzes up and tickles the heart.",
         "confirmed": true
       },
+      "style": {
+        "ko": "상큼하고 쌉쌀한",
+        "en": "Bright and bittersweet"
+      },
+      "desc": {
+        "ko": "상큼함과 쌉쌀함의 대비로 질투의 양면성을 표현한 칵테일.",
+        "en": "Bright against bitter — a cocktail for the two faces of envy."
+      },
       "aroma": {
         "ko": "베르가못, 오렌지",
         "en": "Bergamot, orange"
@@ -66,6 +83,14 @@ window.DS_DATA = {
         "ko": "불꽃처럼 타오르는 열기가 목을 타고 흐르며 뜨거운 에너지가 폭발한다.",
         "en": "Heat that burns like a flame runs down the throat, then bursts.",
         "confirmed": true
+      },
+      "style": {
+        "ko": "강렬하고 스모키한",
+        "en": "Intense and smoky"
+      },
+      "desc": {
+        "ko": "높은 도수와 짙은 훈연 향으로 분노의 강렬함을 표현한 칵테일.",
+        "en": "High proof and deep smoke — a cocktail with all the force of wrath."
       },
       "aroma": {
         "ko": "스모키, 구운 오크",
@@ -91,6 +116,14 @@ window.DS_DATA = {
         "en": "Smooth and refreshing, it loosens you up and hands you a slow, easy rest.",
         "confirmed": true
       },
+      "style": {
+        "ko": "가볍고 청량한",
+        "en": "Light and crisp"
+      },
+      "desc": {
+        "ko": "가볍고 청량한 맛으로 편안하고 느슨한 느낌을 표현한 칵테일.",
+        "en": "Light and crisp — a cocktail for an easy, unhurried, loosened-up mood."
+      },
       "aroma": {
         "ko": "진저, 시트러스",
         "en": "Ginger, citrus"
@@ -114,6 +147,14 @@ window.DS_DATA = {
         "ko": "달콤한 유혹과 쌉싸름한 깊이가 교차하며 끝없는 욕망을 부른다.",
         "en": "Sweet temptation crosses bitter depth and calls for more.",
         "confirmed": true
+      },
+      "style": {
+        "ko": "강하고 아로마틱한",
+        "en": "Bold and aromatic"
+      },
+      "desc": {
+        "ko": "짙은 허브향과 스파이시함으로 강한 욕망을 표현한 칵테일.",
+        "en": "Dark herbs and spice — a cocktail of strong desire."
       },
       "aroma": {
         "ko": "레몬, 허브, 스파이시",
@@ -139,6 +180,14 @@ window.DS_DATA = {
         "en": "Warm cinnamon fills the mouth and keeps you reaching for more.",
         "confirmed": true
       },
+      "style": {
+        "ko": "달큰하고 농밀한",
+        "en": "Sweet and rich"
+      },
+      "desc": {
+        "ko": "달큰하고 농밀한 맛으로 풍성하고 계속 손이 가는 느낌을 표현한 칵테일.",
+        "en": "Sweet and dense — a generous cocktail you keep reaching for."
+      },
       "aroma": {
         "ko": "아몬드, 사과",
         "en": "Almond, apple"
@@ -162,6 +211,14 @@ window.DS_DATA = {
         "ko": "향긋하고 유혹적인 향기가 혀끝을 간질이며 감각을 자극한다.",
         "en": "A fragrant, tempting scent teases the tongue and wakes the senses.",
         "confirmed": true
+      },
+      "style": {
+        "ko": "향긋하고 달콤한",
+        "en": "Fragrant and sweet"
+      },
+      "desc": {
+        "ko": "은은한 꽃향과 달콤함으로 부드럽고 유혹적인 느낌을 표현한 칵테일.",
+        "en": "Soft florals and sweetness — a cocktail that feels gentle and seductive."
       },
       "aroma": {
         "ko": "꽃 향기, 시트러스",
@@ -959,6 +1016,44 @@ window.DS_DATA = {
         "en": "Warm and long"
       },
       "photo": "img/menu/old-fashioned.webp",
+      "photoCredit": null
+    },
+    "blueberry-pepper-cracker": {
+      "kind": {
+        "ko": "안주",
+        "en": "Bite"
+      },
+      "region": null,
+      "abv": null,
+      "about": {
+        "ko": "블루베리에 후추를 더한 분홍빛 크림을 바삭한 크래커에 얹어 먹는 플레이트. 올리브 · 아몬드 · 블루베리가 곁들여 나온다.",
+        "en": "A blush-pink blueberry cream with cracked pepper, spread on crisp crackers, with olives, almonds and blueberries on the side."
+      },
+      "plate": {
+        "ko": "크래커 · 블루베리 페퍼 크림 · 올리브 · 아몬드 · 블루베리",
+        "en": "Crackers, blueberry-pepper cream, olives, almonds, blueberries"
+      },
+      "scene": true,
+      "photo": "img/menu/blueberry-pepper-cracker.webp",
+      "photoCredit": null
+    },
+    "cherry-yogurt-cream": {
+      "kind": {
+        "ko": "안주 · 디저트",
+        "en": "Bite · dessert"
+      },
+      "region": null,
+      "abv": null,
+      "about": {
+        "ko": "부드러운 요거트 크림 위에 체리 콩포트를 듬뿍 올려 잔에 담아 내는 디저트.",
+        "en": "Soft yogurt cream under a generous spoon of cherry compote, served in a coupe."
+      },
+      "plate": {
+        "ko": "요거트 크림 · 체리 콩포트 · 체리",
+        "en": "Yogurt cream, cherry compote, cherries"
+      },
+      "scene": true,
+      "photo": "img/menu/cherry-yogurt-cream.webp",
       "photoCredit": null
     }
   },
