@@ -928,7 +928,7 @@ window.DS_DATA = {
         "ko": "아주 길다",
         "en": "Very long"
       },
-      "photo": null,
+      "photo": "img/menu/octomore-16-3.webp",
       "photoCredit": null
     },
     "old-fashioned": {
