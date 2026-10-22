@@ -3,6 +3,7 @@
    인쇄물 + 공유 미리보기 이미지 만들기
      cd tools && npm install
      node make-qr.js https://<배포주소>
+     node make-qr.js https://<배포주소> --menu     ← 메뉴판 전용 (주소 끝에 #menu, 메뉴판이 바로 열림)
      (크롬 경로를 직접 줄 때)  CHROME_PATH=/path/to/chrome node make-qr.js https://…
 
    만드는 것
@@ -12,6 +13,10 @@
      print/deadly-sins-table-card.pdf  인쇄소용
      print/deadly-sins-table-card.png  카드 이미지본
      public/og.jpg                     카톡·인스타 링크 미리보기 (1200×630)
+
+   --menu 일 때는 같은 디자인으로 메뉴판 카드를 만든다 (링크 미리보기는 그대로 둠)
+     print/menu-qr.svg · print/menu-qr.png · print/menu-card.html
+     print/deadly-sins-menu-card.pdf · print/deadly-sins-menu-card.png
 
    카드와 미리보기는 사이트 첫 화면 그림을 그대로 씁니다.
    그림의 위는 순백, 아래는 순흑이고 경계가 748px 줄에서 곧게 떨어지므로,
@@ -26,8 +31,10 @@ const { chromium } = require('playwright-core');
 const jsQR = require('jsqr');
 const { PNG } = require('pngjs');
 
-const url = process.argv[2];
-if (!/^https?:\/\//.test(url || '')) {
+const MENU = process.argv.includes('--menu');
+let url = process.argv.slice(2).find((a) => /^https?:\/\//.test(a));
+if (MENU && url && !/#menu$/.test(url)) url = url.replace(/\/?$/, '/') + '#menu';
+if (!url) {
   console.error('주소를 넣어주세요.  예)  node make-qr.js https://deadly-sins.vercel.app');
   process.exit(1);
 }
@@ -45,6 +52,17 @@ const price = Number((fs.readFileSync(path.join(PUBLIC, 'data.js'), 'utf8').matc
 if (!price) { console.error('public/data.js 에서 signaturePrice 를 못 찾음'); process.exit(1); }
 const priceText = price.toLocaleString('ko-KR');
 
+/* 카드 문구와 파일 이름: 기본(퀴즈) / 메뉴판 */
+const KIND = MENU ? {
+  title: '메뉴판 카드', kicker: 'WHISKY · COCKTAILS · BITES',
+  cta: 'QR을 찍으면 메뉴판이 열려요', sub: '이름을 누르면 사진과 설명이 나와요', en: 'OPEN THE MENU',
+  qr: 'menu-qr', html: 'menu-card.html', card: 'deadly-sins-menu-card'
+} : {
+  title: '테이블 카드', kicker: 'SEVEN QUESTIONS · SEVEN GLASSES',
+  cta: 'QR을 찍고, 당신의 죄를 찾으세요', sub: '일곱 개의 잔 · 각 ' + priceText + '원', en: 'FIND YOUR SIN',
+  qr: 'deadly-sins-qr', html: 'card.html', card: 'deadly-sins-table-card'
+};
+
 /* 표지 그림의 기준점 (원본 1024×1536 px) */
 const ART = { w: 1024, h: 1536, horizon: 748 };
 
@@ -55,7 +73,7 @@ function cardHtml(qrSvg) {
   const W = 88, HORIZON = 40, s = W / ART.w, top = HORIZON - ART.horizon * s;
   return `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
-<title>DEADLY SINS — 테이블 카드</title>
+<title>DEADLY SINS — ${KIND.title}</title>
 ${FONTS}
 <style>
  @page{size:105mm 148mm;margin:0}
@@ -82,12 +100,12 @@ ${FONTS}
 </style></head><body>
 <div class="card">
   <canvas class="art" width="${Math.round(ART.w * 105 / W)}" height="${ART.h}" aria-label="Deadly Sins"></canvas>
-  <p class="kicker">SEVEN QUESTIONS · SEVEN GLASSES</p>
+  <p class="kicker">${KIND.kicker}</p>
   <div class="bottom">
     <div class="qr">${qrSvg}</div>
-    <p class="cta">QR을 찍고, 당신의 죄를 찾으세요</p>
-    <p class="price">일곱 개의 잔 · 각 ${priceText}원</p>
-    <p class="en">FIND YOUR SIN</p>
+    <p class="cta">${KIND.cta}</p>
+    <p class="price">${KIND.sub}</p>
+    <p class="en">${KIND.en}</p>
   </div>
 </div>
 <script>
@@ -132,16 +150,16 @@ function decode(file) {
 
 (async () => {
   const qrSvg = await QRCode.toString(url, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } });
-  fs.writeFileSync(path.join(OUT, 'deadly-sins-qr.svg'), qrSvg);
-  await QRCode.toFile(path.join(OUT, 'deadly-sins-qr.png'), url, { width: 1200, margin: 4, errorCorrectionLevel: 'M' });
-  fs.writeFileSync(path.join(OUT, 'card.html'), cardHtml(qrSvg.replace(/<\?xml[^>]*>/, '')));
+  fs.writeFileSync(path.join(OUT, KIND.qr + '.svg'), qrSvg);
+  await QRCode.toFile(path.join(OUT, KIND.qr + '.png'), url, { width: 1200, margin: 4, errorCorrectionLevel: 'M' });
+  fs.writeFileSync(path.join(OUT, KIND.html), cardHtml(qrSvg.replace(/<\?xml[^>]*>/, '')));
 
   const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
   try {
     // 카드: PNG(약 600dpi 상당) + PDF
     const ctx = await browser.newContext({ viewport: { width: 520, height: 700 }, deviceScaleFactor: 6, ignoreHTTPSErrors: true });
     const page = await ctx.newPage();
-    await page.goto('file://' + path.join(OUT, 'card.html'), { waitUntil: 'networkidle' });
+    await page.goto('file://' + path.join(OUT, KIND.html), { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
     await page.waitForSelector('body[data-ready="1"]');
     const fontsOk = await page.evaluate(() => document.fonts.check('900 16px "Noto Sans KR"') && document.fonts.check('500 16px Gelasio'));
@@ -149,7 +167,7 @@ function decode(file) {
     // 카드 폭(105mm)이 정수 픽셀이 아니라 가장자리에 바탕색 실선이 끼므로 안쪽으로 반올림해서 자른다
     const b = await page.locator('.card').boundingBox();
     const x = Math.ceil(b.x), y = Math.ceil(b.y);
-    await page.screenshot({ path: path.join(OUT, 'deadly-sins-table-card.png'),
+    await page.screenshot({ path: path.join(OUT, KIND.card + '.png'),
       clip: { x, y, width: Math.floor(b.x + b.width) - x, height: Math.floor(b.y + b.height) - y } });
     await ctx.close();
 
@@ -157,29 +175,31 @@ function decode(file) {
     // 위 PNG(약 575dpi)를 한 장 그대로 깐 PDF 로 만든다. 인쇄 품질엔 충분하다.
     const pdfCtx = await browser.newContext();
     const pdfPage = await pdfCtx.newPage();
-    const png = fs.readFileSync(path.join(OUT, 'deadly-sins-table-card.png')).toString('base64');
+    const png = fs.readFileSync(path.join(OUT, KIND.card + '.png')).toString('base64');
     await pdfPage.setContent(`<!doctype html><style>@page{size:105mm 148mm;margin:0}*{margin:0}
       img{display:block;width:105mm;height:148mm}</style><img src="data:image/png;base64,${png}">`, { waitUntil: 'load' });
-    await pdfPage.pdf({ path: path.join(OUT, 'deadly-sins-table-card.pdf'), width: '105mm', height: '148mm', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
+    await pdfPage.pdf({ path: path.join(OUT, KIND.card + '.pdf'), width: '105mm', height: '148mm', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
     await pdfCtx.close();
 
-    // 링크 미리보기
+    // 링크 미리보기 (메뉴판 카드를 만들 때는 건드리지 않는다)
+    if (!MENU) {
     const og = await browser.newContext({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1, ignoreHTTPSErrors: true });
     const p2 = await og.newPage();
     await p2.setContent(ogHtml(), { waitUntil: 'networkidle' });
     await p2.evaluate(() => document.fonts.ready);
     await p2.screenshot({ path: path.join(PUBLIC, 'og.jpg'), type: 'jpeg', quality: 82 });
     await og.close();
+    }
   } finally {
     await browser.close();
   }
 
-  const read = decode(path.join(OUT, 'deadly-sins-table-card.png'));
-  const readQr = decode(path.join(OUT, 'deadly-sins-qr.png'));
+  const read = decode(path.join(OUT, KIND.card + '.png'));
+  const readQr = decode(path.join(OUT, KIND.qr + '.png'));
   console.log('만들었습니다 →', url);
-  ['deadly-sins-qr.svg', 'deadly-sins-qr.png', 'card.html', 'deadly-sins-table-card.pdf', 'deadly-sins-table-card.png']
+  [KIND.qr + '.svg', KIND.qr + '.png', KIND.html, KIND.card + '.pdf', KIND.card + '.png']
     .forEach((f) => console.log('  print/' + f));
-  console.log('  public/og.jpg');
+  if (!MENU) console.log('  public/og.jpg');
   console.log(`QR 해독: 카드 ${read === url ? '✓' : '✗ (' + read + ')'} · QR PNG ${readQr === url ? '✓' : '✗ (' + readQr + ')'}`);
   if (read !== url || readQr !== url) process.exitCode = 1;
 })().catch((e) => { console.error(e); process.exit(1); });

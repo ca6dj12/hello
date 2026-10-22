@@ -7,6 +7,18 @@
 > **예전에 드린 QR 은 전부 폐기하세요.** `sounds-…` 로 시작하는 주소는 모두 옛 주소입니다.
 > (`sounds-zeta.vercel.app` 은 yantai 로 열립니다.)
 
+## 메뉴판 전용 카드
+
+`deadly-sins-menu-card.pdf` / `.png`, `menu-qr.svg` / `.png` 는 **https://deadly-sins-mu.vercel.app/#menu** 를 가리킵니다.
+찍으면 퀴즈 표지가 아니라 메뉴판이 바로 열립니다 (뒤로가기를 누르면 표지로). QR 해독으로 주소를 확인했습니다.
+같은 디자인이라 퀴즈 카드와 나란히 두어도 어울립니다.
+
+```bash
+node tools/make-qr.js https://deadly-sins-mu.vercel.app --menu
+```
+
+## 퀴즈 카드
+
 | 파일 | 쓸 곳 |
 |---|---|
 | `deadly-sins-table-card.pdf` | A6(105×148mm) 테이블 카드. 인쇄소에 그대로 넘기면 됩니다 (약 575dpi) |

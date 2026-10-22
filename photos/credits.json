@@ -18,10 +18,13 @@
     ]
   },
   "glenallachie-15": {
-    "author": "Keeezawa",
-    "license": "CC BY-SA 4.0",
-    "url": "https://commons.wikimedia.org/wiki/File:Glen_allachie_15yo.jpg",
-    "source": "File:Glen allachie 15yo.jpg"
+    "source": "사장님 제공 제품 사진 (2026-10-22)",
+    "crop": [
+      0.54,
+      0,
+      0.85,
+      1
+    ]
   },
   "glenfarclas-25": {
     "source": "사장님 제공 제품 사진 (2026-10-22)",
@@ -63,15 +66,12 @@
     "source": "사장님 제공 제품 사진 (2026-10-22)"
   },
   "macallan-18": {
-    "source": "사장님 제공 제품 사진 (2026-10-22)",
-    "crop": [
-      0.545,
-      0,
-      0.75,
-      1
-    ]
+    "source": "사장님 제공 제품 사진 (2026-10-22)"
   },
   "old-fashioned": {
+    "source": "사장님 제공 제품 사진 (2026-10-22)"
+  },
+  "makers-mark": {
     "source": "사장님 제공 제품 사진 (2026-10-22)"
   }
 }

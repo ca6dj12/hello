@@ -64,7 +64,8 @@ python3 -m http.server 8080 --directory public   # http://localhost:8080
 캐스크 · 향/맛/피니시 · 글라스/보틀 가격)가 열리고, 폰 뒤로가기로 하나씩 닫힙니다.
 
 - **메뉴판만 바로 여는 주소**: https://deadly-sins-mu.vercel.app/#menu
-  특정 항목까지: `#menu/lagavulin-16` (id 는 `public/data.js` 참고). 바 테이블에 메뉴판 전용 QR 을 따로 두고 싶을 때.
+  특정 항목까지: `#menu/lagavulin-16` (id 는 `public/data.js` 참고).
+  메뉴판 전용 QR 카드: `print/deadly-sins-menu-card.pdf` (`node tools/make-qr.js <주소> --menu` 로 다시 만듦).
 - 설명은 일반 공개 정보 기준입니다. 아벨라워 아부나흐 · 옥토모어처럼 배치마다 도수가 다른 병은 도수 대신 안내 문구를 띄웁니다.
   매장 병과 다르면 `details` 에서 고치세요.
 - 안주(블루베리 페퍼 크래커 · 체리 요거트 크림)는 가게 고유 메뉴라 설명을 비워 뒀습니다. `details` 에 같은 모양으로 넣으면 눌러집니다.

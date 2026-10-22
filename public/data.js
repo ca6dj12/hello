@@ -627,7 +627,7 @@ window.DS_DATA = {
         "en": "Long, sweet spice"
       },
       "photo": "img/menu/glenallachie-15.webp",
-      "photoCredit": {"author": "Keeezawa", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Glen_allachie_15yo.jpg"}
+      "photoCredit": null
     },
     "glendronach-12": {
       "kind": {
@@ -762,7 +762,7 @@ window.DS_DATA = {
         "ko": "짧고 달콤",
         "en": "Short and sweet"
       },
-      "photo": null,
+      "photo": "img/menu/makers-mark.webp",
       "photoCredit": null
     },
     "lagavulin-16": {
