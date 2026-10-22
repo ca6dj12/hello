@@ -22,5 +22,26 @@
     "license": "CC BY-SA 4.0",
     "url": "https://commons.wikimedia.org/wiki/File:Glen_allachie_15yo.jpg",
     "source": "File:Glen allachie 15yo.jpg"
+  },
+  "glenfarclas-25": {
+    "source": "사장님 제공 제품 사진 (2026-10-22)",
+    "crop": [
+      0.18,
+      0,
+      0.515,
+      1
+    ]
+  },
+  "glendronach-12": {
+    "source": "사장님 제공 제품 사진 (2026-10-22)"
+  },
+  "dewars-12": {
+    "source": "사장님 제공 제품 사진 (2026-10-22)"
+  },
+  "glenmorangie-nectar-dor": {
+    "source": "사장님 제공 제품 사진 (2026-10-22)"
+  },
+  "balvenie-14-caribbean": {
+    "source": "사장님 제공 제품 사진 (2026-10-22)"
   }
 }

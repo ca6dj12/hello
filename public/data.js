@@ -457,7 +457,7 @@ window.DS_DATA = {
         "ko": "길고 드라이, 커피와 오크",
         "en": "Long and dry, coffee and oak"
       },
-      "photo": null,
+      "photo": "img/menu/glenfarclas-25.webp",
       "photoCredit": null
     },
     "macallan-18": {
@@ -659,7 +659,7 @@ window.DS_DATA = {
         "ko": "부드럽고 달콤",
         "en": "Soft and sweet"
       },
-      "photo": null,
+      "photo": "img/menu/glendronach-12.webp",
       "photoCredit": null
     },
     "woodford-reserve": {
@@ -729,7 +729,7 @@ window.DS_DATA = {
         "ko": "가볍고 깔끔",
         "en": "Light and clean"
       },
-      "photo": null,
+      "photo": "img/menu/dewars-12.webp",
       "photoCredit": null
     },
     "makers-mark": {
@@ -861,7 +861,7 @@ window.DS_DATA = {
         "ko": "길고 달콤",
         "en": "Long and sweet"
       },
-      "photo": null,
+      "photo": "img/menu/glenmorangie-nectar-dor.webp",
       "photoCredit": null
     },
     "balvenie-14-caribbean": {
@@ -894,7 +894,7 @@ window.DS_DATA = {
         "ko": "부드럽고 따뜻",
         "en": "Soft and warm"
       },
-      "photo": null,
+      "photo": "img/menu/balvenie-14-caribbean.webp",
       "photoCredit": null
     },
     "octomore-16-3": {

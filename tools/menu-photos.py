@@ -130,15 +130,25 @@ def main():
     sess = session()
     done = []
     for p in files:
-        im = Image.open(p)
-        im.load()
-        im = im.convert("RGB")
+        src = Image.open(p)
+        src.load()
+        src = src.convert("RGBA")
         box = (credits.get(p.stem) or {}).get("crop")
         if box:
-            im = im.crop((round(box[0] * im.width), round(box[1] * im.height),
-                          round(box[2] * im.width), round(box[3] * im.height)))
-        cut = im.convert("RGBA")
-        cut.putalpha(mask_of(sess, im))
+            src = src.crop((round(box[0] * src.width), round(box[1] * src.height),
+                            round(box[2] * src.width), round(box[3] * src.height)))
+        alpha = src.getchannel("A")
+        if alpha.getextrema()[0] < 250:
+            # 이미 배경이 투명한 사진(제품 컷 PNG 등)은 그 투명도를 쓴다 — 모델보다 정확하다.
+            # 다만 제품 컷에 깔린 옅은 그림자 · 빛번짐(반투명)은 검은 무대에서 뿌옇게 떠 보이므로 걷어 낸다.
+            a = np.asarray(alpha, dtype=np.float32) / 255
+            a = np.clip((a - 0.55) / 0.40, 0, 1)
+            cut = src
+            cut.putalpha(Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.5)))
+        else:
+            im = src.convert("RGB")
+            cut = src
+            cut.putalpha(mask_of(sess, im))
         out = compose(cut)
         if out is None:
             print(f"  ! {p.name}: 물건을 못 찾음, 건너뜀")
