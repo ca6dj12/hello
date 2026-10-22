@@ -55,6 +55,7 @@ function fakeRes() {
   check((await send({ sid: 'x', type: 'error', message: 'boom', file: 'enhance.js', line: 3, ua: 'UA' })).code === 204, '오류 저장 (기타는 jsonb)');
   check((await call('POST', { sid: 'obj', type: 'start' })).code === 204, '본문이 이미 객체여도 저장');
   check((await call('POST', Buffer.from('{"sid":"buf","type":"menu"}'))).code === 204, '본문이 Buffer 여도 저장');
+  check((await send({ sid: 'abc', type: 'item', id: 'lagavulin-16' })).code === 204, '메뉴 항목 열람 저장');
   check((await send({ sid: 'x', type: 'drop table' })).code === 400, '모르는 종류 → 400');
   check((await send({ sid: 'x', type: 'result', sin: '<script>' })).code === 400, '이상한 죄 이름의 결과 → 400');
   check((await send({ type: 'start' })).code === 400, '세션 없음 → 400');
@@ -92,6 +93,7 @@ function fakeRes() {
   check(Array.isArray(st.picks) && st.picks.some((r) => r.pick === 'Q1D' && r.n === 1), '보기별 선택 수', st.picks);
   check(Array.isArray(st.recent) && st.recent.length === rows.length, '최근 기록', st.recent && st.recent.length);
   check(Array.isArray(st.errors) && st.errors.some((r) => r.message === 'boom'), '최근 오류', st.errors);
+  check(Array.isArray(st.items) && st.items.some((r) => r.id === 'lagavulin-16' && r.n === 1), '많이 눌러 본 메뉴', st.items);
   delete process.env.VERCEL_URL;
   check((await call('GET', undefined, { query: { stats: '1' }, headers: { host: 'x' } })).code === 404, 'VERCEL_URL 이 없으면 통계 꺼짐');
 

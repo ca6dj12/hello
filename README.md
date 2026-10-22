@@ -47,6 +47,8 @@ python3 -m http.server 8080 --directory public   # http://localhost:8080
 | 시그니처 가격 | `public/data.js` 의 `signaturePrice` | 아니오 |
 | 위스키 · 안주 · 음료 메뉴와 가격 | `public/data.js` 의 `menu` | 아니오 |
 | 잔마다 향 · 맛 · 피니시 · 강도 · 한 줄 소개 | `public/data.js` 의 `drinks` | 아니오 |
+| 위스키 · 칵테일 상세 설명 (메뉴판에서 누르면 나오는 것) | `public/data.js` 의 `details` (키 = 메뉴 `id`) | 아니오 |
+| 메뉴 사진 | `photos/src/<id>.jpg` + `photos/credits.json` → `python3 tools/menu-photos.py` | 아니오 (사진 처리만) |
 | 영어 문구 | `public/i18n.js` | 아니오 |
 | 질문 · 보기 · 배점 · 그림 · 디자인 | 디자이너가 원본을 새로 주면 `source/` 교체 | **예** → `python3 tools/build.py` |
 
@@ -55,6 +57,18 @@ python3 -m http.server 8080 --directory public   # http://localhost:8080
 > `data.js` 의 메뉴 가격은 2026-09-18 메뉴판 사진 기준입니다. 시그니처는 16,000원(2026-10-17 확인).
 > 일곱 잔의 한 줄 소개는 나무 메뉴판 문구 그대로입니다(2026-10-20 사장님 확인 반영).
 > 확실하지 않은 문구는 `confirmed: false` 로 두면 화면에 나가지 않습니다.
+
+## 메뉴판
+
+표지 오른쪽 위 MENU, 또는 결과 화면의 "전체 메뉴" 로 열립니다. 이름을 누르면 상세(사진 · 종류 · 산지 · 도수 ·
+캐스크 · 향/맛/피니시 · 글라스/보틀 가격)가 열리고, 폰 뒤로가기로 하나씩 닫힙니다.
+
+- **메뉴판만 바로 여는 주소**: https://deadly-sins-mu.vercel.app/#menu
+  특정 항목까지: `#menu/lagavulin-16` (id 는 `public/data.js` 참고). 바 테이블에 메뉴판 전용 QR 을 따로 두고 싶을 때.
+- 설명은 일반 공개 정보 기준입니다. 아벨라워 아부나흐 · 옥토모어처럼 배치마다 도수가 다른 병은 도수 대신 안내 문구를 띄웁니다.
+  매장 병과 다르면 `details` 에서 고치세요.
+- 안주(블루베리 페퍼 크래커 · 체리 요거트 크림)는 가게 고유 메뉴라 설명을 비워 뒀습니다. `details` 에 같은 모양으로 넣으면 눌러집니다.
+- 사진은 `photos/README.md` 참고. 배경을 지우고 같은 틀에 맞춰 넣으므로, 어떤 배경에서 찍은 사진이든 똑같은 무대 위에 선 것처럼 나옵니다.
 
 ## 결과 쏠림 — 측정값 (2026-10-17, 7문항 원본)
 

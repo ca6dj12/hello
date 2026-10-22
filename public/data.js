@@ -203,13 +203,13 @@ window.DS_DATA = {
         "items": [
           {
             "ko": "글렌파클라스 25년",
-            "en": "Glenfarclas 25",
+            "en": "Glenfarclas 25", "id": "glenfarclas-25",
             "g": "95,000",
             "b": "1,570,000"
           },
           {
             "ko": "맥캘란 18년 셰리",
-            "en": "Macallan 18 Sherry",
+            "en": "Macallan 18 Sherry", "id": "macallan-18",
             "g": "63,000",
             "b": "990,000"
           }
@@ -224,13 +224,13 @@ window.DS_DATA = {
         "items": [
           {
             "ko": "블랑톤",
-            "en": "Blanton's",
+            "en": "Blanton's", "id": "blantons",
             "g": "35,000",
             "b": "600,000"
           },
           {
             "ko": "달모어 15년",
-            "en": "Dalmore 15",
+            "en": "Dalmore 15", "id": "dalmore-15",
             "g": "28,000",
             "b": "450,000"
           }
@@ -245,13 +245,13 @@ window.DS_DATA = {
         "items": [
           {
             "ko": "아벨라워 아부나흐",
-            "en": "Aberlour A'bunadh",
+            "en": "Aberlour A'bunadh", "id": "aberlour-abunadh",
             "g": "28,000",
             "b": "450,000"
           },
           {
             "ko": "글렌알라키 15년",
-            "en": "GlenAllachie 15",
+            "en": "GlenAllachie 15", "id": "glenallachie-15",
             "g": "25,000",
             "b": "400,000"
           }
@@ -266,13 +266,13 @@ window.DS_DATA = {
         "items": [
           {
             "ko": "글렌드로낙 12년",
-            "en": "GlenDronach 12",
+            "en": "GlenDronach 12", "id": "glendronach-12",
             "g": "16,000",
             "b": "250,000"
           },
           {
             "ko": "우드포드 리저브",
-            "en": "Woodford Reserve",
+            "en": "Woodford Reserve", "id": "woodford-reserve",
             "g": "14,000",
             "b": "190,000"
           }
@@ -287,13 +287,13 @@ window.DS_DATA = {
         "items": [
           {
             "ko": "듀어스 12년",
-            "en": "Dewar's 12",
+            "en": "Dewar's 12", "id": "dewars-12",
             "g": "9,000",
             "b": "140,000"
           },
           {
             "ko": "메이커스 마크",
-            "en": "Maker's Mark",
+            "en": "Maker's Mark", "id": "makers-mark",
             "g": "9,000",
             "b": "140,000"
           }
@@ -308,13 +308,13 @@ window.DS_DATA = {
         "items": [
           {
             "ko": "라가불린 16년",
-            "en": "Lagavulin 16",
+            "en": "Lagavulin 16", "id": "lagavulin-16",
             "g": "23,000",
             "b": "370,000"
           },
           {
             "ko": "아드벡 10년",
-            "en": "Ardbeg 10",
+            "en": "Ardbeg 10", "id": "ardbeg-10",
             "g": "15,000",
             "b": "220,000"
           }
@@ -329,13 +329,13 @@ window.DS_DATA = {
         "items": [
           {
             "ko": "글렌모렌지 넥타도르",
-            "en": "Glenmorangie Nectar d'Or",
+            "en": "Glenmorangie Nectar d'Or", "id": "glenmorangie-nectar-dor",
             "g": "25,000",
             "b": "400,000"
           },
           {
             "ko": "발베니 14년 캐리비안",
-            "en": "Balvenie 14 Caribbean Cask",
+            "en": "Balvenie 14 Caribbean Cask", "id": "balvenie-14-caribbean",
             "g": "24,000",
             "b": "380,000"
           }
@@ -351,7 +351,7 @@ window.DS_DATA = {
       "items": [
         {
           "ko": "옥토모어 16.3",
-          "en": "Octomore 16.3",
+          "en": "Octomore 16.3", "id": "octomore-16-3",
           "g": "75,000",
           "b": "1,220,000"
         }
@@ -360,19 +360,19 @@ window.DS_DATA = {
     "bites": [
       {
         "ko": "블루베리 페퍼 크래커",
-        "en": "Blueberry Pepper Cracker",
+        "en": "Blueberry Pepper Cracker", "id": "blueberry-pepper-cracker",
         "p": "8,000"
       },
       {
         "ko": "체리 요거트 크림",
-        "en": "Cherry Yogurt Cream",
+        "en": "Cherry Yogurt Cream", "id": "cherry-yogurt-cream",
         "p": "8,000"
       }
     ],
     "cocktails": [
       {
         "ko": "올드패션드",
-        "en": "Old Fashioned",
+        "en": "Old Fashioned", "id": "old-fashioned",
         "p": "22,000"
       }
     ],
@@ -421,6 +421,546 @@ window.DS_DATA = {
         "en": "Broken glassware or fixtures are charged at 50% of the purchase price."
       }
     ]
+  },
+
+  /* 메뉴 상세 설명 — 메뉴판에서 항목을 누르면 나온다. 키는 menu 의 id.
+     일반 공개 정보 기준. 매장 보틀(빈티지 · 배치)에 따라 도수나 맛이 다를 수 있으니 사장님 확인 권장.
+     abv 가 null 이면 abvNote 를 보여 준다. photo 는 tools/menu-photos.py 로 만든 사진 경로. */
+  details: {
+    "glenfarclas-25": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 스페이사이드",
+        "en": "Speyside, Scotland"
+      },
+      "abv": "43%",
+      "cask": {
+        "ko": "올로로소 셰리",
+        "en": "Oloroso sherry"
+      },
+      "about": {
+        "ko": "1865년부터 한 가문(그랜트 가)이 지켜 온 증류소의 25년 숙성. 셰리 통이 만든 깊이를 오래 즐기는 잔.",
+        "en": "Twenty-five years from a distillery one family (the Grants) has run since 1865. Deep, slow, sherried."
+      },
+      "nose": {
+        "ko": "건포도, 말린 과일, 셰리, 오크",
+        "en": "Raisin, dried fruit, sherry, oak"
+      },
+      "palate": {
+        "ko": "다크 초콜릿, 호두, 향신료",
+        "en": "Dark chocolate, walnut, spice"
+      },
+      "finish": {
+        "ko": "길고 드라이, 커피와 오크",
+        "en": "Long and dry, coffee and oak"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "macallan-18": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 스페이사이드",
+        "en": "Speyside, Scotland"
+      },
+      "abv": "43%",
+      "cask": {
+        "ko": "스페인 헤레스 셰리 시즈닝 오크",
+        "en": "Sherry-seasoned oak from Jerez"
+      },
+      "about": {
+        "ko": "헤레스에서 셰리로 길들인 오크 통에서만 18년. 맥캘란을 상징하는 한 병.",
+        "en": "Eighteen years in oak seasoned with sherry in Jerez — the bottle Macallan is known for."
+      },
+      "nose": {
+        "ko": "말린 과일, 생강, 오렌지 껍질",
+        "en": "Dried fruit, ginger, orange peel"
+      },
+      "palate": {
+        "ko": "건포도, 다크 초콜릿, 시나몬",
+        "en": "Raisin, dark chocolate, cinnamon"
+      },
+      "finish": {
+        "ko": "길고 따뜻한 말린 과일과 스파이스",
+        "en": "Long and warm, dried fruit and spice"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "blantons": {
+      "kind": {
+        "ko": "켄터키 스트레이트 버번",
+        "en": "Kentucky straight bourbon"
+      },
+      "region": {
+        "ko": "미국 켄터키",
+        "en": "Kentucky, USA"
+      },
+      "abv": "46.5%",
+      "cask": {
+        "ko": "싱글 배럴 (새 아메리칸 오크)",
+        "en": "Single barrel, new American oak"
+      },
+      "about": {
+        "ko": "처음으로 \"싱글 배럴\"을 내건 버번. 병마개의 경주마는 8가지 자세라 모으는 사람도 있다.",
+        "en": "The first bourbon sold as a single barrel. The racehorse stopper comes in eight poses — people collect them."
+      },
+      "nose": {
+        "ko": "바닐라, 캐러멜, 오렌지 껍질",
+        "en": "Vanilla, caramel, orange peel"
+      },
+      "palate": {
+        "ko": "꿀, 토피, 시트러스",
+        "en": "Honey, toffee, citrus"
+      },
+      "finish": {
+        "ko": "중간 길이, 따뜻한 스파이스",
+        "en": "Medium, warm spice"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "dalmore-15": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 하이랜드",
+        "en": "Highlands, Scotland"
+      },
+      "abv": "40%",
+      "cask": {
+        "ko": "버번 통 → 세 가지 셰리 통 마무리",
+        "en": "Bourbon cask, finished in three sherry casks"
+      },
+      "about": {
+        "ko": "병에 박힌 12갈래 뿔의 수사슴. 세 종류의 셰리 통에서 마무리한 하이랜드 몰트.",
+        "en": "The twelve-point stag on the bottle. A Highland malt finished in three kinds of sherry cask."
+      },
+      "nose": {
+        "ko": "오렌지 마멀레이드, 크리스마스 케이크",
+        "en": "Orange marmalade, Christmas cake"
+      },
+      "palate": {
+        "ko": "오렌지, 생강, 다크 초콜릿",
+        "en": "Orange, ginger, dark chocolate"
+      },
+      "finish": {
+        "ko": "부드럽고 달콤한 향신료",
+        "en": "Smooth, sweet spice"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "aberlour-abunadh": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 스페이사이드",
+        "en": "Speyside, Scotland"
+      },
+      "abv": null,
+      "abvNote": {
+        "ko": "캐스크 스트렝스 · 배치마다 다름 (보통 60% 안팎)",
+        "en": "Cask strength, varies by batch (around 60%)"
+      },
+      "cask": {
+        "ko": "올로로소 셰리",
+        "en": "Oloroso sherry"
+      },
+      "about": {
+        "ko": "물을 섞지 않고 통에서 꺼낸 그대로. 이름은 게일어로 \"근원\". 물을 몇 방울 떨어뜨려 보는 것도 좋다.",
+        "en": "Bottled straight from the cask, no water added. Gaelic for \"the origin\". Try a few drops of water."
+      },
+      "nose": {
+        "ko": "오렌지, 체리, 다크 초콜릿",
+        "en": "Orange, cherry, dark chocolate"
+      },
+      "palate": {
+        "ko": "진한 셰리, 건포도, 생강",
+        "en": "Rich sherry, raisin, ginger"
+      },
+      "finish": {
+        "ko": "길고 묵직",
+        "en": "Long and heavy"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "glenallachie-15": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 스페이사이드",
+        "en": "Speyside, Scotland"
+      },
+      "abv": "46%",
+      "cask": {
+        "ko": "페드로 히메네스 · 올로로소 셰리",
+        "en": "Pedro Ximénez and Oloroso sherry"
+      },
+      "about": {
+        "ko": "업계의 전설 빌리 워커가 되살린 증류소의 15년. 냉각 여과 없이, 색소 없이.",
+        "en": "Fifteen years from the distillery Billy Walker revived. No chill filtering, no added colour."
+      },
+      "nose": {
+        "ko": "무화과, 건포도, 다크 초콜릿",
+        "en": "Fig, raisin, dark chocolate"
+      },
+      "palate": {
+        "ko": "셰리, 토피, 시나몬",
+        "en": "Sherry, toffee, cinnamon"
+      },
+      "finish": {
+        "ko": "길고 달콤한 스파이스",
+        "en": "Long, sweet spice"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "glendronach-12": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 하이랜드",
+        "en": "Highlands, Scotland"
+      },
+      "abv": "43%",
+      "cask": {
+        "ko": "페드로 히메네스 · 올로로소 셰리",
+        "en": "Pedro Ximénez and Oloroso sherry"
+      },
+      "about": {
+        "ko": "셰리 위스키를 처음 마신다면 흔히 권하는 한 잔. 달고 둥글다.",
+        "en": "An often-recommended first sherried malt. Sweet and round."
+      },
+      "nose": {
+        "ko": "건포도, 바닐라, 시나몬",
+        "en": "Raisin, vanilla, cinnamon"
+      },
+      "palate": {
+        "ko": "셰리, 말린 과일, 견과",
+        "en": "Sherry, dried fruit, nuts"
+      },
+      "finish": {
+        "ko": "부드럽고 달콤",
+        "en": "Soft and sweet"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "woodford-reserve": {
+      "kind": {
+        "ko": "켄터키 스트레이트 버번",
+        "en": "Kentucky straight bourbon"
+      },
+      "region": {
+        "ko": "미국 켄터키",
+        "en": "Kentucky, USA"
+      },
+      "abv": null,
+      "abvNote": {
+        "ko": "43.2% (미국 판매분은 45.2%)",
+        "en": "43.2% (45.2% in the US)"
+      },
+      "cask": {
+        "ko": "새 아메리칸 오크 (내부를 태운 통)",
+        "en": "New charred American oak"
+      },
+      "about": {
+        "ko": "켄터키 더비의 공식 버번. 구리 단식 증류기로 세 번 증류한 원액을 섞어 만든다.",
+        "en": "The official bourbon of the Kentucky Derby, blended with whiskey triple-distilled in copper pot stills."
+      },
+      "nose": {
+        "ko": "바닐라, 캐러멜, 말린 과일",
+        "en": "Vanilla, caramel, dried fruit"
+      },
+      "palate": {
+        "ko": "코코아, 토피, 시나몬",
+        "en": "Cocoa, toffee, cinnamon"
+      },
+      "finish": {
+        "ko": "실키하고 스파이시",
+        "en": "Silky and spicy"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "dewars-12": {
+      "kind": {
+        "ko": "블렌디드 스카치",
+        "en": "Blended Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드",
+        "en": "Scotland"
+      },
+      "abv": "40%",
+      "cask": {
+        "ko": "블렌딩 후 오크 통에서 한 번 더 숙성 (더블 에이징)",
+        "en": "Married again in oak after blending (\"double aged\")"
+      },
+      "about": {
+        "ko": "섞은 뒤 다시 통에서 재워 부드럽게 만든 블렌디드. 하이볼로도 좋다.",
+        "en": "Blended, then rested in oak again for smoothness. Great as a highball too."
+      },
+      "nose": {
+        "ko": "꿀, 바닐라, 서양배",
+        "en": "Honey, vanilla, pear"
+      },
+      "palate": {
+        "ko": "부드러운 꿀, 캐러멜",
+        "en": "Soft honey, caramel"
+      },
+      "finish": {
+        "ko": "가볍고 깔끔",
+        "en": "Light and clean"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "makers-mark": {
+      "kind": {
+        "ko": "켄터키 스트레이트 버번",
+        "en": "Kentucky straight bourbon"
+      },
+      "region": {
+        "ko": "미국 켄터키",
+        "en": "Kentucky, USA"
+      },
+      "abv": "45%",
+      "cask": {
+        "ko": "새 아메리칸 오크 (내부를 태운 통)",
+        "en": "New charred American oak"
+      },
+      "about": {
+        "ko": "호밀 대신 붉은 겨울 밀을 넣어 부드러운 버번. 병목의 빨간 왁스는 하나하나 손으로 담근다.",
+        "en": "Red winter wheat instead of rye makes it soft. Every red wax top is hand-dipped."
+      },
+      "nose": {
+        "ko": "캐러멜, 바닐라",
+        "en": "Caramel, vanilla"
+      },
+      "palate": {
+        "ko": "부드러운 밀, 캐러멜, 과일",
+        "en": "Soft wheat, caramel, fruit"
+      },
+      "finish": {
+        "ko": "짧고 달콤",
+        "en": "Short and sweet"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "lagavulin-16": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 아일라",
+        "en": "Islay, Scotland"
+      },
+      "abv": "43%",
+      "cask": {
+        "ko": "주로 버번 통",
+        "en": "Mostly ex-bourbon casks"
+      },
+      "about": {
+        "ko": "아일라 섬의 묵직한 피트 위스키를 대표하는 한 병. 모닥불 연기와 바다 냄새.",
+        "en": "The classic heavy Islay peat. Bonfire smoke and the sea."
+      },
+      "nose": {
+        "ko": "피트 스모크, 요오드, 해초",
+        "en": "Peat smoke, iodine, seaweed"
+      },
+      "palate": {
+        "ko": "스모크, 셰리 같은 단맛, 짠맛",
+        "en": "Smoke, sherry-like sweetness, salt"
+      },
+      "finish": {
+        "ko": "아주 길고 스모키",
+        "en": "Very long and smoky"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "ardbeg-10": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 아일라",
+        "en": "Islay, Scotland"
+      },
+      "abv": "46%",
+      "cask": {
+        "ko": "버번 통 · 냉각 여과 없음",
+        "en": "Ex-bourbon casks, not chill-filtered"
+      },
+      "about": {
+        "ko": "가장 스모키한 아일라 몰트로 자주 꼽히는 10년. 강하지만 레몬처럼 상쾌한 끝.",
+        "en": "Often called the smokiest Islay ten-year-old. Fierce, with a lemony lift."
+      },
+      "nose": {
+        "ko": "피트, 레몬, 타르",
+        "en": "Peat, lemon, tar"
+      },
+      "palate": {
+        "ko": "스모크, 에스프레소, 시트러스",
+        "en": "Smoke, espresso, citrus"
+      },
+      "finish": {
+        "ko": "길고 스모키",
+        "en": "Long and smoky"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "glenmorangie-nectar-dor": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 하이랜드",
+        "en": "Highlands, Scotland"
+      },
+      "abv": "46%",
+      "cask": {
+        "ko": "버번 통 → 프랑스 소테른 와인 통 마무리",
+        "en": "Bourbon cask, finished in Sauternes wine casks"
+      },
+      "about": {
+        "ko": "프랑스 디저트 와인(소테른) 통에서 마무리해 꿀처럼 달고 부드럽다.",
+        "en": "Finished in casks that held Sauternes, the French dessert wine. Honeyed and smooth."
+      },
+      "nose": {
+        "ko": "꿀, 레몬, 아몬드",
+        "en": "Honey, lemon, almond"
+      },
+      "palate": {
+        "ko": "꿀, 생강, 넛맥",
+        "en": "Honey, ginger, nutmeg"
+      },
+      "finish": {
+        "ko": "길고 달콤",
+        "en": "Long and sweet"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "balvenie-14-caribbean": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 스페이사이드",
+        "en": "Speyside, Scotland"
+      },
+      "abv": "43%",
+      "cask": {
+        "ko": "버번 통 → 카리브 럼 통 마무리",
+        "en": "Bourbon cask, finished in Caribbean rum casks"
+      },
+      "about": {
+        "ko": "카리브 럼을 담았던 통에서 마무리해 토피와 열대 과일 향이 난다.",
+        "en": "Finished in casks that held Caribbean rum: toffee and tropical fruit."
+      },
+      "nose": {
+        "ko": "토피, 바닐라, 열대 과일",
+        "en": "Toffee, vanilla, tropical fruit"
+      },
+      "palate": {
+        "ko": "바닐라, 토피, 달콤한 오크",
+        "en": "Vanilla, toffee, sweet oak"
+      },
+      "finish": {
+        "ko": "부드럽고 따뜻",
+        "en": "Soft and warm"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "octomore-16-3": {
+      "kind": {
+        "ko": "스카치 싱글 몰트",
+        "en": "Single malt Scotch"
+      },
+      "region": {
+        "ko": "스코틀랜드 아일라 (브룩라디)",
+        "en": "Islay, Scotland (Bruichladdich)"
+      },
+      "abv": null,
+      "abvNote": {
+        "ko": "캐스크 스트렝스 · 정확한 도수와 피트 수치는 병 라벨 참고",
+        "en": "Cask strength; see the label for exact ABV and peating"
+      },
+      "cask": null,
+      "about": {
+        "ko": "세상에서 가장 강한 피트 위스키로 손꼽히는 시리즈. \".3\" 판은 아일라 섬에서 키운 보리로 만든다. 이 메뉴판의 마지막 장.",
+        "en": "Among the most heavily peated whiskies made. The \".3\" editions use barley grown on Islay. The last page of this menu."
+      },
+      "nose": {
+        "ko": "강한 피트, 바다, 달콤한 보리",
+        "en": "Massive peat, sea air, sweet barley"
+      },
+      "palate": {
+        "ko": "불, 스모크, 과일",
+        "en": "Fire, smoke, fruit"
+      },
+      "finish": {
+        "ko": "아주 길다",
+        "en": "Very long"
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "old-fashioned": {
+      "kind": {
+        "ko": "클래식 칵테일",
+        "en": "Classic cocktail"
+      },
+      "region": null,
+      "abv": null,
+      "recipe": {
+        "ko": "버번(또는 라이) · 설탕 · 앙고스투라 비터스 · 오렌지 필",
+        "en": "Bourbon or rye, sugar, Angostura bitters, orange peel"
+      },
+      "about": {
+        "ko": "\"칵테일\"이라는 말이 막 생겼을 무렵의 방식 그대로. 위스키를 가장 위스키답게 마시는 한 잔.",
+        "en": "Made the way the word \"cocktail\" first meant it. Whisky, at its most whisky."
+      },
+      "nose": {
+        "ko": "오렌지 껍질, 바닐라",
+        "en": "Orange peel, vanilla"
+      },
+      "palate": {
+        "ko": "진한 위스키, 은은한 단맛, 비터스",
+        "en": "Rich whisky, gentle sweetness, bitters"
+      },
+      "finish": {
+        "ko": "따뜻하고 길다",
+        "en": "Warm and long"
+      },
+      "photo": null,
+      "photoCredit": null
+    }
   },
 
   /* 결과 · 오류 익명 기록 (→ /api/track → Neon). 끄려면 false.

@@ -190,6 +190,32 @@ async function run(browser, base, lang) {
   }));
   check(menu.sig === 7 && menu.mine >= 1 && menu.rows > 20, '메뉴: 일곱 잔 + 내 죄 표시 + 전체 품목', menu);
   await shot(page, lang + '-menu');
+
+  // 메뉴 항목 누르기 → 상세 → 폰 뒤로가기는 상세만 닫음
+  const taps = await page.evaluate(() => document.querySelectorAll('#dsMenu button.ds-tap').length);
+  check(taps >= 7 + 16, '누를 수 있는 항목 (시그니처 7 + 설명 있는 16)', taps);
+  await page.click('#dsMenu button[data-id="lagavulin-16"]');
+  await page.waitForSelector('#dsItem.open', { timeout: 3000 });
+  await page.waitForTimeout(400);
+  const item = await page.evaluate(() => ({
+    en: (document.querySelector('#dsItem .ds-item-en') || {}).textContent,
+    chips: [...document.querySelectorAll('#dsItem .ds-chips li')].map((x) => x.textContent),
+    about: ((document.querySelector('#dsItem .ds-about') || {}).textContent || '').length,
+    prices: [...document.querySelectorAll('#dsItem .ds-prices b')].map((x) => x.textContent)
+  }));
+  check(item.en === 'Lagavulin 16' && item.chips.includes('43%') && item.about > 10 &&
+    item.prices.length === 2 && item.prices.every((p) => /\d/.test(p)), '위스키 상세: 이름 · 도수 · 설명 · 글라스/보틀 가격', item);
+  await shot(page, lang + '-menu-item');
+  await page.goBack();
+  await page.waitForTimeout(400);
+  check(!(await page.$('#dsItem')) && !!(await page.$('#dsMenu.open')), '폰 뒤로가기 → 상세만 닫히고 메뉴는 그대로');
+  await page.click('#dsMenu button[data-id^="sig:"]');
+  await page.waitForSelector('#dsItem.open', { timeout: 3000 });
+  check(await page.evaluate(() => !!document.querySelector('#dsItem .ds-photo-ink img')), '시그니처 상세: 잉크 그림');
+  await page.click('#dsItem [data-ds="close"]');
+  await page.waitForTimeout(400);
+  check(!(await page.$('#dsItem')), '상세 닫기 버튼');
+
   await page.click('#dsMenu [data-ds="close"]');
   await page.waitForTimeout(400);
   check(!(await page.$('#dsMenu')), '메뉴 닫기 버튼');
@@ -227,6 +253,20 @@ async function run(browser, base, lang) {
     const other = lang === 'en' ? 'ko' : 'en';
     check(await page.evaluate(() => document.documentElement.lang) === other, `언어 전환 → ${other}`);
   } else check(false, '퀴즈 1번에서 폰 뒤로가기 → 표지', await screen(page));
+
+  // 메뉴판 전용 링크: #menu, #menu/<id>
+  await page.goto('about:blank');
+  await page.goto(base + '#menu/old-fashioned', { waitUntil: 'networkidle' });
+  await page.waitForSelector('#dsItem.open', { timeout: 3000 });
+  const deep = await page.evaluate(() => ({ menu: !!document.querySelector('#dsMenu'), en: document.querySelector('#dsItem .ds-item-en').textContent, hash: location.hash }));
+  check(deep.menu && deep.en === 'Old Fashioned' && deep.hash === '', '#menu/old-fashioned → 메뉴 + 올드패션드 상세가 바로 열림', deep);
+  await page.goBack(); await page.waitForTimeout(300);
+  await page.goBack(); await page.waitForTimeout(300);
+  check(!(await page.$('#dsMenu')) && await screen(page) === 'cover', '뒤로가기 두 번 → 표지');
+  await page.evaluate(() => { location.hash = '#menu'; });
+  await page.waitForSelector('#dsMenu.open', { timeout: 3000 });
+  check(true, '페이지 안에서 #menu 로 바뀌어도 메뉴가 열림');
+  await page.goBack(); await page.waitForTimeout(300);
 
   check(errors.length === 0, '스크립트 오류 · 404 없음', errors);
   await ctx.close();

@@ -16,7 +16,7 @@
 'use strict';
 const { neon } = require('@neondatabase/serverless');
 
-const TYPES = ['start', 'result', 'signature', 'order', 'menu', 'share', 'restart', 'lang', 'error'];
+const TYPES = ['start', 'result', 'signature', 'order', 'menu', 'item', 'share', 'restart', 'lang', 'error'];
 const SINS = ['교만', '질투', '분노', '나태', '탐욕', '탐식', '색욕'];
 const KNOWN = ['sid', 'type', 'lang', 'v', 'sin', 'second', 'tie', 'points', 'picks'];
 
@@ -93,7 +93,7 @@ function canSeeStats(req) {
 const KST = "(created_at at time zone 'Asia/Seoul')";
 async function stats(sql) {
   const q = (text) => sql.query(text);
-  const [types, sins, days, picks, recent, errors] = await Promise.all([
+  const [types, sins, days, picks, recent, errors, items] = await Promise.all([
     q(`select type, count(*)::int as n, count(distinct sid)::int as sessions
        from deadly_sins_events group by type order by n desc`),
     q(`select sin, count(*)::int as n, count(*) filter (where tie)::int as ties
@@ -110,7 +110,9 @@ async function stats(sql) {
     q(`select to_char(${KST}, 'MM-DD HH24:MI') as at, sid, type, lang, sin, second, tie, picks
        from deadly_sins_events order by id desc limit 40`),
     q(`select to_char(${KST}, 'MM-DD HH24:MI') as at, extra->>'message' as message, extra->>'ua' as ua
-       from deadly_sins_events where type = 'error' order by id desc limit 10`)
+       from deadly_sins_events where type = 'error' order by id desc limit 10`),
+    q(`select extra->>'id' as id, count(*)::int as n, count(distinct sid)::int as sessions
+       from deadly_sins_events where type = 'item' group by 1 order by n desc limit 30`)
   ]);
   const total = sins.reduce((a, r) => a + r.n, 0);
   return {
@@ -119,6 +121,7 @@ async function stats(sql) {
     events: types,
     days,
     picks,
+    items,      // 메뉴판에서 많이 눌러 본 항목
     recent,
     errors
   };

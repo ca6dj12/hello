@@ -298,9 +298,7 @@
     if (pair) {
       html += '<div class="ds-card ds-pair">';
       html += '<p class="ds-card-head">' + esc(t('pairHead')) + ' <span>' + esc(pair.label[lang]) + '</span></p>';
-      pair.items.forEach((it) => {
-        html += '<p class="ds-row"><span>' + esc(it[lang]) + '</span><span>' + esc(t('glass')) + ' ' + esc(it.g) + '</span></p>';
-      });
+      pair.items.forEach((it) => { html += menuRow(it[lang], t('glass') + ' ' + it.g, '', it.id); });
       html += '</div>';
     }
     html += '<button type="button" class="cta ds-order-btn" data-ds="order">' + esc(t('order')) + '</button>';
@@ -383,17 +381,38 @@
     track('order', { sin: KO[k] });
   }
 
+  // 메뉴 항목 찾기: id → { item, group, sinKey, kind }
+  const MENU_INDEX = {};
+  (function indexMenu() {
+    const m = DATA.menu;
+    m.whisky.forEach((w) => w.items.forEach((it) => { if (it.id) MENU_INDEX[it.id] = { item: it, group: w.label, sinKey: w.sin, kind: 'whisky' }; }));
+    m.final.items.forEach((it) => { if (it.id) MENU_INDEX[it.id] = { item: it, group: m.final.label, title: m.final.title, kind: 'whisky' }; });
+    ['cocktails', 'bites', 'beverages'].forEach((sec) => (m[sec] || []).forEach((it) => { if (it.id) MENU_INDEX[it.id] = { item: it, kind: sec }; }));
+  })();
+  const detailOf = (id) => (DATA.details || {})[id] || null;
+  const canOpen = (id) => !!id && (id.indexOf('sig:') === 0 || !!detailOf(id));
+
+  // 메뉴 한 줄. 설명이 있는 항목은 누를 수 있는 버튼으로.
+  function menuRow(name, price, sub, id) {
+    const d = id && detailOf(id);
+    const thumb = d && d.photo ? '<img class="ds-thumb" src="' + esc(d.photo) + '" alt="" loading="lazy">' : '';
+    const inner = thumb + '<span class="ds-row-name">' + esc(name) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>' +
+      '<span class="ds-row-price">' + esc(price) + '</span>';
+    if (canOpen(id)) {
+      return '<button type="button" class="ds-row ds-tap" data-ds="item" data-id="' + esc(id) + '">' + inner + '<i class="ds-chev" aria-hidden="true">›</i></button>';
+    }
+    return '<p class="ds-row">' + inner + '</p>';
+  }
+
   function openMenu() {
     const m = DATA.menu, mine = currentSin;
-    const row = (name, price, sub) =>
-      '<p class="ds-row"><span>' + esc(name) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span><span>' + esc(price) + '</span></p>';
-    let h = '<div class="ds-menu"><h2>MENU</h2>';
+    let h = '<div class="ds-menu"><h2>MENU</h2><p class="ds-tap-hint">' + esc(t('tapHint')) + '</p>';
 
     h += '<section><h3>' + esc(t('menuSeven')) + '</h3><p class="ds-note">' + esc(t('menuSevenNote')(DATA.signaturePrice.toLocaleString('ko-KR'))) + '</p>';
     SINS.forEach((s) => {
       const d = DATA.drinks[s.k];
       const name = SIGNATURE_DRINKS[s.k].en + ' · ' + (lang === 'en' ? I18N.en.drinkName[s.k] : DRINK_KO[s.k]);
-      h += '<div class="ds-sig' + (s.k === mine ? ' mine' : '') + '">' + row(name, priceOf(), d ? d.aroma[lang] : '') +
+      h += '<div class="ds-sig' + (s.k === mine ? ' mine' : '') + '">' + menuRow(name, priceOf(), d ? d.aroma[lang] : '', 'sig:' + s.k) +
         (s.k === mine ? '<em>' + esc(t('yourSin')) + '</em>' : '') + '</div>';
     });
     h += '</section>';
@@ -402,20 +421,20 @@
     m.whisky.forEach((w) => {
       h += '<div class="ds-group' + (w.sin === mine ? ' mine' : '') + '"><p class="ds-group-head">' + esc(w.label[lang]) +
         ' <span>' + esc(SINS.find((s) => s.k === w.sin).name) + '</span>' + (w.sin === mine ? '<em>' + esc(t('yourSin')) + '</em>' : '') + '</p>';
-      w.items.forEach((it) => { h += row(it[lang], 'G ' + it.g + ' · B ' + it.b); });
+      w.items.forEach((it) => { h += menuRow(it[lang], 'G ' + it.g + ' · B ' + it.b, '', it.id); });
       h += '</div>';
     });
     h += '<div class="ds-group"><p class="ds-group-head">' + esc(m.final.title) + ' <span>' + esc(m.final.label[lang]) + '</span></p>';
-    m.final.items.forEach((it) => { h += row(it[lang], 'G ' + it.g + ' · B ' + it.b); });
+    m.final.items.forEach((it) => { h += menuRow(it[lang], 'G ' + it.g + ' · B ' + it.b, '', it.id); });
     h += '</div></section>';
 
     const list = (key, items) => {
       h += '<section><h3>' + esc(t(key)) + '</h3>';
-      items.forEach((it) => { h += row(lang === 'en' ? it.en : it.ko, it.p, lang === 'en' ? it.ko : it.en); });
+      items.forEach((it) => { h += menuRow(lang === 'en' ? it.en : it.ko, it.p, lang === 'en' ? it.ko : it.en, it.id); });
       h += '</section>';
     };
-    list('menuBites', m.bites);
     list('menuCocktails', m.cocktails);
+    list('menuBites', m.bites);
     list('menuBeverages', m.beverages);
 
     h += '<section><h3>' + esc(t('menuInfo')) + '</h3>';
@@ -424,6 +443,62 @@
 
     openOverlay(layer('dsMenu', h));
     track('menu', { from: document.body.dataset.dsScreen });
+  }
+
+  /* 항목 상세 (메뉴판에서 한 줄을 누르면) */
+  const krw = (s) => s + t('won');
+  function noteList(rows) {
+    let h = '<dl class="ds-notes">';
+    rows.forEach(([label, v]) => { if (v) h += '<dt>' + esc(label) + '</dt><dd>' + esc(v) + '</dd>'; });
+    return h + '</dl>';
+  }
+  function itemHtml(id) {
+    if (id.indexOf('sig:') === 0) {
+      const k = id.slice(4), drink = SIGNATURE_DRINKS[k], d = DATA.drinks[k];
+      if (!drink || !d) return null;
+      return '<div class="ds-item">' +
+        '<div class="ds-photo ds-photo-ink"><img src="' + esc(drink.image) + '" alt=""></div>' +
+        '<p class="ds-kicker">' + esc(t('menuSeven')) + (k === currentSin ? ' · ' + esc(t('yourSin')) : '') + '</p>' +
+        '<h2 class="ds-item-en">' + esc(drink.en) + '</h2>' +
+        '<p class="ds-item-ko">' + esc(lang === 'en' ? I18N.en.drinkName[k] : DRINK_KO[k]) + '</p>' +
+        (d.line && d.line.confirmed ? '<p class="ds-about">' + esc(d.line[lang]) + '</p>' : '') +
+        noteList([[t('aroma'), d.aroma[lang]], [t('taste'), d.taste[lang]], [t('finish'), d.finish[lang]], [t('strength'), d.strength[lang]]]) +
+        '<div class="ds-prices"><div><span>' + esc(t('glass')) + '</span><b>' + esc(priceOf()) + '</b></div></div>' +
+      '</div>';
+    }
+    const ref = MENU_INDEX[id], d = detailOf(id);
+    if (!ref || !d) return null;
+    const it = ref.item, L = (o) => (o ? o[lang] : '');
+    const chips = [L(d.kind), L(d.region), d.abv || L(d.abvNote)].filter(Boolean);
+    let kicker = '';
+    if (ref.sinKey) kicker = L(ref.group) + ' · ' + SINS.find((s) => s.k === ref.sinKey).name;
+    else if (ref.title) kicker = ref.title + ' · ' + L(ref.group);
+    else kicker = t(ref.kind === 'cocktails' ? 'menuCocktails' : ref.kind === 'bites' ? 'menuBites' : 'menuBeverages');
+    let prices = '';
+    if (it.g) prices += '<div><span>' + esc(t('glass')) + '</span><b>' + esc(krw(it.g)) + '</b></div>';
+    if (it.b) prices += '<div><span>' + esc(t('bottle')) + '</span><b>' + esc(krw(it.b)) + '</b></div>';
+    if (it.p) prices += '<div><span>' + esc(t('price')) + '</span><b>' + esc(krw(it.p)) + '</b></div>';
+    return '<div class="ds-item">' +
+      (d.photo ? '<div class="ds-photo"><img src="' + esc(d.photo) + '" alt=""></div>' : '') +
+      (d.photo && d.photoCredit ? '<p class="ds-credit">' + esc(t('photoBy')) + ': ' +
+        (d.photoCredit.url ? '<a href="' + esc(d.photoCredit.url) + '" target="_blank" rel="noopener">' : '') +
+        esc([d.photoCredit.author, d.photoCredit.license].filter(Boolean).join(' · ')) +
+        (d.photoCredit.url ? '</a>' : '') + '</p>' : '') +
+      '<p class="ds-kicker">' + esc(kicker) + (ref.sinKey && ref.sinKey === currentSin ? ' · ' + esc(t('yourSin')) : '') + '</p>' +
+      '<h2 class="ds-item-en">' + esc(it.en) + '</h2>' +
+      (lang === 'ko' ? '<p class="ds-item-ko">' + esc(it.ko) + '</p>' : '') +
+      (chips.length ? '<ul class="ds-chips">' + chips.map((c) => '<li>' + esc(c) + '</li>').join('') + '</ul>' : '') +
+      '<p class="ds-about">' + esc(L(d.about)) + '</p>' +
+      noteList([[t('recipe'), L(d.recipe)], [t('cask'), L(d.cask)], [t('nose'), L(d.nose)], [t('palate'), L(d.palate)], [t('finish'), L(d.finish)]]) +
+      (prices ? '<div class="ds-prices">' + prices + '</div>' : '') +
+      '<p class="ds-note">' + esc(t('detailNote')) + '</p>' +
+    '</div>';
+  }
+  function openItem(id) {
+    const html = itemHtml(id);
+    if (!html) return;
+    openOverlay(layer('dsItem', html));
+    track('item', { id });
   }
 
   /* -----------------------------------------------------------
@@ -560,6 +635,7 @@
     const a = b.getAttribute('data-ds');
     if (a === 'order') openOrder();
     else if (a === 'menu') openMenu();
+    else if (a === 'item') openItem(b.getAttribute('data-id'));
     else if (a === 'share') shareResult();
     else if (a === 'restart') restart();
     else if (a === 'close') { if (depth > 0) history.back(); else closeTopOverlay(); }
@@ -579,5 +655,16 @@
   document.body.appendChild(top);   // #cover 안에 두면 누를 때 표지 전환까지 같이 시작된다
 
   applyLang();
+
+  // 주소 끝이 #menu 면 메뉴를, #menu/<id> 면 그 항목까지 바로 연다 (메뉴판 전용 QR · 링크 공유용)
+  function openFromHash() {
+    const m = /^#menu(?:\/([\w:-]+))?$/.exec(location.hash || '');
+    if (!m) return;
+    history.replaceState(history.state, '', location.pathname + location.search);
+    if (!document.getElementById('dsMenu')) openMenu();
+    if (m[1] && canOpen(decodeURIComponent(m[1]))) openItem(decodeURIComponent(m[1]));
+  }
+  openFromHash();
+  window.addEventListener('hashchange', openFromHash);
   window.DS_ENHANCE = { version: VERSION, collect: COLLECT_ON, calculate: () => calculate() };
 })();
