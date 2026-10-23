@@ -497,9 +497,9 @@
   /* 항목 상세 (메뉴판에서 한 줄을 누르면) */
   const krw = (s) => s + t('won');
   function noteList(rows) {
-    let h = '<dl class="ds-notes">';
+    let h = '';
     rows.forEach(([label, v]) => { if (v) h += '<dt>' + esc(label) + '</dt><dd>' + esc(v) + '</dd>'; });
-    return h + '</dl>';
+    return h ? '<dl class="ds-notes">' + h + '</dl>' : '';   // 음료처럼 적을 게 없으면 빈 상자를 그리지 않는다
   }
   function itemHtml(id) {
     if (id.indexOf('sig:') === 0) {

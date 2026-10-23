@@ -255,6 +255,19 @@ async function run(browser, base, lang) {
   await page.click('#dsItem [data-ds="close"]');
   await page.waitForTimeout(400);
 
+  // 음료: 사진 · 가격, 적을 맛 정보가 없으니 빈 상자도 없음
+  await page.click('#dsMenu button[data-id="coke"]');
+  await page.waitForSelector('#dsItem.open', { timeout: 3000 });
+  await page.waitForFunction(() => { const i = document.querySelector('#dsItem .ds-photo img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 5000 });
+  const drink = await page.evaluate(() => ({
+    notes: document.querySelectorAll('#dsItem .ds-notes').length,
+    credit: !!document.querySelector('#dsItem .ds-credit a'),
+    price: (document.querySelector('#dsItem .ds-prices b') || {}).textContent
+  }));
+  check(drink.notes === 0 && drink.credit && /\d/.test(drink.price || ''), '음료 상세: 사진 · 출처 · 가격, 빈 상자 없음', drink);
+  await page.click('#dsItem [data-ds="close"]');
+  await page.waitForTimeout(400);
+
   await page.click('#dsMenu [data-ds="close"]');
   await page.waitForTimeout(400);
   check(!(await page.$('#dsMenu')), '메뉴 닫기 버튼');
