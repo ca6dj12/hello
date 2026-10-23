@@ -1084,8 +1084,8 @@ window.DS_DATA = {
         "ko": "코카콜라 오리지널.",
         "en": "Coca-Cola Original."
       },
-      "photo": null,
-      "photoCredit": null
+      "photo": "img/menu/coke.webp",
+      "photoCredit": {"author": "James Larrison", "license": "CC BY 2.0", "url": "https://commons.wikimedia.org/wiki/File:Coca-Cola_Trio-_Zero_Sugar,_Original,_and_Diet_Coke.jpg"}
     },
     "coke-zero": {
       "kind": {
@@ -1098,8 +1098,8 @@ window.DS_DATA = {
         "ko": "설탕 없는 코카콜라 제로.",
         "en": "Coca-Cola Zero Sugar."
       },
-      "photo": null,
-      "photoCredit": null
+      "photo": "img/menu/coke-zero.webp",
+      "photoCredit": {"author": "James Larrison", "license": "CC BY 2.0", "url": "https://commons.wikimedia.org/wiki/File:Coca-Cola_Trio-_Zero_Sugar,_Original,_and_Diet_Coke.jpg"}
     },
     "ginger-ale": {
       "kind": {

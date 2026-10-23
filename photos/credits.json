@@ -117,5 +117,31 @@
     "source": "Wikimedia Commons, original",
     "scale": 0.72,
     "gray": true
+  },
+  "coke": {
+    "author": "James Larrison",
+    "license": "CC BY 2.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Coca-Cola_Trio-_Zero_Sugar,_Original,_and_Diet_Coke.jpg",
+    "source": "Wikimedia Commons, 960px (세 캔 사진에서 한 캔씩 자름)",
+    "scale": 0.72,
+    "crop": [
+      0.392,
+      0.146,
+      0.6375,
+      0.778
+    ]
+  },
+  "coke-zero": {
+    "author": "James Larrison",
+    "license": "CC BY 2.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Coca-Cola_Trio-_Zero_Sugar,_Original,_and_Diet_Coke.jpg",
+    "source": "Wikimedia Commons, 960px (세 캔 사진에서 한 캔씩 자름)",
+    "scale": 0.72,
+    "crop": [
+      0.13,
+      0.139,
+      0.392,
+      0.806
+    ]
   }
 }
