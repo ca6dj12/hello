@@ -11,6 +11,7 @@
                           "url": "https://commons.wikimedia.org/wiki/File:...",
                           "crop": [0.55, 0, 1, 1] } }
       crop 은 선택: 원본에서 병만 남길 영역 (왼쪽, 위, 오른쪽, 아래 — 0~1 비율). 상자나 다른 병이 같이 찍혔을 때.
+      "scale" (선택, 기본 1): 틀 안에서의 크기 배율. 캔처럼 병보다 작은 것은 0.7 정도로 줄인다.
       "scene": true 는 안주처럼 접시 · 받침까지 한 장면인 사진: 배경을 지우지 않고 crop 영역을
       정사각형 900×900 으로 잘라 그대로 쓴다 (data.js 에 "scene": true 가 붙어 메뉴판이 꽉 찬 사진으로 보여 준다).
 
@@ -76,13 +77,13 @@ def mask_of(sess, im):
     return Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.6))
 
 
-def compose(cut):
-    """투명 컷아웃 → 같은 틀, 같은 크기, 같은 바닥선, 바닥 반사."""
+def compose(cut, scale=1.0):
+    """투명 컷아웃 → 같은 틀, 같은 크기, 같은 바닥선, 바닥 반사. scale 로 병보다 작은 것(캔)을 줄인다."""
     box = cut.getchannel("A").point(lambda v: 255 if v > 12 else 0).getbbox()
     if not box:
         return None
     cut = cut.crop(box)
-    s = min(H * MAX_H / cut.height, W * MAX_W / cut.width)
+    s = min(H * MAX_H / cut.height, W * MAX_W / cut.width) * scale
     cut = cut.resize((max(1, round(cut.width * s)), max(1, round(cut.height * s))), Image.LANCZOS)
     canvas = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     x = (W - cut.width) // 2
@@ -162,7 +163,7 @@ def main():
             im = src.convert("RGB")
             cut = src
             cut.putalpha(mask_of(sess, im))
-        out = compose(cut)
+        out = compose(cut, (credits.get(p.stem) or {}).get("scale", 1.0))
         if out is None:
             print(f"  ! {p.name}: 물건을 못 찾음, 건너뜀")
             continue

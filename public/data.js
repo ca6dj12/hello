@@ -1112,8 +1112,8 @@ window.DS_DATA = {
         "ko": "캐나다드라이 진저에일. 생강 향이 은은하고 달지 않은 편이라 위스키에 섞어 마시기도 좋다.",
         "en": "Canada Dry Ginger Ale — gently gingery and not too sweet, so it also mixes well with whisky."
       },
-      "photo": null,
-      "photoCredit": null
+      "photo": "img/menu/ginger-ale.webp",
+      "photoCredit": {"author": "Fmvh", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Canada_Dry_ginger_ale_can.jpg"}
     },
     "soda-water": {
       "kind": {

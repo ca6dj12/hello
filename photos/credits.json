@@ -102,5 +102,12 @@
     "license": "CC BY-SA 4.0",
     "url": "https://commons.wikimedia.org/wiki/File:Acqua_Panna_mineral_water_in_a_glass_bottle_-_20140408.jpg",
     "source": "Wikimedia Commons, 960px"
+  },
+  "ginger-ale": {
+    "author": "Fmvh",
+    "license": "CC BY-SA 4.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Canada_Dry_ginger_ale_can.jpg",
+    "source": "Wikimedia Commons, 960px",
+    "scale": 0.72
   }
 }
