@@ -191,6 +191,13 @@ async function run(browser, base, lang) {
   check(menu.sig === 7 && menu.mine >= 1 && menu.rows > 20, '메뉴: 일곱 잔 + 내 죄 표시 + 전체 품목', menu);
   const syms = await page.evaluate(() => [...document.querySelectorAll('#dsMenu .ds-sig .ds-sym')].map((i) => i.complete && i.naturalWidth));
   check(syms.length === 7 && syms.every((w) => w > 0), '일곱 잔 이름 옆에 상징 아이콘', syms);
+  // 자유 이용 사진의 출처는 메뉴판 맨 아래 '사진 출처' 한곳에 (접힌 채로)
+  const credits = await page.evaluate(() => {
+    const c = document.querySelector('#dsMenu details.ds-credits');
+    const expected = Object.values(DS_DATA.details).filter((d) => d.photo && d.photoCredit).length;
+    return { open: c && c.open, n: c ? c.querySelectorAll('li a[href^="https://commons.wikimedia.org/"]').length : 0, expected };
+  });
+  check(credits.open === false && credits.n === credits.expected && credits.n > 0, '사진 출처: 메뉴판 맨 아래에 접혀 있음', credits);
   const sigDesc = await page.evaluate(() => [...document.querySelectorAll('#dsMenu .ds-sig')].map((r) =>
     [(r.querySelector('small:not(.ds-row-desc)') || {}).textContent || '', ((r.querySelector('.ds-row-desc') || {}).textContent || '').length]));
   check(sigDesc.length === 7 && sigDesc.every(([style, n]) => style && n > 15), '일곱 잔: 맛 한마디 + 한 줄 설명', sigDesc);
@@ -261,10 +268,10 @@ async function run(browser, base, lang) {
   await page.waitForFunction(() => { const i = document.querySelector('#dsItem .ds-photo img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 5000 });
   const drink = await page.evaluate(() => ({
     notes: document.querySelectorAll('#dsItem .ds-notes').length,
-    credit: !!document.querySelector('#dsItem .ds-credit a'),
+    credit: !!document.querySelector('#dsItem .ds-credit'),
     price: (document.querySelector('#dsItem .ds-prices b') || {}).textContent
   }));
-  check(drink.notes === 0 && drink.credit && /\d/.test(drink.price || ''), '음료 상세: 사진 · 출처 · 가격, 빈 상자 없음', drink);
+  check(drink.notes === 0 && !drink.credit && /\d/.test(drink.price || ''), '음료 상세: 사진 · 가격, 출처 줄 · 빈 상자 없음', drink);
   await page.click('#dsItem [data-ds="close"]');
   await page.waitForTimeout(400);
 

@@ -444,11 +444,25 @@
 
     h += '<section><h3>' + esc(t('menuInfo')) + '</h3>';
     m.info.forEach((i) => { h += '<p class="ds-info">' + esc(i[lang]) + '</p>'; });
-    h += '<p class="ds-note">' + esc(t('menuNote')) + '</p></section></div>';
+    h += '<p class="ds-note">' + esc(t('menuNote')) + '</p>' + creditsHtml() + '</section></div>';
 
     openOverlay(layer('dsMenu', h));
     ensureStories().catch(() => {});   // 상세를 누르기 전에 미리 받아 둔다
     track('menu', { from: document.body.dataset.dsScreen });
+  }
+
+  /* 자유 이용 사진(CC BY · BY-SA)은 작성자 · 라이선스 · 고친 점을 밝혀야 쓸 수 있다.
+     상세 화면마다 붙이지 않고 메뉴판 맨 아래에 접어서 한곳에 모아 둔다. */
+  function creditsHtml() {
+    const rows = Object.keys(MENU_INDEX).filter((id) => { const d = detailOf(id); return d && d.photo && d.photoCredit; });
+    if (!rows.length) return '';
+    return '<details class="ds-credits"><summary>' + esc(t('photoCredits')) + '</summary><ul>' + rows.map((id) => {
+      const c = detailOf(id).photoCredit;
+      const who = esc([c.author, c.license].filter(Boolean).join(' · '));
+      return '<li>' + esc(MENU_INDEX[id].item[lang]) + ' — ' +
+        (c.url ? '<a href="' + esc(c.url) + '" target="_blank" rel="noopener">' + who + '</a>' : who) +
+        ' (' + esc(t(c.gray ? 'photoEditedGray' : 'photoEdited')) + ')</li>';
+    }).join('') + '</ul></details>';
   }
 
   /* '이 술에 대해 알아보기' 원문은 stories.js 에 따로 있다 — 첫 화면 용량에 넣지 않고 메뉴판을 열 때 받아 둔다 */
@@ -531,12 +545,6 @@
     if (it.p) prices += '<div><span>' + esc(t('price')) + '</span><b>' + esc(krw(it.p)) + '</b></div>';
     return '<div class="ds-item">' +
       (d.photo ? '<div class="ds-photo' + (d.scene ? ' ds-photo-scene' : '') + '"><img src="' + esc(d.photo) + '" alt=""></div>' : '') +
-      (d.photo && d.photoCredit ? '<p class="ds-credit">' + esc(t('photoBy')) + ': ' +
-        (d.photoCredit.url ? '<a href="' + esc(d.photoCredit.url) + '" target="_blank" rel="noopener">' : '') +
-        esc([d.photoCredit.author, d.photoCredit.license].filter(Boolean).join(' · ')) +
-        // CC 라이선스는 고친 점을 밝히도록 한다 — 모든 메뉴 사진은 배경을 지우고 크기를 맞춘 것
-        esc(' (' + t(d.photoCredit.gray ? 'photoEditedGray' : 'photoEdited') + ')') +
-        (d.photoCredit.url ? '</a>' : '') + '</p>' : '') +
       '<p class="ds-kicker">' + esc(kicker) + (ref.sinKey && ref.sinKey === currentSin ? ' · ' + esc(t('yourSin')) : '') + '</p>' +
       '<h2 class="ds-item-en">' + esc(it.en) + '</h2>' +
       (lang === 'ko' ? '<p class="ds-item-ko">' + esc(it.ko) + '</p>' : '') +
