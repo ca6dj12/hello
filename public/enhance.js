@@ -419,7 +419,9 @@
     const sym = id && id.indexOf('sig:') === 0 && window.DS_SYMBOLS ? window.DS_SYMBOLS[id.slice(4)] : null;
     const thumb = sym ? '<img class="ds-sym" src="' + esc(sym) + '" alt="" loading="lazy">'
       : d && d.photo ? '<img class="ds-thumb' + (d.scene ? ' ds-thumb-scene' : '') + '" src="' + esc(d.photo) + '" alt="" loading="lazy">' : '';
-    const inner = thumb + '<span class="ds-row-name">' + esc(name) + (sub ? '<small>' + esc(sub) + '</small>' : '') +
+    const it = id && MENU_INDEX[id] ? MENU_INDEX[id].item : null;
+    const badge = it && it.new ? ' <span class="ds-new">NEW</span>' : '';   // data.js 에서 "new": true
+    const inner = thumb + '<span class="ds-row-name">' + esc(name) + badge + (sub ? '<small>' + esc(sub) + '</small>' : '') +
       (desc ? '<small class="ds-row-desc">' + esc(desc) + '</small>' : '') + '</span>' +
       '<span class="ds-row-price">' + esc(price) + '</span>';
     if (canOpen(id)) {
@@ -566,7 +568,7 @@
     return '<div class="ds-item">' +
       (d.photo ? '<div class="ds-photo' + (d.scene ? ' ds-photo-scene' : '') + '"><img src="' + esc(d.photo) + '" alt=""></div>' : '') +
       '<p class="ds-kicker">' + esc(kicker) + (ref.sinKey && ref.sinKey === currentSin ? ' · ' + esc(t('yourSin')) : '') + '</p>' +
-      '<h2 class="ds-item-en">' + esc(it.en) + '</h2>' +
+      '<h2 class="ds-item-en">' + esc(it.en) + (it.new ? ' <span class="ds-new">NEW</span>' : '') + '</h2>' +
       (lang === 'ko' ? '<p class="ds-item-ko">' + esc(it.ko) + '</p>' : '') +
       (chips.length ? '<ul class="ds-chips">' + chips.map((c) => '<li>' + esc(c) + '</li>').join('') + '</ul>' : '') +
       '<p class="ds-about">' + esc(L(d.about)) + '</p>' +

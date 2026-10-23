@@ -428,7 +428,7 @@ window.DS_DATA = {
       },
       {
         "ko": "치즈케이크",
-        "en": "Cheesecake", "id": "cheesecake",
+        "en": "Cheesecake", "id": "cheesecake", "new": true,
         "p": "8,000"
       }
     ],

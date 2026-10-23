@@ -253,6 +253,8 @@ async function run(browser, base, lang) {
   await page.waitForTimeout(400);
   check(!(await page.$('#dsItem')), '상세 닫기 버튼');
 
+  check(await page.evaluate(() => [...document.querySelectorAll('#dsMenu .ds-new')].map((b) => b.closest('[data-id]').getAttribute('data-id')).join()) === 'cheesecake',
+    '새 메뉴(치즈케이크)에 NEW 표시');
   // 안주: 매장 사진(꽉 찬 장면) + 구성 + 가격, 위스키용 안내 문구는 없음
   await page.click('#dsMenu button[data-id="cherry-yogurt-pudding"]');
   await page.waitForSelector('#dsItem.open', { timeout: 3000 });

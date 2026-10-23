@@ -135,6 +135,12 @@ button.ds-row:focus-visible { outline: 1px solid var(--ds-red); outline-offset: 
 }
 .ds-sym { flex: none; width: 30px; height: 30px; object-fit: contain; opacity: .92; }
 .ds-tap-hint { margin: -12px 0 20px; text-align: center; font-size: 11.5px; color: var(--ds-dim); }
+.ds-new {
+  display: inline-block; margin-left: 4px; padding: 3px 5px 2px; vertical-align: 2px;
+  background: var(--ds-red); color: #fff; border-radius: 4px;
+  font: 800 9.5px/1 var(--ds-sans); letter-spacing: .08em;
+}
+.ds-item-en .ds-new { font-size: 11px; vertical-align: 8px; margin-left: 6px; }
 .ds-row small { display: block; margin-top: 1px; color: var(--ds-dim); font-size: .84em; }
 /* 시그니처 잔: 맛 한마디(위) + 한 줄 설명(아래) */
 .ds-sig .ds-row small:not(.ds-row-desc) { color: var(--ds-soft); font-weight: 700; }
