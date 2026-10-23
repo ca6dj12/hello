@@ -18,14 +18,16 @@ public/                   실제로 배포되는 사이트 (빌드 결과, 커�
   i18n.js                 영어 문구 (질문 7개, 성향 49개, 화면 문구)
   enhance.js / .css       개선 레이어
   og.jpg / favicon.svg    링크 미리보기 · 탭 아이콘
+  admin.html / .js / .css 사장님 메뉴 관리 페이지 (/admin)
 print/                    QR · 테이블 카드 (인쇄용, 사이트에는 안 올라감)
-api/track.js              결과 기록 API → Neon(Postgres). 사이트에서 유일한 서버 코드
-package.json              위 API 의 의존성(Neon 드라이버)만
+api/track.js              결과 기록 API → Neon(Postgres)
+api/menu.js               사장님 메뉴 고침 API → Neon (품절 · 가격 · 숨김 · NEW · 새 메뉴)
+package.json              위 API 들의 의존성(Neon 드라이버)만
 tools/
   build.py                source → public
   simulate.js             결과 쏠림 검증 (실패하면 종료 코드 1)
   e2e.js                  실제 브라우저로 끝까지 눌러 보는 점검
-  test-api.js             api/track.js 를 진짜 Postgres(PGlite) 위에서 점검
+  test-api.js             api/track.js · api/menu.js 를 진짜 Postgres(PGlite) 위에서 점검
   make-qr.js              QR · 테이블 카드 · 링크 미리보기 이미지 생성
 .github/workflows/check.yml   푸시마다 위 세 가지 자동 실행
 ```
@@ -70,7 +72,33 @@ python3 -m http.server 8080 --directory public   # http://localhost:8080
   매장 병과 다르면 `details` 에서 고치세요.
 - 안주(크래커 · 체리 요거트 푸딩 · 치즈케이크)는 가게 고유 메뉴라, 사장님이 알려준 구성(2026-10-23)과 매장 사진만 넣었습니다.
   메뉴가 바뀌면 `menu.bites` 와 `details` 를 같이 고치세요.
+- **사장님이 직접 고치기**: 아래 "메뉴 관리" 참고. 품절 · 가격 · 숨김 · NEW · 새 메뉴는 코드 없이 /admin 에서.
 - 사진은 `photos/README.md` 참고. 배경을 지우고 같은 틀에 맞춰 넣으므로, 어떤 배경에서 찍은 사진이든 똑같은 무대 위에 선 것처럼 나옵니다.
+
+## 메뉴 관리 (사장님용 · https://deadly-sins-mu.vercel.app/admin)
+
+폰으로 열어 비밀번호를 넣으면 메뉴 전체가 나옵니다. 바꾸고 **저장하기** → 손님 화면에 10초쯤 뒤 반영.
+
+| 할 수 있는 것 | 손님 화면 |
+|---|---|
+| 품절 | 가격 자리에 '품절', 흐리게. 상세 · 시그니처 결과 화면에 "오늘은 품절" 안내 |
+| 가격 | 시그니처(일곱 잔 공통) · 위스키 글라스/보틀 · 칵테일 · 안주 · 음료 |
+| 숨김 | 메뉴판에서 빠짐 (지우지 않고 잠시 내리기) |
+| NEW | 이름 옆 빨간 NEW |
+| 새 메뉴 추가 · 삭제 | 각 구역 맨 아래. 설명을 넣으면 손님이 눌러서 볼 수 있음 (사진은 없음 — 사진은 `photos/` 로) |
+| 직전 저장으로 되돌리기 | 실수했을 때 |
+
+**처음 한 번 — 비밀번호 정하기** (이게 없으면 저장이 안 됨)
+1. Vercel → `deadly-sins` → Settings → Environment Variables
+2. Key `ADMIN_PASSWORD`, Value 에 비밀번호(12자 이상 권장), Environment 는 Production → Save
+3. Deployments → 맨 위 배포 ⋯ → Redeploy (환경 변수는 새 배포부터 적용)
+
+- 저장되는 건 data.js 와 **다른 점만**입니다(`deadly_sins_menu` 테이블, 저장할 때마다 한 줄씩 쌓임).
+  data.js 를 고쳐 다시 배포해도 사장님이 고친 내용은 메뉴 id 기준으로 그대로 덮입니다.
+- 비밀번호를 틀리면 그 기기(IP)는 15분에 10번까지, 전체는 15분에 50번까지 — 넘으면 15분 막힙니다.
+  누가 계속 틀리게 넣으면 사장님도 잠시 막힐 수 있습니다. 비밀번호는 이 탭을 닫으면 잊습니다.
+- /admin 주소는 어디에도 링크하지 않았고 검색에 안 잡히게(noindex) 해 두었습니다. 그래도 비밀번호가 유일한 잠금입니다.
+- API 를 못 읽으면(서버 문제 등) 손님 화면은 data.js 기본 메뉴로 그대로 뜹니다.
 
 ## 결과 쏠림 — 측정값 (2026-10-17, 7문항 원본)
 

@@ -114,6 +114,60 @@ function fakeRes() {
   const res = fakeRes(); await again({ method: 'GET' }, res);
   check(res.code === 200 && res.body.events === rows.length, '함수가 새로 떠도 테이블 그대로');
 
+  /* ---------- api/menu.js: 사장님 메뉴 고치기 ---------- */
+  console.log('\n■ 메뉴 고치기 (/api/menu)');
+  const menu = require(path.join(ROOT, 'api', 'menu.js'));
+  const mcall = async (method, body, headers) => {
+    const r = fakeRes(); await menu({ method, body, headers: Object.assign({ 'x-real-ip': '1.2.3.4' }, headers || {}), query: {} }, r); return r;
+  };
+  const KEY = { 'x-admin-key': 'correct horse battery' };
+  const empty = await mcall('GET');
+  check(empty.code === 200 && empty.body.v === 0 && empty.body.data === null, '처음엔 고친 것 없음', empty.body);
+  check(/s-maxage=10/.test(empty.headers['Cache-Control']), '손님용 읽기는 10초 캐시', empty.headers['Cache-Control']);
+  delete process.env.ADMIN_PASSWORD;
+  check((await mcall('POST', { action: 'check' }, KEY)).code === 503, '비밀번호 환경 변수가 없으면 저장 막힘 (503)');
+  process.env.ADMIN_PASSWORD = 'correct horse battery';
+  for (let i = 0; i < 12; i++) await mcall('POST', { action: 'check' }, { 'x-real-ip': '5.5.5.5' });
+  check((await mcall('POST', { action: 'check' })).code === 401, '비밀번호 없이 → 401');
+  check((await mcall('POST', { action: 'check' }, Object.assign({}, KEY, { 'x-real-ip': '5.5.5.5' }))).code === 200,
+    '비밀번호 없이 온 요청은 세지 않음 (다른 사이트가 사장님을 잠그지 못하게)');
+  check((await mcall('POST', { action: 'check' }, { 'x-admin-key': 'wrong' })).code === 401, '틀린 비밀번호 → 401');
+  const ok = await mcall('POST', { action: 'check' }, KEY);
+  check(ok.code === 200 && ok.body.ok === true, '맞는 비밀번호 → 200');
+
+  const saveData = {
+    signaturePrice: '17000',
+    items: { 'lagavulin-16': { g: '24000', b: '380,000', soldOut: true }, 'sig:교': { soldOut: true }, cheesecake: { new: false }, coke: { hidden: true, junk: 1 } },
+    extra: [{ id: 'x-ab12', section: 'bites', ko: '<b>나쵸</b>', en: 'Nachos', p: '9000', about: { ko: '치즈 나쵸', en: '' }, new: true }]
+  };
+  const saved = await mcall('POST', JSON.stringify({ action: 'save', data: saveData }), KEY);
+  const sd = saved.body && saved.body.data;
+  check(saved.code === 200 && saved.body.v > 0, '저장 → 새 버전', saved.body);
+  check(sd && sd.signaturePrice === 17000 && sd.items['lagavulin-16'].g === '24,000' && sd.items['lagavulin-16'].b === '380,000',
+    '가격은 숫자로 받아 "24,000" 꼴로', sd && sd.items);
+  check(sd && sd.items.coke && sd.items.coke.hidden === true && !('junk' in sd.items.coke), '모르는 칸은 버림', sd && sd.items.coke);
+  check(sd && sd.extra[0].ko === '<b>나쵸</b>' && sd.extra[0].p === '9,000' && !('en' in sd.extra[0].about), '새 메뉴 (글자는 그대로 두고 화면에서 이스케이프)', sd && sd.extra);
+  const now = await mcall('GET');
+  check(now.body.v === saved.body.v && now.body.data.items['sig:교'].soldOut === true, '손님 화면이 읽는 값 = 마지막 저장', now.body);
+
+  const bad = async (data, what) => check((await mcall('POST', { action: 'save', data }, KEY)).code === 400, what);
+  await bad({ items: { 'DROP TABLE': { p: '1' } } }, '이상한 메뉴 id → 400');
+  await bad({ signaturePrice: -5 }, '음수 가격 → 400');
+  await bad({ extra: [{ id: 'x-ab12', section: 'bar', ko: 'a' }] }, '모르는 구역의 새 메뉴 → 400');
+  await bad({ extra: [{ id: 'nope', section: 'bites', ko: 'a' }] }, '새 메뉴 id 꼴이 틀림 → 400');
+  await bad({ extra: [{ id: 'x-ab12', section: 'bites' }] }, '이름 없는 새 메뉴 → 400');
+  check(JSON.stringify(menu.validate({ items: { coke: { p: 'abc' } } })) === '{}', '숫자가 아닌 가격은 무시');
+
+  await mcall('POST', { action: 'save', data: { signaturePrice: 18000 } }, KEY);
+  const undo = await mcall('POST', { action: 'undo' }, KEY);
+  check(undo.code === 200 && undo.body.data.signaturePrice === 17000 && undo.body.data.items, '되돌리기 → 직전 저장 내용', undo.body.data);
+
+  // 틀린 비밀번호를 계속 넣으면 그 IP 는 잠시 막힘 (맞는 비밀번호도)
+  for (let i = 0; i < 10; i++) await mcall('POST', { action: 'check' }, { 'x-admin-key': 'guess' + i, 'x-real-ip': '9.9.9.9' });
+  check((await mcall('POST', { action: 'check' }, Object.assign({}, KEY, { 'x-real-ip': '9.9.9.9' }))).code === 429, '틀리기 10번 → 15분 막힘 (429)');
+  check((await mcall('POST', { action: 'check' }, KEY)).code === 200, '다른 IP 는 그대로');
+  delete process.env.ADMIN_PASSWORD;
+
   console.log('\n' + (fails.length ? `결과: 실패 ${fails.length}건` : '결과: 모두 통과 ✓'));
   process.exitCode = fails.length ? 1 : 0;
 })().catch((e) => { console.error(e); process.exit(1); });

@@ -316,9 +316,10 @@
     if (pair) {
       html += '<div class="ds-card ds-pair">';
       html += '<p class="ds-card-head">' + esc(t('pairHead')) + ' <span>' + esc(pair.label[lang]) + '</span></p>';
-      pair.items.forEach((it) => { html += menuRow(it[lang], t('glass') + ' ' + it.g, '', it.id); });
+      pair.items.filter(shown).forEach((it) => { html += menuRow(it[lang], it.g ? t('glass') + ' ' + it.g : '', '', it.id); });
       html += '</div>';
     }
+    if ((SIG_FLAGS[k] || {}).soldOut) html += '<p class="ds-soldout-note">' + esc(t('sigSoldOut')) + '</p>';
     html += '<button type="button" class="cta ds-order-btn" data-ds="order">' + esc(t('order')) + '</button>';
     html += '<div class="ds-actions">';
     html += '<button type="button" data-ds="share">' + esc(t('share')) + '</button>';
@@ -403,14 +404,52 @@
 
   // 메뉴 항목 찾기: id → { item, group, sinKey, kind }
   const MENU_INDEX = {};
-  (function indexMenu() {
+  function indexMenu() {
+    Object.keys(MENU_INDEX).forEach((k) => { delete MENU_INDEX[k]; });
     const m = DATA.menu;
     m.whisky.forEach((w) => w.items.forEach((it) => { if (it.id) MENU_INDEX[it.id] = { item: it, group: w.label, sinKey: w.sin, kind: 'whisky' }; }));
     m.final.items.forEach((it) => { if (it.id) MENU_INDEX[it.id] = { item: it, group: m.final.label, title: m.final.title, kind: 'whisky' }; });
     ['cocktails', 'bites', 'beverages'].forEach((sec) => (m[sec] || []).forEach((it) => { if (it.id) MENU_INDEX[it.id] = { item: it, kind: sec }; }));
-  })();
+  }
+  indexMenu();
   const detailOf = (id) => (DATA.details || {})[id] || null;
   const canOpen = (id) => !!id && (id.indexOf('sig:') === 0 || !!detailOf(id));
+
+  /* 사장님이 /admin 에서 고친 것(품절 · 가격 · 숨김 · NEW · 새 메뉴)을 data.js 위에 덮는다.
+     첫 화면을 막지 않게 따로 받아 두고, 메뉴판을 열 때는 1.5초까지만 기다린다. 못 받으면 data.js 그대로. */
+  const SIG_FLAGS = {};   // 시그니처 일곱 잔의 품절 · NEW: { 교: { soldOut, new } }
+  const LIVE_KEYS = ['g', 'b', 'p', 'soldOut', 'hidden', 'new'];
+  function applyLive(live) {
+    const d = live && live.data;
+    if (!d || typeof d !== 'object') return;
+    const m = DATA.menu;
+    if (Number.isInteger(d.signaturePrice) && d.signaturePrice > 0) DATA.signaturePrice = d.signaturePrice;
+    const items = d.items || {};
+    const all = [].concat(...m.whisky.map((w) => w.items), m.final.items, m.cocktails, m.bites, m.beverages);
+    all.forEach((it) => {
+      const o = it.id && items[it.id];
+      if (o) LIVE_KEYS.forEach((k) => { if (o[k] !== undefined) it[k] = o[k]; });
+    });
+    Object.keys(items).forEach((id) => { if (id.indexOf('sig:') === 0) SIG_FLAGS[id.slice(4)] = items[id]; });
+    DATA.details = DATA.details || {};
+    (Array.isArray(d.extra) ? d.extra : []).forEach((x) => {
+      const sec = String(x.section || '');
+      const list = sec === 'final' ? m.final.items
+        : sec.indexOf('whisky:') === 0 ? (m.whisky.find((w) => w.sin === sec.slice(7)) || {}).items
+        : ['cocktails', 'bites', 'beverages'].includes(sec) ? m[sec] : null;
+      if (!Array.isArray(list) || !x.id || list.some((it) => it.id === x.id)) return;
+      list.push({ id: x.id, ko: x.ko || x.en, en: x.en || x.ko, g: x.g, b: x.b, p: x.p,
+        soldOut: x.soldOut, hidden: x.hidden, new: x.new, added: true });
+      if (x.about) DATA.details[x.id] = { kind: null, region: null, abv: null, about: x.about, photo: null, photoCredit: null };
+    });
+    indexMenu();
+  }
+  let liveDone = false;
+  const liveMenu = (typeof fetch === 'function' ? fetch('api/menu').then((r) => (r.ok ? r.json() : null)) : Promise.resolve(null))
+    .then(applyLive).catch(() => {}).then(() => { liveDone = true; });
+  const waitLive = () => (liveDone ? Promise.resolve() : Promise.race([liveMenu, new Promise((r) => setTimeout(r, 1500))]));
+  const flagsOf = (id) => (!id ? {} : id.indexOf('sig:') === 0 ? SIG_FLAGS[id.slice(4)] || {} : (MENU_INDEX[id] || {}).item || {});
+  const shown = (it) => !it.hidden;
 
   // 메뉴 한 줄. 설명이 있는 항목은 누를 수 있는 버튼으로. desc 는 이름 아래 한 줄 설명 (시그니처 잔).
   function menuRow(name, price, sub, id, desc) {
@@ -418,19 +457,27 @@
     // 시그니처 잔은 그 죄의 상징(마름모 · 별 · 원 …), 나머지는 병 · 접시 사진
     const sym = id && id.indexOf('sig:') === 0 && window.DS_SYMBOLS ? window.DS_SYMBOLS[id.slice(4)] : null;
     const thumb = sym ? '<img class="ds-sym" src="' + esc(sym) + '" alt="" loading="lazy">'
-      : d && d.photo ? '<img class="ds-thumb' + (d.scene ? ' ds-thumb-scene' : '') + '" src="' + esc(d.photo) + '" alt="" loading="lazy">' : '';
-    const it = id && MENU_INDEX[id] ? MENU_INDEX[id].item : null;
-    const badge = it && it.new ? ' <span class="ds-new">NEW</span>' : '';   // data.js 에서 "new": true
+      : d && d.photo ? '<img class="ds-thumb' + (d.scene ? ' ds-thumb-scene' : '') + '" src="' + esc(d.photo) + '" alt="" loading="lazy">'
+      : id ? '<span class="ds-thumb ds-thumb-empty" aria-hidden="true"></span>' : '';   // 사진 없는 새 메뉴도 줄이 맞게
+    const f = flagsOf(id);
+    const badge = f.new ? ' <span class="ds-new">NEW</span>' : '';   // data.js 의 "new": true 또는 /admin 의 NEW
     const inner = thumb + '<span class="ds-row-name">' + esc(name) + badge + (sub ? '<small>' + esc(sub) + '</small>' : '') +
       (desc ? '<small class="ds-row-desc">' + esc(desc) + '</small>' : '') + '</span>' +
-      '<span class="ds-row-price">' + esc(price) + '</span>';
+      '<span class="ds-row-price">' + esc(f.soldOut ? t('soldOut') : price) + '</span>';
+    const cls = 'ds-row' + (f.soldOut ? ' ds-soldout' : '');
     if (canOpen(id)) {
-      return '<button type="button" class="ds-row ds-tap" data-ds="item" data-id="' + esc(id) + '">' + inner + '<i class="ds-chev" aria-hidden="true">›</i></button>';
+      return '<button type="button" class="' + cls + ' ds-tap" data-ds="item" data-id="' + esc(id) + '">' + inner + '<i class="ds-chev" aria-hidden="true">›</i></button>';
     }
-    return '<p class="ds-row">' + inner + '</p>';
+    return '<p class="' + cls + '">' + inner + '</p>';
   }
 
-  function openMenu() {
+  let menuOpening = false;
+  async function openMenu() {
+    if (menuOpening || document.getElementById('dsMenu')) return;
+    menuOpening = true;
+    try { await waitLive(); renderMenu(); } finally { menuOpening = false; }
+  }
+  function renderMenu() {
     const m = DATA.menu, mine = currentSin;
     let h = '<div class="ds-menu"><h2>MENU</h2><p class="ds-tap-hint">' + esc(t('tapHint')) + '</p>';
 
@@ -445,17 +492,26 @@
     h += '</section>';
 
     h += '<section><h3>' + esc(t('menuWhisky')) + '</h3><p class="ds-note">' + esc(m.whiskyNote[lang]) + ' · ' + esc(m.whiskyHead[lang]) + '</p>';
+    const gb = (it) => [it.g && 'G ' + it.g, it.b && 'B ' + it.b].filter(Boolean).join(' · ');
     m.whisky.forEach((w) => {
+      const items = w.items.filter(shown);
+      if (!items.length) return;
       h += '<div class="ds-group' + (w.sin === mine ? ' mine' : '') + '"><p class="ds-group-head">' + esc(w.label[lang]) +
         ' <span>' + esc(SINS.find((s) => s.k === w.sin).name) + '</span>' + (w.sin === mine ? '<em>' + esc(t('yourSin')) + '</em>' : '') + '</p>';
-      w.items.forEach((it) => { h += menuRow(it[lang], 'G ' + it.g + ' · B ' + it.b, '', it.id); });
+      items.forEach((it) => { h += menuRow(it[lang], gb(it), '', it.id); });
       h += '</div>';
     });
-    h += '<div class="ds-group"><p class="ds-group-head">' + esc(m.final.title) + ' <span>' + esc(m.final.label[lang]) + '</span></p>';
-    m.final.items.forEach((it) => { h += menuRow(it[lang], 'G ' + it.g + ' · B ' + it.b, '', it.id); });
-    h += '</div></section>';
+    const finals = m.final.items.filter(shown);
+    if (finals.length) {
+      h += '<div class="ds-group"><p class="ds-group-head">' + esc(m.final.title) + ' <span>' + esc(m.final.label[lang]) + '</span></p>';
+      finals.forEach((it) => { h += menuRow(it[lang], gb(it), '', it.id); });
+      h += '</div>';
+    }
+    h += '</section>';
 
-    const list = (key, items) => {
+    const list = (key, all) => {
+      const items = all.filter(shown);
+      if (!items.length) return;
       h += '<section><h3>' + esc(t(key)) + '</h3>';
       items.forEach((it) => { h += menuRow(lang === 'en' ? it.en : it.ko, it.p, lang === 'en' ? it.ko : it.en, it.id); });
       h += '</section>';
@@ -550,6 +606,7 @@
         (d.desc ? '<p class="ds-about">' + esc(d.desc[lang]) + '</p>' : '') +
         (d.line && d.line.confirmed ? '<p class="' + (d.desc ? 'ds-quote' : 'ds-about') + '">' + esc(d.line[lang]) + '</p>' : '') +
         noteList([[t('aroma'), d.aroma[lang]], [t('taste'), d.taste[lang]], [t('finish'), d.finish[lang]], [t('strength'), d.strength[lang]]]) +
+        ((SIG_FLAGS[k] || {}).soldOut ? '<p class="ds-soldout-note">' + esc(t('soldOutNote')) + '</p>' : '') +
         '<div class="ds-prices"><div><span>' + esc(t('glass')) + '</span><b>' + esc(priceOf()) + '</b></div></div>' +
       '</div>';
     }
@@ -573,8 +630,9 @@
       (chips.length ? '<ul class="ds-chips">' + chips.map((c) => '<li>' + esc(c) + '</li>').join('') + '</ul>' : '') +
       '<p class="ds-about">' + esc(L(d.about)) + '</p>' +
       noteList([[t('plate'), L(d.plate)], [t('recipe'), L(d.recipe)], [t('cask'), L(d.cask)], [t('nose'), L(d.nose)], [t('palate'), L(d.palate)], [t('finish'), L(d.finish)]]) +
+      (it.soldOut ? '<p class="ds-soldout-note">' + esc(t('soldOutNote')) + '</p>' : '') +
       (prices ? '<div class="ds-prices">' + prices + '</div>' : '') +
-      (ref.kind === 'whisky' || ref.kind === 'cocktails'
+      ((ref.kind === 'whisky' || ref.kind === 'cocktails') && !it.added   // 사장님이 새로 넣은 메뉴는 '알아보기' 원문이 없다
         ? '<button type="button" class="ds-more" data-ds="more" data-id="' + esc(id) + '" aria-expanded="false">' +
             esc(t('learnMore')) + '<i aria-hidden="true">↓</i></button><div class="ds-story" hidden></div>'
         : '') +
@@ -785,11 +843,11 @@
   applyLang();
 
   // 주소 끝이 #menu 면 메뉴를, #menu/<id> 면 그 항목까지 바로 연다 (메뉴판 전용 QR · 링크 공유용)
-  function openFromHash() {
+  async function openFromHash() {
     const m = /^#menu(?:\/([\w:%-]+))?$/.exec(location.hash || '');
     if (!m) return;
     history.replaceState(history.state, '', location.pathname + location.search);
-    if (!document.getElementById('dsMenu')) openMenu();
+    if (!document.getElementById('dsMenu')) await openMenu();
     let id = '';
     try { id = decodeURIComponent(m[1] || ''); } catch (e) { /* 깨진 주소면 메뉴판만 */ }
     if (id && canOpen(id)) openItem(id);   // #menu/sig:교 처럼 한글이 들어가면 %EA… 로 인코딩돼 온다

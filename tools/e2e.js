@@ -28,9 +28,27 @@ const PUBLIC = path.join(__dirname, '..', 'public');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css',
   '.webp': 'image/webp', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png' };
 const BEACONS = [];   // 로컬 서버가 받은 /api/track 기록 (실제 서버 대신)
+// 로컬 서버의 /api/menu (사장님 고침). 실제 서버의 검사는 tools/test-api.js 가 한다.
+const ADMIN_KEY = 'test-key';
+let LIVE = { v: 0, at: null, data: null };
+const ADMIN_POSTS = [];
 function serve() {
   return new Promise((resolve) => {
     const srv = http.createServer((req, res) => {
+      if (req.url.split('?')[0] === '/api/menu') {
+        let body = '';
+        req.on('data', (c) => { body += c; });
+        req.on('end', () => {
+          const json = (code, o) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
+          if (req.method === 'GET') return json(200, LIVE);
+          if (req.headers['x-admin-key'] !== ADMIN_KEY) return json(401, { error: 'wrong-password' });
+          let d = {}; try { d = JSON.parse(body); } catch (e) { return json(400, {}); }
+          ADMIN_POSTS.push(d);
+          if (d.action === 'save') LIVE = { v: LIVE.v + 1, at: new Date().toISOString(), data: d.data };
+          return json(200, Object.assign({ ok: true }, LIVE));
+        });
+        return;
+      }
       if (req.url.split('?')[0] === '/api/track') {
         let body = '';
         req.on('data', (c) => { body += c; });
@@ -479,6 +497,87 @@ async function collect(browser, base) {
   await ctx2.close();
 }
 
+/* 사장님 메뉴 관리: /admin 에서 고친 것이 손님 메뉴판에 그대로 보이는지 */
+async function admin(browser, base) {
+  console.log('\n■ 메뉴 관리 (/admin)');
+  LIVE = { v: 0, at: null, data: null }; ADMIN_POSTS.length = 0;
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ko-KR', isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
+  page.on('dialog', (d) => d.accept());
+  await page.goto(base + 'admin.html', { waitUntil: 'networkidle' });
+  await page.fill('#pw', 'nope'); await page.click('#login button');
+  await page.waitForFunction(() => /틀렸/.test(document.getElementById('loginMsg').textContent), null, { timeout: 5000 }).catch(() => {});
+  check(/틀렸/.test(await page.textContent('#loginMsg')) && await page.isHidden('#editor'), '틀린 비밀번호 → 들어가지 못함');
+  await page.fill('#pw', ADMIN_KEY); await page.click('#login button');
+  await page.waitForSelector('#editor:not([hidden])', { timeout: 5000 });
+  check(await page.isDisabled('#save'), '들어가면 편집 화면, 바꾼 게 없으면 저장 버튼 꺼짐');
+
+  // 라가불린 품절 · 콜라 3,500원 · 소다워터 숨김 · 치즈케이크 NEW 끄기 · 교만 품절 · 시그니처 17,000 · 안주에 새 메뉴
+  const card = (ko) => page.locator('.card.row', { has: page.locator('.name', { hasText: ko }) }).first();
+  await card('라가불린 16년').locator('.tg-sold').click();
+  await card('콜라 ').locator('[data-f="p"]').fill('3500');
+  await card('소다워터').locator('.tg', { hasText: '숨김' }).click();
+  await card('치즈케이크').locator('.tg', { hasText: 'NEW' }).click();
+  await card('PRIDE').locator('.tg-sold').click();
+  await page.fill('[data-f="sigPrice"]', '17000');
+  await page.click('.add:has-text("안주에 새 메뉴 추가")');
+  const added = page.locator('.card.is-added').last();
+  await added.locator('[data-f="ko"]').fill('<b>나쵸</b>');
+  await added.locator('[data-f="en"]').fill('Nachos');
+  await added.locator('[data-f="p"]').fill('9000');
+  await added.locator('[data-f="about"]').fill('치즈를 듬뿍 올린 나쵸.');
+  check(!(await page.isDisabled('#save')), '바꾸면 저장 버튼 켜짐');
+  await page.click('#save');
+  await page.waitForFunction(() => /저장했어요/.test(document.getElementById('barMsg').textContent), null, { timeout: 5000 }).catch(() => {});
+  const saved = (ADMIN_POSTS.filter((p) => p.action === 'save').pop() || {}).data || {};
+  check(saved.signaturePrice === 17000 && saved.items && saved.items['lagavulin-16'].soldOut === true && saved.items.coke.p === '3,500' &&
+    saved.items['soda-water'].hidden === true && saved.items.cheesecake.new === false && saved.items['sig:교'].soldOut === true &&
+    !saved.items['ardbeg-10'], '저장: 기본과 다른 점만 보냄', saved);
+  check(Array.isArray(saved.extra) && saved.extra.length === 1 && saved.extra[0].section === 'bites' && saved.extra[0].p === '9,000' &&
+    saved.extra[0].new === true && /^x-[a-z0-9]{4,12}$/.test(saved.extra[0].id), '새 메뉴: 구역 · 가격 · NEW', saved.extra);
+  check(/저장했어요/.test(await page.textContent('#barMsg')) && await page.isDisabled('#save'), '저장하면 안내 + 저장 버튼 꺼짐');
+
+  // 손님 메뉴판
+  const g = await ctx.newPage();
+  g.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
+  await g.goto(base + '#menu', { waitUntil: 'networkidle' });
+  await g.waitForSelector('#dsMenu.open', { timeout: 5000 });
+  const m = await g.evaluate(() => {
+    const row = (id) => document.querySelector('#dsMenu [data-id="' + id + '"]');
+    const price = (id) => (row(id) ? row(id).querySelector('.ds-row-price').textContent : null);
+    const nachos = [...document.querySelectorAll('#dsMenu .ds-row')].find((r) => r.textContent.includes('나쵸'));
+    return {
+      lagavulin: price('lagavulin-16'), lagSold: row('lagavulin-16').classList.contains('ds-soldout'),
+      coke: price('coke'), soda: !!row('soda-water'), cheeseNew: !!row('cheesecake').querySelector('.ds-new'),
+      pride: price('sig:교'), sigNote: document.querySelector('#dsMenu .ds-note').textContent,
+      nachos: nachos ? { html: nachos.querySelector('.ds-row-name').innerHTML, price: nachos.querySelector('.ds-row-price').textContent, id: nachos.getAttribute('data-id') } : null
+    };
+  });
+  check(m.lagavulin === '품절' && m.lagSold, '손님 메뉴판: 품절 표시', m);
+  check(m.coke === '3,500' && !m.soda && !m.cheeseNew, '손님 메뉴판: 가격 · 숨김 · NEW 끄기', m);
+  check(m.pride === '품절' && m.sigNote.includes('17,000'), '손님 메뉴판: 시그니처 품절 · 가격', m);
+  check(m.nachos && m.nachos.html.includes('&lt;b&gt;나쵸&lt;/b&gt;') && m.nachos.html.includes('ds-new') && m.nachos.price === '9,000' && m.nachos.id,
+    '손님 메뉴판: 새 메뉴 (글자는 이스케이프)', m.nachos);
+  if (m.nachos && m.nachos.id) {
+    await g.click('#dsMenu [data-id="' + m.nachos.id + '"]');
+    await g.waitForSelector('#dsItem.open', { timeout: 3000 });
+    const it = await g.evaluate(() => ({ about: document.querySelector('#dsItem .ds-about').textContent, more: !!document.querySelector('#dsItem [data-ds="more"]') }));
+    check(it.about === '치즈를 듬뿍 올린 나쵸.' && !it.more, '새 메뉴를 누르면 설명', it);
+  }
+
+  // 되돌리기 요청 · 나가기
+  await page.click('#undo');
+  await page.waitForTimeout(400);
+  check(ADMIN_POSTS.some((p) => p.action === 'undo'), '직전 저장으로 되돌리기 요청');
+  await page.click('#logout');
+  check(await page.isVisible('#login') && await page.evaluate(() => sessionStorage.getItem('ds_admin_key')) === null, '나가기 → 비밀번호 잊음');
+  check(errors.length === 0, '관리 · 손님 화면 스크립트 오류 없음', errors);
+  await ctx.close();
+  LIVE = { v: 0, at: null, data: null };
+}
+
 let SIGNATURE_EN = {};
 (async () => {
   let srv = null, base = TARGET;
@@ -494,6 +593,7 @@ let SIGNATURE_EN = {};
     await run(browser, base, 'en');
     await sizes(browser, base);
     if (!TARGET) await collect(browser, base);   // 로컬 서버가 /api/track 을 대신 받는 검사라 로컬에서만
+    if (!TARGET) await admin(browser, base);     // 마찬가지로 /api/menu 를 로컬 서버가 대신 받는다
   } catch (e) {
     check(false, '테스트 진행 중 예외', String(e).slice(0, 300));
   } finally {

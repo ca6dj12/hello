@@ -135,6 +135,13 @@ button.ds-row:focus-visible { outline: 1px solid var(--ds-red); outline-offset: 
 }
 .ds-sym { flex: none; width: 30px; height: 30px; object-fit: contain; opacity: .92; }
 .ds-tap-hint { margin: -12px 0 20px; text-align: center; font-size: 11.5px; color: var(--ds-dim); }
+/* 품절: 흐리게, 가격 자리에 '품절' */
+.ds-soldout .ds-row-name, .ds-soldout .ds-thumb, .ds-soldout .ds-sym { opacity: .42; }
+.ds-soldout .ds-row-price { color: var(--ds-red); font: 700 .92em var(--ds-sans); }
+.ds-soldout-note {
+  margin: 12px 0 0; padding: 10px 12px; border: 1px solid rgba(200, 74, 80, .55); border-radius: 10px;
+  background: rgba(200, 74, 80, .1); color: #f7f5f3; font-size: 13px; line-height: 1.5; word-break: keep-all;
+}
 .ds-new {
   display: inline-block; margin-left: 4px; padding: 3px 5px 2px; vertical-align: 2px;
   background: var(--ds-red); color: #fff; border-radius: 4px;
@@ -147,6 +154,7 @@ button.ds-row:focus-visible { outline: 1px solid var(--ds-red); outline-offset: 
 .ds-row small.ds-row-desc { margin-top: 3px; line-height: 1.5; word-break: keep-all; }
 /* 안주처럼 배경까지 한 장면인 사진은 꽉 채워 자른다 */
 .ds-thumb.ds-thumb-scene { width: 42px; height: 42px; object-fit: cover; }
+.ds-thumb-empty { display: inline-block; border: 1px solid var(--ds-line); box-sizing: border-box; }
 
 .ds-order-btn { margin-top: 6px; }
 .ds-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
