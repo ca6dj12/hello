@@ -1126,8 +1126,8 @@ window.DS_DATA = {
         "ko": "단맛도 향도 없는 탄산수. 그대로 마시거나, 위스키에 부어 하이볼로.",
         "en": "Plain sparkling water, no sugar, no flavour. On its own, or poured over whisky for a highball."
       },
-      "photo": null,
-      "photoCredit": null
+      "photo": "img/menu/soda-water.webp",
+      "photoCredit": {"author": "Égoïté", "license": "CC BY-SA 3.0", "url": "https://commons.wikimedia.org/wiki/File:Verre-eau-gazeuse-au-jardin.jpg", "gray": true}
     }
   },
 

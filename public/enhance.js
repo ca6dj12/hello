@@ -535,7 +535,7 @@
         (d.photoCredit.url ? '<a href="' + esc(d.photoCredit.url) + '" target="_blank" rel="noopener">' : '') +
         esc([d.photoCredit.author, d.photoCredit.license].filter(Boolean).join(' · ')) +
         // CC 라이선스는 고친 점을 밝히도록 한다 — 모든 메뉴 사진은 배경을 지우고 크기를 맞춘 것
-        esc(' (' + t('photoEdited') + ')') +
+        esc(' (' + t(d.photoCredit.gray ? 'photoEditedGray' : 'photoEdited') + ')') +
         (d.photoCredit.url ? '</a>' : '') + '</p>' : '') +
       '<p class="ds-kicker">' + esc(kicker) + (ref.sinKey && ref.sinKey === currentSin ? ' · ' + esc(t('yourSin')) : '') + '</p>' +
       '<h2 class="ds-item-en">' + esc(it.en) + '</h2>' +

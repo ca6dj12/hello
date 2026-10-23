@@ -109,5 +109,13 @@
     "url": "https://commons.wikimedia.org/wiki/File:Canada_Dry_ginger_ale_can.jpg",
     "source": "Wikimedia Commons, 960px",
     "scale": 0.72
+  },
+  "soda-water": {
+    "author": "Égoïté",
+    "license": "CC BY-SA 3.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Verre-eau-gazeuse-au-jardin.jpg",
+    "source": "Wikimedia Commons, original",
+    "scale": 0.72,
+    "gray": true
   }
 }

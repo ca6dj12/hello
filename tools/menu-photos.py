@@ -11,6 +11,7 @@
                           "url": "https://commons.wikimedia.org/wiki/File:...",
                           "crop": [0.55, 0, 1, 1] } }
       crop 은 선택: 원본에서 병만 남길 영역 (왼쪽, 위, 오른쪽, 아래 — 0~1 비율). 상자나 다른 병이 같이 찍혔을 때.
+      "gray": true (선택): 흑백으로. 무색 음료가 뒷배경 색을 비쳐 보일 때 (화면의 출처 옆에 "흑백" 도 적힌다).
       "scale" (선택, 기본 1): 틀 안에서의 크기 배율. 캔처럼 병보다 작은 것은 0.7 정도로 줄인다.
       "scene": true 는 안주처럼 접시 · 받침까지 한 장면인 사진: 배경을 지우지 않고 crop 영역을
       정사각형 900×900 으로 잘라 그대로 쓴다 (data.js 에 "scene": true 가 붙어 메뉴판이 꽉 찬 사진으로 보여 준다).
@@ -115,7 +116,7 @@ def update_data(done, credits):
         nxt = entry.search(s, m.end())
         end = nxt.start() if nxt else s.find("\n  },", m.end())
         part = s[m.start():end]
-        c = {k: v for k, v in (credits.get(mid) or {}).items() if k in ("author", "license", "url")} or None
+        c = {k: v for k, v in (credits.get(mid) or {}).items() if k in ("author", "license", "url", "gray")} or None
         part = re.sub(r'"photo": (null|"[^"]*")', '"photo": "img/menu/' + mid + '.webp"', part, count=1)
         part = re.sub(r'"photoCredit": (null|\{[^}]*\})', '"photoCredit": ' + (json.dumps(c, ensure_ascii=False) if c else "null"), part, count=1)
         part = re.sub(r'\n      "scene": true,', '', part)
@@ -163,6 +164,10 @@ def main():
             im = src.convert("RGB")
             cut = src
             cut.putalpha(mask_of(sess, im))
+        if (credits.get(p.stem) or {}).get("gray"):
+            a = cut.getchannel("A")
+            cut = cut.convert("L").convert("RGBA")
+            cut.putalpha(a)
         out = compose(cut, (credits.get(p.stem) or {}).get("scale", 1.0))
         if out is None:
             print(f"  ! {p.name}: 물건을 못 찾음, 건너뜀")
