@@ -436,27 +436,27 @@ window.DS_DATA = {
     "beverages": [
       {
         "ko": "아쿠아파나",
-        "en": "Acqua Panna",
+        "en": "Acqua Panna", "id": "acqua-panna",
         "p": "5,000"
       },
       {
         "ko": "콜라",
-        "en": "Coke",
+        "en": "Coke", "id": "coke",
         "p": "3,000"
       },
       {
         "ko": "콜라제로",
-        "en": "Coke Zero",
+        "en": "Coke Zero", "id": "coke-zero",
         "p": "3,000"
       },
       {
         "ko": "진저에일",
-        "en": "Ginger Ale",
+        "en": "Ginger Ale", "id": "ginger-ale",
         "p": "3,000"
       },
       {
         "ko": "소다워터",
-        "en": "Soda Water",
+        "en": "Soda Water", "id": "soda-water",
         "p": "3,000"
       }
     ],
@@ -1054,6 +1054,79 @@ window.DS_DATA = {
       },
       "scene": true,
       "photo": "img/menu/cherry-yogurt-cream.webp",
+      "photoCredit": null
+    },
+    "acqua-panna": {
+      "kind": {
+        "ko": "생수 · 탄산 없음",
+        "en": "Still mineral water"
+      },
+      "region": {
+        "ko": "이탈리아 토스카나",
+        "en": "Tuscany, Italy"
+      },
+      "abv": null,
+      "about": {
+        "ko": "토스카나 언덕의 샘에서 나는 이탈리아 내추럴 미네랄워터. 순하고 부드러워서 위스키 사이사이 입을 헹구는 체이서로 좋다.",
+        "en": "Natural mineral water from a spring in the Tuscan hills. Soft and smooth — a good chaser between whiskies."
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "coke": {
+      "kind": {
+        "ko": "탄산음료 · 캔",
+        "en": "Soft drink · can"
+      },
+      "region": null,
+      "abv": null,
+      "about": {
+        "ko": "코카콜라 오리지널.",
+        "en": "Coca-Cola Original."
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "coke-zero": {
+      "kind": {
+        "ko": "탄산음료 · 캔",
+        "en": "Soft drink · can"
+      },
+      "region": null,
+      "abv": null,
+      "about": {
+        "ko": "설탕 없는 코카콜라 제로.",
+        "en": "Coca-Cola Zero Sugar."
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "ginger-ale": {
+      "kind": {
+        "ko": "탄산음료",
+        "en": "Soft drink"
+      },
+      "region": null,
+      "abv": null,
+      "about": {
+        "ko": "캐나다드라이 진저에일. 생강 향이 은은하고 달지 않은 편이라 위스키에 섞어 마시기도 좋다.",
+        "en": "Canada Dry Ginger Ale — gently gingery and not too sweet, so it also mixes well with whisky."
+      },
+      "photo": null,
+      "photoCredit": null
+    },
+    "soda-water": {
+      "kind": {
+        "ko": "탄산수",
+        "en": "Sparkling water"
+      },
+      "region": null,
+      "abv": null,
+      "about": {
+        "ko": "단맛도 향도 없는 탄산수. 그대로 마시거나, 위스키에 부어 하이볼로.",
+        "en": "Plain sparkling water, no sugar, no flavour. On its own, or poured over whisky for a highball."
+      },
+      "photo": null,
       "photoCredit": null
     }
   },
