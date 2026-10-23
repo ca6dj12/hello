@@ -160,7 +160,13 @@
   function setDirty(on, msg) {
     dirty = on;
     $('save').disabled = !on;
-    $('barMsg').textContent = msg !== undefined ? msg : (on ? '바뀐 내용이 있어요.' : '');
+    const text = msg !== undefined ? msg : (on ? '바뀐 내용이 있어요.' : '');
+    if ($('barMsg').textContent !== text) { $('barMsg').textContent = text; replay($('barMsg'), 'msg-in'); }
+  }
+  // CSS 애니메이션을 처음부터 다시 (같은 클래스를 다시 붙여도 재생되게)
+  function replay(el, cls, ms) {
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    if (ms) setTimeout(() => el.classList.remove(cls), ms);
   }
 
   /* ---------- 입력 ---------- */
@@ -200,13 +206,18 @@
       render(); setDirty(true);
       const cards = document.querySelectorAll('[data-g="' + b.getAttribute('data-g') + '"].is-added');
       const last = cards[cards.length - 1];
-      if (last) { last.scrollIntoView({ block: 'center' }); const i = last.querySelector('input'); if (i) i.focus(); }
+      if (last) {
+        last.classList.add('just-added');
+        last.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        const i = last.querySelector('input'); if (i) i.focus({ preventScroll: true });
+      }
     } else if (b.getAttribute('data-act') === 'del') {
       const t = targetOf(b);
       if (!t || !window.confirm('이 메뉴를 지울까요? (저장해야 반영돼요)')) return;
       const g = model.groups[Number(t.card.getAttribute('data-g'))];
-      g.rows.splice(Number(t.card.getAttribute('data-r')), 1);
-      render(); setDirty(true);
+      const at = Number(t.card.getAttribute('data-r'));
+      t.card.classList.add('removing');   // 접히며 사라진 뒤 지운다
+      setTimeout(() => { g.rows.splice(at, 1); render(); setDirty(true); }, 260);
     }
   });
 
@@ -221,6 +232,7 @@
       if (res.status === 200) {
         model = build(res.body); render();
         setDirty(false, '저장했어요. 손님 화면에는 10초쯤 뒤 반영돼요.');
+        replay($('bar'), 'saved', 1400);
       } else if (res.status === 401) { showLogin(failText(res)); }
       else setDirty(true, failText(res));
     } catch (e) { setDirty(true, '인터넷 연결을 확인하고 다시 눌러 주세요.'); }
@@ -240,6 +252,7 @@
   function showLogin(msg) {
     $('editor').hidden = true; $('bar').hidden = true; $('login').hidden = false;
     $('loginMsg').textContent = msg || '';
+    if (msg) replay($('login'), 'shake', 500);
   }
   async function enter() {
     $('loginMsg').textContent = '확인하는 중…';
@@ -253,6 +266,7 @@
       try { sessionStorage.setItem(KEY_STORE, key); } catch (e) {}
       model = build(res.body);
       $('login').hidden = true; $('editor').hidden = false; $('bar').hidden = false;
+      replay($('editor'), 'entering', 1600);   // 구역들이 차례로 떠오름 (그 뒤 다시 그릴 때는 안 움직임)
       render(); setDirty(false);
     } catch (e) { showLogin('인터넷 연결을 확인해 주세요.'); }
   }

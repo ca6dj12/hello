@@ -327,6 +327,7 @@
     html += '<button type="button" data-ds="restart">' + esc(t('restart')) + '</button>';
     html += '</div>';
     extra.innerHTML = html;
+    settleImages(extra);
     shareTop.innerHTML = SHARE_ICON + '<span>' + esc(t('share')) + '</span>';
   }
 
@@ -363,17 +364,60 @@
     document.body.appendChild(node);
     overlays.push(node);
     requestAnimationFrame(() => node.classList.add('open'));
+    settleImages(node);
+    if (node.id === 'dsMenu') revealOnScroll(node);
     push('overlay');
   }
   function closeTopOverlay() {
     const node = overlays.pop();
     if (!node) return false;
     node.classList.remove('open');
-    setTimeout(() => node.remove(), 220);
+    setTimeout(() => node.remove(), 280);   // 닫히는 움직임(.26s)이 끝난 뒤
     if (wakeLock && !overlays.some((o) => o.id === 'dsOrder')) { wakeLock.release().catch(() => {}); wakeLock = null; }
     return true;
   }
   function closeAllOverlays() { while (overlays.length) closeTopOverlay(); }
+
+  /* ---------- 부드러운 움직임 (움직임 줄이기 설정이면 전부 끔) ---------- */
+  const REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // 사진은 다 받아진 뒤에 부드럽게 나타나게
+  function settleImages(root) {
+    if (REDUCED) return;
+    root.querySelectorAll('.ds-photo img, img.ds-thumb').forEach((img) => {
+      img.classList.add('ds-fade');
+      const done = () => requestAnimationFrame(() => img.classList.add('ds-ready'));
+      if (img.complete && img.naturalWidth) done();
+      else { img.addEventListener('load', done, { once: true }); img.addEventListener('error', done, { once: true }); }
+    });
+  }
+  // 메뉴판: 화면에 들어오는 줄부터 차례로 떠오름
+  function revealOnScroll(root) {
+    if (REDUCED || typeof IntersectionObserver === 'undefined') return;
+    const els = root.querySelectorAll('.ds-menu > h2, .ds-tap-hint, .ds-menu h3, .ds-menu section > .ds-note, .ds-sig, .ds-group, .ds-menu section > .ds-row, .ds-info, .ds-credits');
+    const io = new IntersectionObserver((entries) => {
+      let k = 0;
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.style.setProperty('--d', Math.min(k++, 10) * 45 + 'ms');
+        e.target.classList.add('ds-in');
+        io.unobserve(e.target);
+      });
+    }, { root, threshold: 0.01 });
+    els.forEach((el) => { el.classList.add('ds-reveal'); io.observe(el); });
+  }
+  // 누른 자리에서 번지는 잔물결
+  const RIPPLE = '.choice, button.ds-row, .ds-share-top, .ds-more, .ds-actions button, .ds-share-copy';
+  if (!REDUCED) {
+    document.addEventListener('pointerdown', (e) => {
+      const b = e.target.closest && e.target.closest(RIPPLE);
+      if (!b) return;
+      const r = b.getBoundingClientRect();
+      b.style.setProperty('--rx', (e.clientX - r.left) + 'px');
+      b.style.setProperty('--ry', (e.clientY - r.top) + 'px');
+      b.classList.remove('ds-ripple'); void b.offsetWidth; b.classList.add('ds-ripple');
+      clearTimeout(b.dsRipple); b.dsRipple = setTimeout(() => b.classList.remove('ds-ripple'), 700);
+    }, { passive: true });
+  }
   function layer(id, inner) {
     const node = document.createElement('div');
     node.className = 'ds-layer'; node.id = id;
@@ -744,7 +788,7 @@
       const key = k + ':' + lang;
       let blob = shareCache && shareCache.key === key ? shareCache.blob : null;
       if (!blob) {
-        if (btn) btn.textContent = t('making');
+        if (btn) { (btn.querySelector('span') || btn).textContent = t('making'); btn.setAttribute('aria-busy', 'true'); }
         blob = await makeShareImage(k);
         shareCache = { key, blob };
       }
@@ -766,7 +810,7 @@
     } catch (e) {
       track('error', { message: 'share: ' + String(e && e.message || e).slice(0, 200) });
     } finally {
-      if (btn) btn.innerHTML = label;
+      if (btn) { btn.innerHTML = label; btn.removeAttribute('aria-busy'); }
       sharing = false;
     }
   }
@@ -785,7 +829,10 @@
     track('share', { sin: KO[k], via: 'sheet' });
   }
   function copyLink(btn) {
-    const done = () => { btn.textContent = t('copied'); setTimeout(() => { btn.textContent = t('copyLink'); }, 1600); };
+    const done = () => {
+      btn.textContent = t('copied'); btn.classList.add('ds-done');
+      setTimeout(() => { btn.textContent = t('copyLink'); btn.classList.remove('ds-done'); }, 1600);
+    };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(SITE_URL).then(done, () => window.prompt(t('copyLink'), SITE_URL));
     else window.prompt(t('copyLink'), SITE_URL);
   }

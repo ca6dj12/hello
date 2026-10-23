@@ -207,11 +207,14 @@ button.ds-row:focus-visible { outline: 1px solid var(--ds-red); outline-offset: 
   overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
   padding: calc(env(safe-area-inset-top, 0px) + 64px) 22px calc(env(safe-area-inset-bottom, 0px) + 40px);
   box-sizing: border-box;
-  opacity: 0; transform: translateY(14px);
-  transition: opacity .22s ease, transform .3s cubic-bezier(.19, 1, .22, 1);
+  opacity: 0; transform: translateY(22px) scale(.99);
+  transition: opacity .2s ease, transform .26s cubic-bezier(.4, 0, 1, 1);   /* 닫힐 때: 짧고 빠르게 */
   font-family: var(--ds-sans);
 }
-.ds-layer.open { opacity: 1; transform: none; }
+.ds-layer.open {
+  opacity: 1; transform: none;
+  transition: opacity .34s ease, transform .55s cubic-bezier(.22, 1, .36, 1);   /* 열릴 때: 부드럽게 떠오름 */
+}
 .ds-layer .ds-close {
   position: fixed; z-index: 2;
   top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
@@ -342,7 +345,64 @@ button.ds-row:focus-visible { outline: 1px solid var(--ds-red); outline-offset: 
 .ds-layers span { display: block; margin-top: 3px; font-size: clamp(13.5px, 3.6vw, 15px); line-height: 1.55; color: rgba(255, 255, 255, .9); word-break: keep-all; }
 @keyframes dsRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
+/* ---------- 부드러운 움직임 ---------- */
+@keyframes dsUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes dsPop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+@keyframes dsArt { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes dsNudge { 50% { transform: translateY(-3px); } }
+@keyframes dsRipple { from { transform: scale(0); opacity: 1; } to { transform: scale(36); opacity: 0; } }
+:root { --ds-ease: cubic-bezier(.22, 1, .36, 1); }
+
+/* 메뉴판: 스크롤해서 보이는 줄부터 차례로 떠오름 (enhance.js 의 revealOnScroll) */
+.ds-reveal { opacity: 0; transform: translateY(12px); transition: opacity .5s ease var(--d, 0ms), transform .65s var(--ds-ease) var(--d, 0ms); }
+.ds-reveal.ds-in { opacity: 1; transform: none; }
+.ds-in .ds-new, .ds-layer.open .ds-item-en .ds-new { animation: dsPop .5s cubic-bezier(.34, 1.56, .64, 1) .3s both; }
+
+/* 사진: 다 받아지면 살짝 커졌다가 제자리로 */
+.ds-fade { opacity: 0; transition: opacity .55s ease, transform .9s var(--ds-ease); }
+.ds-photo img.ds-fade { transform: scale(1.035); }
+.ds-fade.ds-ready { opacity: 1; transform: none; }
+
+/* 상세 · 주문 · 공유 화면: 위에서부터 차례로 */
+.ds-layer.open .ds-item > :not(.ds-photo):not(.ds-story),
+.ds-layer.open .ds-order > *,
+.ds-layer.open .ds-sharesheet > * { animation: dsUp .55s var(--ds-ease) both; }
+.ds-layer.open .ds-item > :nth-child(2), .ds-layer.open .ds-order > :nth-child(2), .ds-layer.open .ds-sharesheet > :nth-child(2) { animation-delay: 70ms; }
+.ds-layer.open .ds-item > :nth-child(3), .ds-layer.open .ds-order > :nth-child(3), .ds-layer.open .ds-sharesheet > :nth-child(3) { animation-delay: 120ms; }
+.ds-layer.open .ds-item > :nth-child(4), .ds-layer.open .ds-order > :nth-child(4), .ds-layer.open .ds-sharesheet > :nth-child(4) { animation-delay: 170ms; }
+.ds-layer.open .ds-item > :nth-child(5), .ds-layer.open .ds-order > :nth-child(5), .ds-layer.open .ds-sharesheet > :nth-child(5) { animation-delay: 220ms; }
+.ds-layer.open .ds-item > :nth-child(6), .ds-layer.open .ds-order > :nth-child(6), .ds-layer.open .ds-sharesheet > :nth-child(6) { animation-delay: 270ms; }
+.ds-layer.open .ds-item > :nth-child(n+7), .ds-layer.open .ds-order > :nth-child(n+7) { animation-delay: 320ms; }
+.ds-layer.open .ds-order-art { animation-name: dsArt; animation-duration: .9s; }
+.ds-layer.open .ds-share-img { animation-name: dsArt; }
+.ds-story .ds-layers li { animation: dsUp .45s var(--ds-ease) both; }
+.ds-story .ds-layers li:nth-child(2) { animation-delay: 80ms; }
+.ds-story .ds-layers li:nth-child(3) { animation-delay: 160ms; }
+.ds-story .ds-layers li:nth-child(4) { animation-delay: 240ms; }
+
+/* 칵테일 이름이 떠오른 뒤 공유 버튼 · 카드가 이어서 */
+#signatureNameReveal.visible .ds-share-top { animation: dsUp .6s var(--ds-ease) .55s both; }
+#signatureNameReveal.visible .ds-extra > * { animation: dsUp .6s var(--ds-ease) both; animation-delay: .75s; }
+#signatureNameReveal.visible .ds-extra > :nth-child(2) { animation-delay: .85s; }
+#signatureNameReveal.visible .ds-extra > :nth-child(n+3) { animation-delay: .95s; }
+.ds-share-top[aria-busy="true"] svg { animation: dsNudge .9s ease-in-out infinite; }
+.ds-share-copy, .ds-actions button, button.ds-row { transition: background .2s ease, border-color .2s ease, transform .15s ease; }
+.ds-share-copy.ds-done { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .45); }
+
+/* 누른 자리에서 번지는 잔물결 (퀴즈 보기 · 메뉴 줄 · 버튼) */
+.choice, button.ds-row, .ds-share-top, .ds-more, .ds-actions button, .ds-share-copy { position: relative; overflow: hidden; }
+.ds-ripple::after {
+  content: ''; position: absolute; left: var(--rx, 50%); top: var(--ry, 50%);
+  width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%;
+  background: rgba(255, 255, 255, .2); pointer-events: none;
+  animation: dsRipple .65s var(--ds-ease) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ds-layer { transition: none; transform: none; }
-  .ds-story { animation: none; }
+  .ds-layer, .ds-layer.open { transition: none; transform: none; }
+  .ds-story, .ds-story .ds-layers li, .ds-new,
+  .ds-layer.open .ds-item > *, .ds-layer.open .ds-order > *, .ds-layer.open .ds-sharesheet > *,
+  #signatureNameReveal.visible .ds-share-top, #signatureNameReveal.visible .ds-extra > *, .ds-share-top svg { animation: none !important; }
+  .ds-reveal, .ds-fade { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .ds-ripple::after { display: none; }
 }

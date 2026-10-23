@@ -222,6 +222,16 @@ async function run(browser, base, lang) {
     return { open: c && c.open, n: c ? c.querySelectorAll('li a[href^="https://commons.wikimedia.org/"]').length : 0, expected };
   });
   check(credits.open === false && credits.n === credits.expected && credits.n > 0, '사진 출처: 메뉴판 맨 아래에 접혀 있음', credits);
+  // 줄은 화면에 들어올 때 떠오르는데, 끝까지 내리면 하나도 빠짐없이 나타나야 한다
+  const unrevealed = await page.evaluate(async () => {
+    const m = document.getElementById('dsMenu');
+    for (let y = 0; y <= m.scrollHeight; y += 250) { m.scrollTop = y; await new Promise((r) => setTimeout(r, 40)); }
+    await new Promise((r) => setTimeout(r, 250));
+    const left = m.querySelectorAll('.ds-reveal:not(.ds-in)').length;
+    m.scrollTop = 0;
+    return left;
+  });
+  check(unrevealed === 0, '메뉴판을 끝까지 내리면 모든 줄이 나타남', unrevealed);
   const sigDesc = await page.evaluate(() => [...document.querySelectorAll('#dsMenu .ds-sig')].map((r) =>
     [(r.querySelector('small:not(.ds-row-desc)') || {}).textContent || '', ((r.querySelector('.ds-row-desc') || {}).textContent || '').length]));
   check(sigDesc.length === 7 && sigDesc.every(([style, n]) => style && n > 15), '일곱 잔: 맛 한마디 + 한 줄 설명', sigDesc);
@@ -578,6 +588,21 @@ async function admin(browser, base) {
   LIVE = { v: 0, at: null, data: null };
 }
 
+/* 폰에서 '동작 줄이기'를 켠 손님: 움직임 없이 처음부터 다 보여야 한다 */
+async function reducedMotion(browser, base) {
+  console.log('\n■ 동작 줄이기 설정');
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ko-KR', reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  await page.goto(base + '#menu', { waitUntil: 'networkidle' });
+  await page.waitForSelector('#dsMenu.open', { timeout: 5000 });
+  const r = await page.evaluate(() => ({
+    reveal: document.querySelectorAll('.ds-reveal').length,
+    faded: [...document.querySelectorAll('#dsMenu .ds-row')].filter((x) => getComputedStyle(x).opacity !== '1').length
+  }));
+  check(r.reveal === 0 && r.faded === 0, '동작 줄이기: 메뉴가 움직임 없이 바로 다 보임', r);
+  await ctx.close();
+}
+
 let SIGNATURE_EN = {};
 (async () => {
   let srv = null, base = TARGET;
@@ -594,6 +619,7 @@ let SIGNATURE_EN = {};
     await sizes(browser, base);
     if (!TARGET) await collect(browser, base);   // 로컬 서버가 /api/track 을 대신 받는 검사라 로컬에서만
     if (!TARGET) await admin(browser, base);     // 마찬가지로 /api/menu 를 로컬 서버가 대신 받는다
+    await reducedMotion(browser, base);
   } catch (e) {
     check(false, '테스트 진행 중 예외', String(e).slice(0, 300));
   } finally {

@@ -81,3 +81,38 @@ button { font-family: var(--sans); cursor: pointer; -webkit-tap-highlight-color:
 }
 .bar-msg { flex: 1; margin: 0; font-size: 13px; line-height: 1.4; color: var(--soft); word-break: keep-all; }
 .bar .primary { flex: none; }
+
+/* ---------- 부드러운 움직임 ---------- */
+:root { --ease: cubic-bezier(.22, 1, .36, 1); }
+@keyframes up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes barIn { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes addIn { from { opacity: 0; transform: translateY(-8px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes shake { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+@keyframes savedPulse { 0% { box-shadow: 0 0 0 0 rgba(247, 245, 243, .55); } 100% { box-shadow: 0 0 0 14px rgba(247, 245, 243, 0); } }
+
+#login:not([hidden]), #editor:not([hidden]) { animation: fade .4s ease both; }
+.top { animation: up .6s var(--ease) both; }
+#editor.entering .help, #editor.entering .sec { animation: up .55s var(--ease) both; }
+#editor.entering .sec:nth-child(1) { animation-delay: .08s; }
+#editor.entering .sec:nth-child(2) { animation-delay: .14s; }
+#editor.entering .sec:nth-child(3) { animation-delay: .2s; }
+#editor.entering .sec:nth-child(4) { animation-delay: .26s; }
+#editor.entering .sec:nth-child(n+5) { animation-delay: .32s; }
+.bar:not([hidden]) { animation: barIn .45s var(--ease) both; }
+.bar-msg.msg-in { animation: up .35s var(--ease) both; }
+.bar.saved .primary { animation: savedPulse .9s ease-out; }
+.login.shake { animation: shake .42s ease; }
+
+.card { transition: border-color .25s ease, opacity .25s ease, background .25s ease, transform .26s var(--ease); }
+.card.just-added { animation: addIn .5s var(--ease) both; }
+.card.removing { opacity: 0; transform: translateX(24px) scale(.97); }
+.tg span { transition: background .2s ease, border-color .2s ease, color .2s ease, transform .15s ease; }
+.tg:active span { transform: scale(.94); }
+.primary, .ghost, .add, .del { transition: transform .15s ease, opacity .2s ease, background .2s ease; }
+.primary:not(:disabled):active, .ghost:active, .add:active, .del:active { transform: scale(.97); }
+input, textarea { transition: border-color .2s ease, outline-color .2s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
