@@ -57,6 +57,18 @@
       ua: navigator.userAgent.slice(0, 200)
     });
   });
+  // 퀴즈 도중 화면을 떠나면(앱 전환 · 탭 닫기) 몇 번 문항이었는지 남긴다 — 어느 문항에서 그만두는지 보려고.
+  // 돌아와서 끝까지 한 세션은 통계에서 빠진다(결과가 있는 세션은 제외).
+  let lastQuit = '';
+  function noteQuit() {
+    if (document.body.dataset.dsScreen !== 'quiz') return;
+    const key = SID + ':' + index;
+    if (key === lastQuit) return;
+    lastQuit = key;
+    track('quit', { q: index + 1, answered: answers.filter((a) => a !== null).length });
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') noteQuit(); });
+  window.addEventListener('pagehide', noteQuit);
   window.addEventListener('unhandledrejection', (e) => {
     if (errorBudget-- <= 0) return;
     track('error', { message: String((e.reason && e.reason.message) || e.reason).slice(0, 300), ua: navigator.userAgent.slice(0, 200) });

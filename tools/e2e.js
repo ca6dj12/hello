@@ -431,6 +431,22 @@ async function collect(browser, base) {
   await page.click('#start');
   await page.waitForSelector('#quiz.active', { timeout: 8000 });
   await page.waitForFunction(() => !coverTransitionBusy, null, { timeout: 8000 });
+  // 2문항 답한 뒤 다른 앱으로 넘어감 → 3번 문항에서 떠났다는 기록
+  for (let i = 0; i < 2; i++) {
+    const before = await page.evaluate(() => index);
+    await (await page.$$('#choices .choice'))[0].click();
+    await page.waitForFunction((b) => index !== b, before, { timeout: 6000 });
+    await page.waitForFunction(() => !advancing, null, { timeout: 6000 }).catch(() => {});
+  }
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    document.dispatchEvent(new Event('visibilitychange'));   // 같은 문항에서 두 번 떠도 한 번만
+    delete document.visibilityState;
+  });
+  await page.waitForTimeout(300);
+  const quits = BEACONS.filter((x) => x.body && x.body.type === 'quit').map((x) => x.body);
+  check(quits.length === 1 && quits[0].q === 3 && quits[0].answered === 2, '퀴즈 도중 떠나면 몇 번 문항이었는지 기록', quits);
   await answerAll(page);
   await page.click('#toDesire');
   await page.waitForSelector('#signatureNameReveal.visible', { timeout: 20000 });

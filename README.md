@@ -132,10 +132,10 @@ python3 -m http.server 8080 --directory public   # http://localhost:8080
 |---|---|
 | created_at | 시간 (UTC. 한국 시간은 `created_at at time zone 'Asia/Seoul'`) |
 | sid | 퀴즈를 시작할 때마다 새로 만드는 임의 값 (사람을 특정하지 못함) |
-| type | start · result · signature · order(바텐더 화면) · menu · share(이미지 저장) · restart · lang · error |
+| type | start · quit(퀴즈 도중 떠남) · result · signature · order(바텐더 화면) · menu · item(메뉴 항목) · share(공유) · restart · lang · error |
 | sin / second / tie | 1위 · 2위 죄(한국어), 동점 여부 — result 일 때 |
 | points / picks | 점수, 고른 보기 (`Q1B` = 1번 문항의 디자이너 원본 B 보기) |
-| extra | 그 밖의 값 (오류 메시지 등) |
+| extra | 그 밖의 값 (오류 메시지, quit 의 문항 번호 `q` 등) |
 
 - result 는 세션마다 한 줄입니다. 손님이 뒤로 가서 답을 바꾸면 마지막 결과로 덮어씁니다.
 - 개인 정보(이름 · 전화번호 · IP)는 저장하지 않습니다. 오류일 때만 브라우저 종류를 같이 저장합니다.
@@ -148,7 +148,10 @@ python3 -m http.server 8080 --directory public   # http://localhost:8080
 
 Vercel → `deadly-sins` → Deployments → 맨 위(Production) 배포의 고유 주소
 (`deadly-sins-xxxxxxxx-ca6dj12s-projects.vercel.app`) 뒤에 `/api/track?stats=1` 을 붙여 엽니다.
-죄별 분포 · 날짜별 시작/완주/바텐더 화면 · 보기별 선택 수 · 최근 기록 40건 · 최근 오류가 JSON 으로 나옵니다.
+죄별 분포 · 날짜별 시작/완주/바텐더 화면 · 보기별 선택 수 · 많이 눌러 본 메뉴 · 그만둔 문항(`quits`) · 최근 기록 40건 · 최근 오류가 JSON 으로 나옵니다.
+
+- `quits`: 끝까지 못 간 손님이 마지막으로 보던 문항별 명수. 퀴즈 도중 다른 앱으로 넘어가거나 창을 닫으면 기록되고,
+  돌아와서 끝까지 한 손님은 빠집니다. 한 문항에 몰리면 그 문항이 헷갈리거나 길다는 신호입니다.
 
 - 이 주소는 Deployment Protection(로그인) 뒤에 있어서 팀원만 열립니다.
   손님이 쓰는 `deadly-sins-mu.vercel.app/api/track?stats=1` 은 404 입니다.

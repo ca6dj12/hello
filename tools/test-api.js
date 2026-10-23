@@ -56,6 +56,13 @@ function fakeRes() {
   check((await call('POST', { sid: 'obj', type: 'start' })).code === 204, '본문이 이미 객체여도 저장');
   check((await call('POST', Buffer.from('{"sid":"buf","type":"menu"}'))).code === 204, '본문이 Buffer 여도 저장');
   check((await send({ sid: 'abc', type: 'item', id: 'lagavulin-16' })).code === 204, '메뉴 항목 열람 저장');
+  // 퀴즈 도중 떠남: q1 은 3번에서 떠났다가 4번에서 다시 떠남(마지막 것만), q2 는 5번, abc 는 떠났다가 돌아와 결과까지
+  check((await send({ sid: 'q1', type: 'quit', q: 3, answered: 2 })).code === 204, '이탈 문항 저장');
+  await send({ sid: 'q1', type: 'quit', q: 4, answered: 3 });
+  await send({ sid: 'q2', type: 'quit', q: 5, answered: 4, junk: 'x'.repeat(50) });
+  await send({ sid: 'abc', type: 'quit', q: 2, answered: 1 });
+  check((await send({ sid: 'q3', type: 'quit', q: 'drop' })).code === 400, '이탈 문항이 숫자가 아니면 → 400');
+  check((await send({ sid: 'q3', type: 'quit', q: 99 })).code === 400, '이탈 문항이 범위 밖이면 → 400');
   check((await send({ sid: 'x', type: 'drop table' })).code === 400, '모르는 종류 → 400');
   check((await send({ sid: 'x', type: 'result', sin: '<script>' })).code === 400, '이상한 죄 이름의 결과 → 400');
   check((await send({ type: 'start' })).code === 400, '세션 없음 → 400');
@@ -73,6 +80,8 @@ function fakeRes() {
   const big = rows.find((r) => r.sid === 'big');
   check(big && big.extra && JSON.stringify(big.extra).length <= 1100, '긴 기타는 1000자 안팎으로 잘림', big && JSON.stringify(big.extra).length);
   check(rows.every((r) => r.sid.length <= 16), '세션은 16자 이내');
+  const quitRow = rows.find((r) => r.sid === 'q2' && r.type === 'quit');
+  check(quitRow && JSON.stringify(quitRow.extra) === '{"q":5,"answered":4}', '이탈 기록에는 문항 번호 · 답한 수만', quitRow && quitRow.extra);
 
   const get = await call('GET');
   check(get.body.db === true && get.body.events === rows.length, `GET → db:true, events:${rows.length}`, get.body);
@@ -94,6 +103,8 @@ function fakeRes() {
   check(Array.isArray(st.recent) && st.recent.length === rows.length, '최근 기록', st.recent && st.recent.length);
   check(Array.isArray(st.errors) && st.errors.some((r) => r.message === 'boom'), '최근 오류', st.errors);
   check(Array.isArray(st.items) && st.items.some((r) => r.id === 'lagavulin-16' && r.n === 1), '많이 눌러 본 메뉴', st.items);
+  check(JSON.stringify(st.quits) === JSON.stringify([{ q: 4, n: 1 }, { q: 5, n: 1 }]),
+    '그만둔 문항: 세션마다 마지막 것, 끝까지 한 세션은 빼고', st.quits);
   delete process.env.VERCEL_URL;
   check((await call('GET', undefined, { query: { stats: '1' }, headers: { host: 'x' } })).code === 404, 'VERCEL_URL 이 없으면 통계 꺼짐');
 

@@ -16,7 +16,7 @@
 'use strict';
 const { neon } = require('@neondatabase/serverless');
 
-const TYPES = ['start', 'result', 'signature', 'order', 'menu', 'item', 'share', 'restart', 'lang', 'error'];
+const TYPES = ['start', 'quit', 'result', 'signature', 'order', 'menu', 'item', 'share', 'restart', 'lang', 'error'];
 const SINS = ['교만', '질투', '분노', '나태', '탐욕', '탐식', '색욕'];
 const KNOWN = ['sid', 'type', 'lang', 'v', 'sin', 'second', 'tie', 'points', 'picks'];
 
@@ -64,6 +64,13 @@ function toRow(d) {
   if (d.type === 'result' && !sin(d.sin)) return null;
   const extra = {};
   Object.keys(d).forEach((k) => { if (!KNOWN.includes(k)) extra[k] = d[k]; });
+  if (d.type === 'quit') {   // 퀴즈 도중 화면을 떠남: 몇 번 문항이었는지(q), 몇 개 답했는지
+    const q = Number(d.q), answered = Number(d.answered);
+    if (!Number.isInteger(q) || q < 1 || q > 30) return null;
+    Object.keys(extra).forEach((k) => { delete extra[k]; });
+    extra.q = q;
+    if (Number.isInteger(answered) && answered >= 0 && answered <= 30) extra.answered = answered;
+  }
   const extraJson = Object.keys(extra).length ? JSON.stringify(extra).slice(0, 1000) : null;
   return {
     sid,
@@ -93,7 +100,7 @@ function canSeeStats(req) {
 const KST = "(created_at at time zone 'Asia/Seoul')";
 async function stats(sql) {
   const q = (text) => sql.query(text);
-  const [types, sins, days, picks, recent, errors, items] = await Promise.all([
+  const [types, sins, days, picks, recent, errors, items, quits] = await Promise.all([
     q(`select type, count(*)::int as n, count(distinct sid)::int as sessions
        from deadly_sins_events group by type order by n desc`),
     q(`select sin, count(*)::int as n, count(*) filter (where tie)::int as ties
@@ -112,7 +119,13 @@ async function stats(sql) {
     q(`select to_char(${KST}, 'MM-DD HH24:MI') as at, extra->>'message' as message, extra->>'ua' as ua
        from deadly_sins_events where type = 'error' order by id desc limit 10`),
     q(`select extra->>'id' as id, count(*)::int as n, count(distinct sid)::int as sessions
-       from deadly_sins_events where type = 'item' group by 1 order by n desc limit 30`)
+       from deadly_sins_events where type = 'item' group by 1 order by n desc limit 30`),
+    // 결과까지 못 간 세션이 마지막으로 보던 문항 (돌아와서 끝낸 세션은 빠진다)
+    q(`select (extra->>'q')::int as q, count(*)::int as n
+       from (select distinct on (sid) sid, extra from deadly_sins_events
+             where type = 'quit' order by sid, id desc) last
+       where not exists (select 1 from deadly_sins_events r where r.type = 'result' and r.sid = last.sid)
+       group by 1 order by 1`)
   ]);
   const total = sins.reduce((a, r) => a + r.n, 0);
   return {
@@ -122,6 +135,7 @@ async function stats(sql) {
     days,
     picks,
     items,      // 메뉴판에서 많이 눌러 본 항목
+    quits,      // 퀴즈를 그만둔 문항 (q 번에서 n 명)
     recent,
     errors
   };
