@@ -205,7 +205,7 @@ async function run(browser, base, lang) {
 
   // 메뉴 항목 누르기 → 상세 → 폰 뒤로가기는 상세만 닫음
   const taps = await page.evaluate(() => document.querySelectorAll('#dsMenu button.ds-tap').length);
-  check(taps >= 7 + 23, '누를 수 있는 항목 (시그니처 7 + 설명 있는 23)', taps);
+  check(taps >= 7 + 24, '누를 수 있는 항목 (시그니처 7 + 설명 있는 24)', taps);
   await page.click('#dsMenu button[data-id="lagavulin-16"]');
   await page.waitForSelector('#dsItem.open', { timeout: 3000 });
   await page.waitForTimeout(400);
@@ -248,7 +248,7 @@ async function run(browser, base, lang) {
   check(!(await page.$('#dsItem')), '상세 닫기 버튼');
 
   // 안주: 매장 사진(꽉 찬 장면) + 구성 + 가격, 위스키용 안내 문구는 없음
-  await page.click('#dsMenu button[data-id="cherry-yogurt-cream"]');
+  await page.click('#dsMenu button[data-id="cherry-yogurt-pudding"]');
   await page.waitForSelector('#dsItem.open', { timeout: 3000 });
   await page.waitForFunction(() => { const i = document.querySelector('#dsItem .ds-photo-scene img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 5000 });
   const bite = await page.evaluate(() => ({

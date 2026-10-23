@@ -3,7 +3,8 @@
    가격이나 메뉴가 바뀌면 이 파일만 고치면 됩니다 (빌드 불필요).
 
    ※ 시그니처 일곱 잔 가격(signaturePrice)은 2026-10-17 에 16,000원으로 확인.
-     위스키 · 안주 · 음료 가격은 2026-09-18 메뉴판 사진 기준이라,
+     안주 세 가지(이름 · 구성 · 가격)는 2026-10-23 사장님 확인.
+     위스키 · 음료 가격은 2026-09-18 메뉴판 사진 기준이라,
      그 뒤 바뀐 게 있으면 여기서 고쳐 주세요.
    ※ 키(교·질·분·나·탐·식·색)는 사이트 원본의 SINS 키와 같아야 합니다.
    ============================================================= */
@@ -416,13 +417,18 @@ window.DS_DATA = {
     },
     "bites": [
       {
-        "ko": "블루베리 페퍼 크래커",
-        "en": "Blueberry Pepper Cracker", "id": "blueberry-pepper-cracker",
+        "ko": "크래커",
+        "en": "Crackers", "id": "cracker",
         "p": "8,000"
       },
       {
-        "ko": "체리 요거트 크림",
-        "en": "Cherry Yogurt Cream", "id": "cherry-yogurt-cream",
+        "ko": "체리 요거트 푸딩",
+        "en": "Cherry Yogurt Pudding", "id": "cherry-yogurt-pudding",
+        "p": "8,000"
+      },
+      {
+        "ko": "치즈케이크",
+        "en": "Cheesecake", "id": "cheesecake",
         "p": "8,000"
       }
     ],
@@ -1018,7 +1024,7 @@ window.DS_DATA = {
       "photo": "img/menu/old-fashioned.webp",
       "photoCredit": null
     },
-    "blueberry-pepper-cracker": {
+    "cracker": {
       "kind": {
         "ko": "안주",
         "en": "Bite"
@@ -1026,18 +1032,18 @@ window.DS_DATA = {
       "region": null,
       "abv": null,
       "about": {
-        "ko": "블루베리에 후추를 더한 분홍빛 크림을 바삭한 크래커에 얹어 먹는 플레이트. 올리브 · 아몬드 · 블루베리가 곁들여 나온다.",
-        "en": "A blush-pink blueberry cream with cracked pepper, spread on crisp crackers, with olives, almonds and blueberries on the side."
+        "ko": "트러플 크래커에 블루베리 크림을 얹어 먹는 플레이트. 블루베리 · 올리브 · 아몬드가 곁들여 나온다.",
+        "en": "Truffle crackers to spread with blueberry cream, with blueberries, olives and almonds on the side."
       },
       "plate": {
-        "ko": "크래커 · 블루베리 페퍼 크림 · 올리브 · 아몬드 · 블루베리",
-        "en": "Crackers, blueberry-pepper cream, olives, almonds, blueberries"
+        "ko": "트러플 크래커 · 블루베리크림 · 블루베리 · 올리브 · 아몬드",
+        "en": "Truffle crackers, blueberry cream, blueberries, olives, almonds"
       },
       "scene": true,
-      "photo": "img/menu/blueberry-pepper-cracker.webp",
+      "photo": "img/menu/cracker.webp",
       "photoCredit": null
     },
-    "cherry-yogurt-cream": {
+    "cherry-yogurt-pudding": {
       "kind": {
         "ko": "안주 · 디저트",
         "en": "Bite · dessert"
@@ -1045,15 +1051,34 @@ window.DS_DATA = {
       "region": null,
       "abv": null,
       "about": {
-        "ko": "부드러운 요거트 크림 위에 체리 콩포트를 듬뿍 올려 잔에 담아 내는 디저트.",
-        "en": "Soft yogurt cream under a generous spoon of cherry compote, served in a coupe."
+        "ko": "잔에 담아 내는 요거트 푸딩에 체리를 듬뿍 올린 디저트.",
+        "en": "Yogurt pudding served in a coupe, heaped with cherries."
       },
       "plate": {
-        "ko": "요거트 크림 · 체리 콩포트 · 체리",
-        "en": "Yogurt cream, cherry compote, cherries"
+        "ko": "체리 요거트 푸딩 · 체리",
+        "en": "Cherry yogurt pudding, cherries"
       },
       "scene": true,
-      "photo": "img/menu/cherry-yogurt-cream.webp",
+      "photo": "img/menu/cherry-yogurt-pudding.webp",
+      "photoCredit": null
+    },
+    "cheesecake": {
+      "kind": {
+        "ko": "안주 · 디저트",
+        "en": "Bite · dessert"
+      },
+      "region": null,
+      "abv": null,
+      "about": {
+        "ko": "치즈케이크 한 조각에 블루베리 크림과 블루베리를 곁들인 디저트.",
+        "en": "A slice of cheesecake with blueberry cream and blueberries."
+      },
+      "plate": {
+        "ko": "치즈케이크 · 블루베리크림 · 블루베리",
+        "en": "Cheesecake, blueberry cream, blueberries"
+      },
+      "scene": true,
+      "photo": "img/menu/cheesecake.webp",
       "photoCredit": null
     },
     "acqua-panna": {
