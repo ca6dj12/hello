@@ -1070,8 +1070,8 @@ window.DS_DATA = {
         "ko": "토스카나 언덕의 샘에서 나는 이탈리아 내추럴 미네랄워터. 순하고 부드러워서 위스키 사이사이 입을 헹구는 체이서로 좋다.",
         "en": "Natural mineral water from a spring in the Tuscan hills. Soft and smooth — a good chaser between whiskies."
       },
-      "photo": null,
-      "photoCredit": null
+      "photo": "img/menu/acqua-panna.webp",
+      "photoCredit": {"author": "Smuconlaw", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Acqua_Panna_mineral_water_in_a_glass_bottle_-_20140408.jpg"}
     },
     "coke": {
       "kind": {
