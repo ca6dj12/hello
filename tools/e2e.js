@@ -159,6 +159,12 @@ async function run(browser, base, lang) {
   check(lang === 'en' ? sig.extra.includes('16,000 KRW') : sig.extra.includes('16,000원'), '가격 16,000원 표시');
   check(lang === 'en' ? sig.label === 'Love' : sig.label === '연애 성향', '성향 라벨 언어', sig.label);
   await shot(page, lang + '-signature');
+  const shareBtn = await page.evaluate(() => {
+    const b = document.querySelector('.ds-share-top'); if (!b) return null;
+    const r = b.getBoundingClientRect(); return { text: b.textContent, bottom: Math.round(r.bottom), vh: innerHeight };
+  });
+  check(shareBtn && (lang === 'en' ? shareBtn.text === 'Share' : shareBtn.text === '공유하기') && shareBtn.bottom <= shareBtn.vh,
+    '칵테일 이름 바로 아래 공유 버튼 (스크롤 없이 보임)', shareBtn);
   const canScroll = await page.evaluate(() => {
     const h = document.getElementById('signatureNameReveal');
     h.scrollTop = h.scrollHeight;
@@ -294,6 +300,28 @@ async function run(browser, base, lang) {
     fs.writeFileSync(path.join(SHOTS, `share-${lang}.png`), Buffer.from(data.split(',')[1], 'base64'));
   }
 
+  // 공유하기: 폰 공유 창이 있으면 이미지 + 테스트 링크를 넘기고, 없으면 길게 눌러 저장하는 이미지 화면
+  await page.evaluate(() => {
+    window.__shared = null;
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: (d) => {
+      window.__shared = { files: d.files.length, type: d.files[0].type, size: d.files[0].size, text: d.text }; return Promise.resolve();
+    } });
+  });
+  await page.click('.ds-share-top');
+  await page.waitForFunction(() => window.__shared, null, { timeout: 8000 }).catch(() => {});
+  const shared = await page.evaluate(() => window.__shared);
+  check(shared && shared.files === 1 && shared.type === 'image/png' && shared.size > 40000 && shared.text.includes(new URL(base).origin),
+    '공유하기 → 폰 공유 창에 결과 이미지 + 테스트 링크', shared);
+  await page.evaluate(() => { Object.defineProperty(navigator, 'canShare', { configurable: true, value: undefined }); });
+  await page.click('.ds-share-top');
+  const sheet = await page.waitForFunction(() => {
+    const i = document.querySelector('#dsShare.open .ds-share-img'); return i && i.complete && i.naturalWidth === 1080;
+  }, null, { timeout: 8000 }).then(() => true, () => false);
+  check(sheet, '공유 창이 없는 곳 → 이미지 화면 (길게 눌러 저장)');
+  await page.goBack(); await page.waitForTimeout(400);
+  check(!(await page.$('#dsShare')) && await screen(page) === 'signature', '폰 뒤로가기 → 이미지 화면만 닫힘');
+
   // 다시 하기
   await page.click('[data-ds="restart"]');
   await page.waitForTimeout(700);
@@ -380,9 +408,12 @@ async function sizes(browser, base) {
       const g = document.querySelector('.signature-glass-crop').getBoundingClientRect();
       h.scrollTop = 0;
       const g0 = document.querySelector('.signature-glass-crop').getBoundingClientRect();
-      return { reach: a.bottom <= innerHeight + 1, glassTop: Math.round(g0.top), wide: document.documentElement.scrollWidth > innerWidth || a.right > innerWidth };
+      const sh = document.querySelector('.ds-share-top').getBoundingClientRect();
+      return { reach: a.bottom <= innerHeight + 1, glassTop: Math.round(g0.top), shareBottom: Math.round(sh.bottom), vh: innerHeight,
+        wide: document.documentElement.scrollWidth > innerWidth || a.right > innerWidth };
     });
-    check(!quiz.wide && quiz.worst <= 1 && sig.reach && !sig.wide && sig.glassTop >= 0 && !errors.length,
+    // 공유 버튼은 작은 폰에서도 스크롤 없이 첫 화면 안에
+    check(!quiz.wide && quiz.worst <= 1 && sig.reach && !sig.wide && sig.glassTop >= 0 && sig.shareBottom <= sig.vh && !errors.length,
       `${name} ${width}×${height}`, { quiz, sig, errors });
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `size-${width}x${height}.png`) });
     await ctx.close();

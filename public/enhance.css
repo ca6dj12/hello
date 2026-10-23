@@ -153,6 +153,34 @@ button.ds-row:focus-visible { outline: 1px solid var(--ds-red); outline-offset: 
 }
 .ds-actions button:active { transform: scale(.98); }
 
+/* 칵테일 이름 바로 아래 공유 버튼 */
+.ds-share-top {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 42px; padding: 0 20px; margin: 2px 0 6px;
+  background: rgba(0, 0, 0, .45); color: #f7f5f3;
+  border: 1px solid rgba(255, 255, 255, .34); border-radius: 999px;
+  font: 700 13.5px/1 var(--ds-sans); letter-spacing: -.01em;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ds-share-top:empty { display: none; }
+.ds-share-top:active { transform: scale(.97); background: rgba(255, 255, 255, .08); }
+.ds-share-top:focus-visible { outline: 1px solid var(--ds-red); outline-offset: 3px; }
+
+/* 공유 창이 없는 곳에서 띄우는 이미지 화면 */
+.ds-sharesheet { width: min(100%, 420px); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.ds-share-img {
+  width: min(100%, 300px); aspect-ratio: 9 / 16; object-fit: contain;
+  border: 1px solid rgba(255, 255, 255, .14); border-radius: 14px;
+  -webkit-touch-callout: default;   /* 아이폰에서 길게 눌러 '사진에 저장' */
+}
+.ds-share-hint { margin: 2px 0 4px; font-size: 13px; line-height: 1.55; color: var(--ds-soft); word-break: keep-all; }
+.ds-share-save { width: 100%; text-decoration: none; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+.ds-share-copy {
+  width: 100%; min-height: 46px; background: none; color: #f0f0f0;
+  border: 1px solid rgba(255, 255, 255, .2); border-radius: 12px;
+  font: 700 13px/1 var(--ds-sans); cursor: pointer;
+}
+
 @media (max-height: 700px) {
   .ds-card { padding: 10px 11px; }
   .ds-taste dl { gap: 4px 9px; }

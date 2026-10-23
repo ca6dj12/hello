@@ -271,6 +271,12 @@
   extra.className = 'ds-extra';
   const revealHost = el('signatureNameReveal');
   if (revealHost) revealHost.appendChild(extra);
+  // 칵테일 이름 바로 아래 공유 버튼 — 스크롤하지 않아도 보이게
+  const shareTop = document.createElement('button');
+  shareTop.type = 'button'; shareTop.className = 'ds-share-top'; shareTop.setAttribute('data-ds', 'share');
+  if (revealHost) revealHost.insertBefore(shareTop, el('signatureTrait'));
+  const SHARE_ICON = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M12 3v12"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
 
   function pips(level) {
     let out = '<span class="ds-pips" aria-hidden="true">';
@@ -303,11 +309,12 @@
     }
     html += '<button type="button" class="cta ds-order-btn" data-ds="order">' + esc(t('order')) + '</button>';
     html += '<div class="ds-actions">';
-    html += '<button type="button" data-ds="share">' + esc(t('saveImage')) + '</button>';
+    html += '<button type="button" data-ds="share">' + esc(t('share')) + '</button>';
     html += '<button type="button" data-ds="menu">' + esc(t('fullMenu')) + '</button>';
     html += '<button type="button" data-ds="restart">' + esc(t('restart')) + '</button>';
     html += '</div>';
     extra.innerHTML = html;
+    shareTop.innerHTML = SHARE_ICON + '<span>' + esc(t('share')) + '</span>';
   }
 
   const originalRenderTrait = renderSignatureTrait;
@@ -323,6 +330,7 @@
       const secret = host.querySelector('.sex-secret'); if (secret) secret.setAttribute('aria-label', t('lockMain'));
     }
     renderExtra(currentSin);
+    prepareShare(currentSin);
     track('signature', { sin: KO[currentSin] });
   };
 
@@ -641,34 +649,73 @@
     return new Promise((res) => c.toBlob(res, 'image/png'));
   }
 
-  let sharing = false;
-  async function shareResult() {
+  /* 공유: 폰의 공유 창(인스타그램 · 카카오톡 · 사진에 저장 …)으로 결과 이미지를 보낸다.
+     공유 창은 누른 직후에 열어야 해서(사파리는 시간이 지나면 막는다) 이미지는 시그니처가 뜰 때 미리 만들어 둔다.
+     공유 창이 없는 곳(앱 안 브라우저 · PC)은 이미지를 띄워 길게 눌러 저장하게 한다. */
+  const SITE_URL = location.origin + '/';
+  let shareCache = null;   // { key, blob }
+  function prepareShare(k) {
+    const key = k + ':' + lang;
+    if (shareCache && shareCache.key === key) return;
+    shareCache = { key, blob: null };
+    const job = shareCache;
+    setTimeout(() => {   // 이름이 떠오르는 애니메이션이 끝난 뒤에
+      makeShareImage(k).then((b) => { job.blob = b; }).catch(() => {});
+    }, 1800);
+  }
+  let sharing = false, shareUrl = null;
+  async function shareResult(btn) {
     const k = currentSin; if (!k || sharing) return;
     sharing = true;
-    const btn = extra.querySelector('[data-ds="share"]');
-    const label = btn ? btn.textContent : '';
-    if (btn) btn.textContent = t('making');
+    const label = btn ? btn.innerHTML : '';
     try {
-      const blob = await makeShareImage(k);
-      const file = new File([blob], 'deadly-sins-' + SIGNATURE_DRINKS[k].en.toLowerCase() + '.png', { type: 'image/png' });
-      const text = t('shareText')(SIGNATURE_DRINKS[k].en, lang === 'en' ? I18N.en.drinkName[k] : DRINK_KO[k]);
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: t('shareTitle'), text }).catch(() => {});
-      } else {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob); a.download = file.name;
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-        if (btn) btn.textContent = t('saved');
-        await new Promise((r) => setTimeout(r, 1400));
+      const key = k + ':' + lang;
+      let blob = shareCache && shareCache.key === key ? shareCache.blob : null;
+      if (!blob) {
+        if (btn) btn.textContent = t('making');
+        blob = await makeShareImage(k);
+        shareCache = { key, blob };
       }
-      track('share', { sin: KO[k] });
+      const name = 'deadly-sins-' + SIGNATURE_DRINKS[k].en.toLowerCase() + '.png';
+      const file = new File([blob], name, { type: 'image/png' });
+      const text = t('shareText')(SIGNATURE_DRINKS[k].en, lang === 'en' ? I18N.en.drinkName[k] : DRINK_KO[k]) +
+        '\n' + t('shareInvite') + ' ' + SITE_URL;
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: t('shareTitle'), text });
+          track('share', { sin: KO[k], via: 'native' });
+          return;
+        } catch (e) {
+          if (e && e.name === 'AbortError') return;   // 공유 창을 그냥 닫음
+          // 그 밖의 실패(앱 안 브라우저가 막는 경우 등)는 아래 이미지 화면으로
+        }
+      }
+      openShareSheet(blob, name, k);
     } catch (e) {
       track('error', { message: 'share: ' + String(e && e.message || e).slice(0, 200) });
     } finally {
-      if (btn) btn.textContent = label;
+      if (btn) btn.innerHTML = label;
       sharing = false;
     }
+  }
+  function openShareSheet(blob, name, k) {
+    if (shareUrl) URL.revokeObjectURL(shareUrl);
+    shareUrl = URL.createObjectURL(blob);
+    const inner =
+      '<div class="ds-sharesheet">' +
+        '<p class="ds-kicker">' + esc(t('shareKicker')) + '</p>' +
+        '<img class="ds-share-img" src="' + shareUrl + '" alt="' + esc(SIGNATURE_DRINKS[k].en) + '">' +
+        '<p class="ds-share-hint">' + esc(t('shareHint')) + '</p>' +
+        '<a class="cta ds-share-save" href="' + shareUrl + '" download="' + esc(name) + '">' + esc(t('saveImage')) + '</a>' +
+        '<button type="button" class="ds-share-copy" data-ds="copylink">' + esc(t('copyLink')) + '</button>' +
+      '</div>';
+    openOverlay(layer('dsShare', inner));
+    track('share', { sin: KO[k], via: 'sheet' });
+  }
+  function copyLink(btn) {
+    const done = () => { btn.textContent = t('copied'); setTimeout(() => { btn.textContent = t('copyLink'); }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(SITE_URL).then(done, () => window.prompt(t('copyLink'), SITE_URL));
+    else window.prompt(t('copyLink'), SITE_URL);
   }
   window.DS_makeShareImage = makeShareImage;   // 자동 테스트용
 
@@ -702,7 +749,8 @@
     else if (a === 'menu') openMenu();
     else if (a === 'item') openItem(b.getAttribute('data-id'));
     else if (a === 'more') toggleStory(b);
-    else if (a === 'share') shareResult();
+    else if (a === 'share') shareResult(b);
+    else if (a === 'copylink') copyLink(b);
     else if (a === 'restart') restart();
     else if (a === 'close') { if (depth > 0) history.back(); else closeTopOverlay(); }
     else if (a === 'lang') {
