@@ -37,15 +37,6 @@
   const newSid = () => Math.random().toString(36).slice(2, 10);
   let SID = newSid();
   let errorBudget = 5;
-  // 1층 QR 소개 페이지(/lobby)에서 넘어온 손님: 기록에 표시하고, 결과 화면에 '5층에서 만나요' 안내
-  let FROM = '';
-  try {
-    if (new URLSearchParams(location.search).get('from') === 'lobby') {
-      sessionStorage.setItem('ds_from', 'lobby');
-      history.replaceState(history.state, '', location.pathname + location.hash);   // 주소창은 깔끔하게
-    }
-    FROM = sessionStorage.getItem('ds_from') || '';
-  } catch (e) { /* 사파리 사생활 보호 모드 등 */ }
 
   function track(type, data) {
     if (!COLLECT_ON) return;
@@ -227,7 +218,7 @@
     if (target.closest('#cover') && !coverTransitionBusy) {
       if (isFresh()) newSession();
       push('quiz');
-      track('start', FROM ? { from: FROM } : undefined);
+      track('start');
       return;
     }
     // 답 고르기
@@ -329,12 +320,6 @@
       html += '</div>';
     }
     if ((SIG_FLAGS[k] || {}).soldOut) html += '<p class="ds-soldout-note">' + esc(t('sigSoldOut')) + '</p>';
-    if (FROM === 'lobby') {   // 아직 1층에 있는 손님
-      const F = (DATA.lobby && DATA.lobby.floor) || 5;
-      html += '<div class="ds-card ds-lobby"><p class="ds-card-head">' + esc(t('lobbyHead')(F)) + '</p>' +
-        '<p class="ds-lobby-body">' + esc(t('lobbyBody')(F)) + '</p>' +
-        '<a class="ds-lobby-link" href="lobby.html#way">' + esc(t('lobbyWay')(F)) + ' →</a></div>';
-    }
     html += '<button type="button" class="cta ds-order-btn" data-ds="order">' + esc(t('order')) + '</button>';
     html += '<div class="ds-actions">';
     html += '<button type="button" data-ds="share">' + esc(t('share')) + '</button>';

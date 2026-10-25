@@ -129,6 +129,7 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       // 손님 화면이 열 때마다 부르므로 Vercel 앞단에서 10초 묶어 둔다 (사장님이 저장하면 10초쯤 뒤 반영)
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=10, stale-while-revalidate=30');
+      res.setHeader('Access-Control-Allow-Origin', '*');   // 1층 배너 홍보 사이트(다른 주소)도 읽는다 — 공개 정보뿐
       if (!sql) return res.status(200).json(pack(null));
       await ready;
       return res.status(200).json(pack((await latest(sql))[0]));

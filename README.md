@@ -215,19 +215,21 @@ from deadly_sins_events where type = 'error'
 order by created_at desc limit 30;
 ```
 
-## 1층 QR 소개 페이지 (https://deadly-sins-mu.vercel.app/lobby)
+## 1층 배너 QR 홍보 사이트 (`promo/` — 테이블 설문 사이트와 별개)
 
-건물 1층에 붙인 QR 로 들어오는 사람을 5층까지 올라오게 하는 페이지입니다.
-바 소개 → 일곱 잔 → 위스키 → 바 안 사진 → 안주 → "올라오기 전, 나의 죄 테스트" → 오시는 길.
+| | 테이블 QR | 1층 배너 QR |
+|---|---|---|
+| 사이트 | 이 저장소의 `public/` → https://deadly-sins-mu.vercel.app | 이 저장소의 `promo/` → 별도 Vercel 프로젝트 (Root Directory = `promo`) |
+| 하는 일 | 나의 죄 테스트(설문) · 메뉴판 · 바텐더 화면 | 바 소개 · 일곱 잔 · 위스키 · 바 안 사진 · 안주 · 메뉴(글자) · 오시는 길 |
 
-- 내용은 `public/data.js` 의 메뉴 · `lobby` 설정에서 읽습니다. **주소 · 오시는 길 · 영업시간 · 인스타 · 전화 · 이벤트 문구는
-  `lobby` 에서 null 을 채우면 바로 나타납니다** (null 이면 숨김). 영업시간을 넣으면 첫 화면에 "지금 영업 중 · 새벽 2시까지" 가 뜹니다.
-- 사진: `lobby.photos` (바 안 사진 원본은 `photos/room/`). 그림 경로(표지 · 일곱 잔)는 빌드가 만드는 `public/brand.js`.
-- /admin 에서 고친 가격 · 숨김도 이 페이지에 반영됩니다.
-- 여기서 테스트로 넘어간 손님은 결과 화면에 "5층에서 만나요"와 오시는 길 링크가 나옵니다.
-- 통계(`?stats=1`)의 `lobby`: 들어온 사람 → 테스트 · 메뉴 · 오시는 길을 누른 사람 → 테스트 시작 → 결과까지 (세션 수).
-- 1층 포스터: `node tools/make-qr.js https://deadly-sins-mu.vercel.app --lobby` →
-  `print/deadly-sins-lobby-poster.pdf` (A4) + 링크 미리보기 `public/og-lobby.jpg`.
+- 홍보 사이트에는 테스트로 가는 링크가 없습니다. 테스트는 5층 테이블에서 하는 경험이라 "자리에 앉으면 일곱 개의 질문이 기다립니다"로 예고만 합니다.
+- 홍보 사이트는 메뉴 · 가격 · 그림을 **설문 사이트의 `data.js` · `brand.js` · `img/` 에서 그대로 읽습니다** (`promo/index.html` 맨 아래 주소).
+  그래서 data.js 나 /admin 에서 고친 가격 · 품절 · 숨김 · 새 메뉴가 두 사이트에 함께 반영됩니다.
+- **주소 · 오시는 길 · 영업시간 · 인스타 · 전화 · 이벤트 문구는 `public/data.js` 의 `promo` 에서 null 을 채우면 바로 나타납니다.**
+  영업시간을 넣으면 첫 화면에 "지금 영업 중 · 새벽 2시까지" 가 뜹니다. 사진은 `promo.photos` (원본 `photos/room/`).
+- 방문 기록은 설문 사이트의 /api/track 으로 보냅니다(`from: 'promo'`). 통계(`?stats=1`)의 `promo`: 들어온 사람 → 메뉴 · 오시는 길 · 인스타/전화/지도를 누른 사람.
+- 배너 QR · A4 포스터: `node tools/make-qr.js https://<홍보 사이트 주소> --promo` →
+  `print/banner-qr.svg` (배너 디자인에 얹을 QR) · `print/deadly-sins-banner-poster.pdf` (A4) · 링크 미리보기 `promo/og.jpg`.
 
 ## 테이블 QR 카드
 

@@ -24,6 +24,7 @@ const args = process.argv.slice(2);
 const SHOTS = args.includes('--shots') ? args[args.indexOf('--shots') + 1] : null;
 const TARGET = args.find((a) => /^https?:/.test(a));
 const PUBLIC = path.join(__dirname, '..', 'public');
+const PROMO = path.join(__dirname, '..', 'promo');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css',
   '.webp': 'image/webp', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png' };
@@ -59,8 +60,9 @@ function serve() {
         return;
       }
       const rel = decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/, '') || 'index.html';
-      const file = path.join(PUBLIC, rel);
-      if (!file.startsWith(PUBLIC) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end(); return; }
+      const root = rel.startsWith('promo/') ? PROMO : PUBLIC;   // 1층 배너 홍보 사이트는 저장소의 promo/
+      const file = path.join(root, rel.startsWith('promo/') ? rel.slice(6) : rel);
+      if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end(); return; }
       res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
       fs.createReadStream(file).pipe(res);
     });
@@ -588,79 +590,99 @@ async function admin(browser, base) {
   LIVE = { v: 0, at: null, data: null };
 }
 
-/* 1층 QR 소개 페이지 → 테스트 → 결과 화면의 '5층에서 만나요' */
-async function lobby(browser, base) {
-  console.log('\n■ 1층 소개 페이지 (/lobby)');
+/* 1층 배너 QR 홍보 사이트 (promo/). 실제로는 다른 주소에서 설문 사이트의 data.js · 그림 · API 를 읽으므로,
+   그 주소(PROMO_BASE)로 가는 요청을 로컬 public/ 과 로컬 기록으로 돌려서 검사한다. */
+const PROMO_BASE = 'https://deadly-sins-mu.vercel.app/';
+async function promoSite(browser, base) {
+  console.log('\n■ 1층 배너 홍보 사이트 (promo/)');
   BEACONS.length = 0;
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ko-KR', isMobile: true, hasTouch: true });
-  const page = await ctx.newPage();
+  const open = async (dataPatch) => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ko-KR', isMobile: true, hasTouch: true });
+    await ctx.route(PROMO_BASE + '**', async (route) => {
+      const req = route.request(), u = new URL(req.url());
+      if (u.pathname === '/api/track') {
+        try { BEACONS.push({ body: JSON.parse(req.postData() || '{}') }); } catch (e) { BEACONS.push({ bad: true }); }
+        return route.fulfill({ status: 204, body: '' });
+      }
+      if (u.pathname === '/api/menu') return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(LIVE) });
+      const file = path.join(PUBLIC, decodeURIComponent(u.pathname));
+      if (!file.startsWith(PUBLIC) || !fs.existsSync(file)) return route.fulfill({ status: 404, body: '' });
+      let body = fs.readFileSync(file);
+      if (dataPatch && u.pathname === '/data.js') body = dataPatch(body.toString('utf8'));
+      return route.fulfill({ status: 200, contentType: TYPES[path.extname(file)] || 'application/octet-stream', body });
+    });
+    const page = await ctx.newPage();
+    return { ctx, page };
+  };
+  const { ctx, page } = await open();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
-  page.on('response', (r) => { if (r.status() >= 400 && !r.url().includes('/api/')) errors.push(r.status() + ' ' + r.url()); });
-  await page.goto(base + 'lobby.html', { waitUntil: 'networkidle' });
+  page.on('response', (r) => { if (r.status() >= 400) errors.push(r.status() + ' ' + r.url()); });
+  await page.goto(base + 'promo/index.html', { waitUntil: 'networkidle' });
   const info = await page.evaluate(() => ({
     h1: document.querySelector('.lb-hero h1').textContent,
     cards: document.querySelectorAll('.lb-card').length,
     bottles: document.querySelectorAll('.lb-bottle').length,
     bites: document.querySelectorAll('.lb-shot').length,
+    room: document.querySelectorAll('.lb-room img').length,
+    menuRows: document.querySelectorAll('.lb-mrow').length,
+    table: !!document.getElementById('table'),
+    toQuiz: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')).filter((h) => !h.startsWith('#') && !/instagram|tel:|map/.test(h)),
     info: document.querySelector('.lb-info').textContent,
     address: !!document.querySelector('.lb-info .lb-dim'),
     status: !!document.querySelector('.lb-status'),
-    hero: Math.round(document.querySelector('.lb-cta').getBoundingClientRect().top),
+    cta: Math.round(document.querySelector('.lb-cta').getBoundingClientRect().top),
     vh: innerHeight
   }));
-  check(info.h1.includes('일곱 개의 죄') && info.cards === 7 && info.bottles >= 10 && info.bites === 3, '소개 페이지: 첫 화면 · 일곱 잔 · 위스키 · 안주', info);
+  check(info.h1.includes('일곱 개의 죄') && info.cards === 7 && info.bottles >= 10 && info.bites === 3 && info.room === 3,
+    '홍보 사이트: 첫 화면 · 일곱 잔 · 위스키 · 바 안 사진 · 안주', info);
+  check(info.menuRows > 30 && info.table && info.toQuiz.length === 0, '메뉴는 사이트 안에서, 설문 사이트로 가는 링크 없음 (테이블 질문은 예고만)', info.toQuiz);
   check(info.info.includes('16,000') && info.info.includes('커버차지 없음') && !info.address && !info.status, '모르는 정보(주소 · 영업시간)는 숨기고 가격은 안내', info.info);
-  check(info.hero < info.vh - 60, '첫 화면 안에 버튼이 보임', info);
-  const opened = BEACONS.filter((x) => x.body && x.body.type === 'visit').map((x) => x.body);
-  check(opened.some((b) => b.act === 'open' && b.from === 'lobby'), '들어오면 방문 기록', opened);
+  check(info.cta < info.vh - 60, '첫 화면 안에 버튼이 보임', info);
+  check(BEACONS.some((x) => x.body && x.body.type === 'visit' && x.body.act === 'open' && x.body.from === 'promo'), '들어오면 방문 기록 (설문 사이트의 기록 API 로)');
 
   const dockY = () => page.evaluate(() => new DOMMatrixReadOnly(getComputedStyle(document.getElementById('lbDock')).transform).m42);
   const y0 = await dockY();
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForTimeout(700);
-  const y1 = await dockY();
-  check(y0 > 10 && Math.abs(y1) < 1, '첫 화면을 지나면 아래 바로가기 막대가 올라옴', [y0, y1]);
+  check(y0 > 10 && Math.abs(await dockY()) < 1, '첫 화면을 지나면 아래 바로가기 막대가 올라옴', y0);
   await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(300);
   await page.click('.lb-hero [data-act="way"]');
   await page.waitForTimeout(1200);
   const wayTop = await page.evaluate(() => Math.round(document.getElementById('way').getBoundingClientRect().top));
-  check(wayTop >= -5 && wayTop < 300, '"5층으로 오는 길" → 오시는 길로 내려감 (페이지 끝이라 맨 위까지는 안 갈 수 있음)', wayTop);
+  check(wayTop >= -5 && wayTop < 300, '"5층으로 오는 길" → 오시는 길로 내려감', wayTop);
+  // 위스키 병을 누르면 메뉴의 그 줄로
+  await page.evaluate(() => window.scrollTo(0, document.getElementById('whisky').offsetTop));
+  await page.waitForTimeout(500);
+  const bottle = await page.$('.lb-bottle');
+  const target = (await bottle.getAttribute('href')).slice(1);
+  await bottle.click();
+  await page.waitForTimeout(1200);
+  const hl = await page.evaluate((id) => { const r = document.getElementById(id); const b = r.getBoundingClientRect(); return { inView: b.top > 0 && b.bottom < innerHeight, hl: r.classList.contains('lb-hl') }; }, target);
+  check(hl.inView && hl.hl, '위스키 병 → 메뉴의 그 줄로 가서 잠깐 표시', hl);
+  check(BEACONS.some((x) => x.body && x.body.act === 'bottle'), '누른 것도 기록');
+  check(await page.evaluate(() => document.querySelector('.lb-top').classList.contains('hide')), '스크롤하면 위의 MENU · EN 은 숨김 (글자를 가리지 않게)');
+  await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(500);
   await page.click('#lbLang');
   check((await page.textContent('.lb-hero h1')).includes('Seven sins'), '영어 전환');
   await page.click('#lbLang');
-
-  // 테스트로 → 1층에서 시작한 손님으로 기록 → 결과 화면에 '5층에서 만나요'
-  await page.click('.lb-hero [data-act="test"]');
-  await page.waitForSelector('#start', { timeout: 8000 });
-  await page.waitForLoadState('networkidle');
-  const land = await page.evaluate(() => ({ search: location.search, from: sessionStorage.getItem('ds_from') }));
-  check(land.search === '' && land.from === 'lobby', '테스트 화면: 주소는 깔끔하게, 1층에서 왔다는 표시는 남김', land);
-  await page.click('#start');
-  await page.waitForSelector('#quiz.active', { timeout: 8000 });
-  await page.waitForFunction(() => !coverTransitionBusy, null, { timeout: 8000 });
-  const start = BEACONS.map((x) => x.body).find((b) => b && b.type === 'start');
-  check(start && start.from === 'lobby', '테스트 시작 기록에 from: lobby', start);
-  await answerAll(page);
-  await page.click('#toDesire');
-  await page.waitForSelector('#signatureNameReveal.visible', { timeout: 20000 });
-  const nudge = await page.evaluate(() => { const c = document.querySelector('.ds-lobby'); return c && { text: c.textContent, href: c.querySelector('a').getAttribute('href') }; });
-  check(nudge && nudge.text.includes('5층') && /lobby/.test(nudge.href), '결과 화면: 5층에서 만나요 + 오는 길 링크', nudge);
+  check(errors.length === 0, '홍보 사이트 스크립트 오류 · 404 없음', errors);
   await ctx.close();
 
-  // 영업시간을 넣으면 첫 화면에 '지금 영업 중'
-  const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ko-KR' });
-  const p2 = await ctx2.newPage();
-  await p2.route('**/data.js', async (route) => {
-    const r = await route.fetch();
-    route.fulfill({ response: r, body: (await r.text()).replace('    hours: null,', '    hours: [{ days: [0, 1, 2, 3, 4, 5, 6], open: "00:00", close: "23:59" }],') });
+  // 영업시간을 넣으면 첫 화면에 '지금 영업 중', 사장님이 품절로 바꾸면 메뉴에 '품절'
+  LIVE = { v: 1, at: null, data: { items: { 'lagavulin-16': { soldOut: true } } } };
+  const o2 = await open((txt) => txt.replace('    hours: null,', '    hours: [{ days: [0, 1, 2, 3, 4, 5, 6], open: "00:00", close: "23:59" }],'));
+  await o2.page.goto(base + 'promo/index.html', { waitUntil: 'networkidle' });
+  await o2.page.waitForTimeout(300);
+  const st = await o2.page.evaluate(() => {
+    const s = document.querySelector('.lb-status');
+    return { status: s && s.textContent, open: s && s.classList.contains('is-open'), hours: document.querySelector('.lb-info').textContent.includes('00:00'),
+      lag: (document.querySelector('#m-lagavulin-16 .lb-mprice') || {}).textContent };
   });
-  await p2.goto(base + 'lobby.html', { waitUntil: 'networkidle' });
-  const status = await p2.evaluate(() => { const s = document.querySelector('.lb-status'); return s && { text: s.textContent, open: s.classList.contains('is-open') }; });
-  check(status && status.open && status.text.includes('영업 중'), '영업시간을 넣으면 "지금 영업 중"', status);
-  check((await p2.textContent('.lb-info')).includes('00:00'), '영업시간이 오시는 길에 나옴');
-  await ctx2.close();
-  check(errors.length === 0, '소개 페이지 스크립트 오류 · 404 없음', errors);
+  check(st.open && /영업 중/.test(st.status) && st.hours, '영업시간을 넣으면 "지금 영업 중" + 오시는 길에 시간', st);
+  check(st.lag === '품절', '/admin 에서 품절로 바꾸면 홍보 사이트 메뉴에도 품절', st.lag);
+  await o2.ctx.close();
+  LIVE = { v: 0, at: null, data: null };
 }
 
 /* 폰에서 '동작 줄이기'를 켠 손님: 움직임 없이 처음부터 다 보여야 한다 */
@@ -695,7 +717,7 @@ let SIGNATURE_EN = {};
     if (!TARGET) await collect(browser, base);   // 로컬 서버가 /api/track 을 대신 받는 검사라 로컬에서만
     if (!TARGET) await admin(browser, base);     // 마찬가지로 /api/menu 를 로컬 서버가 대신 받는다
     await reducedMotion(browser, base);
-    if (!TARGET) await lobby(browser, base);     // 방문 기록을 로컬 서버가 받는 검사라 로컬에서만
+    if (!TARGET) await promoSite(browser, base); // 방문 기록 · 그림을 로컬로 돌려서 하는 검사라 로컬에서만
   } catch (e) {
     check(false, '테스트 진행 중 예외', String(e).slice(0, 300));
   } finally {

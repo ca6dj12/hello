@@ -18,10 +18,10 @@
      print/menu-qr.svg · print/menu-qr.png · print/menu-card.html
      print/deadly-sins-menu-card.pdf · print/deadly-sins-menu-card.png
 
-   --lobby 일 때는 1층에 붙일 A4 포스터 (주소 끝에 /lobby — 바 소개 페이지)
-     print/lobby-qr.svg · print/lobby-qr.png · print/lobby-poster.html
-     print/deadly-sins-lobby-poster.pdf · print/deadly-sins-lobby-poster.png
-     public/og-lobby.jpg   소개 페이지 링크 미리보기 (일곱 죄 포스터 벽 사진)
+   --promo 일 때는 1층 배너용 (주소는 홍보 사이트 주소를 그대로: node make-qr.js https://<홍보 사이트> --promo)
+     print/banner-qr.svg · print/banner-qr.png   배너 디자인에 바로 얹을 QR (SVG 는 크기 상관없이 선명)
+     print/banner-poster.html · print/deadly-sins-banner-poster.pdf · .png   A4 포스터
+     promo/og.jpg   홍보 사이트 링크 미리보기 (일곱 죄 포스터 벽 사진)
 
    카드와 미리보기는 사이트 첫 화면 그림을 그대로 씁니다.
    그림의 위는 순백, 아래는 순흑이고 경계가 748px 줄에서 곧게 떨어지므로,
@@ -37,10 +37,10 @@ const jsQR = require('jsqr');
 const { PNG } = require('pngjs');
 
 const MENU = process.argv.includes('--menu');
-const LOBBY = process.argv.includes('--lobby');
+const LOBBY = process.argv.includes('--promo');   // 1층 배너 홍보 사이트 (주소 그대로 씀)
 let url = process.argv.slice(2).find((a) => /^https?:\/\//.test(a));
 if (MENU && url && !/#menu$/.test(url)) url = url.replace(/\/?$/, '/') + '#menu';
-if (LOBBY && url && !/\/lobby$/.test(url)) url = url.replace(/\/?$/, '') + '/lobby';
+if (LOBBY && url) url = url.replace(/\/?$/, '/');
 if (!url) {
   console.error('주소를 넣어주세요.  예)  node make-qr.js https://deadly-sins.vercel.app');
   process.exit(1);
@@ -65,7 +65,7 @@ const KIND = LOBBY ? {
   title: '1층 포스터', kicker: 'COCKTAIL & WHISKY BAR', k: 2, floor: floor + 'F',
   cta: '일곱 개의 죄, 일곱 잔의 칵테일', sub: '시그니처 칵테일 ' + priceText + '원 · 커버차지 없음',
   scan: 'QR을 찍고 올라오세요', en: '',
-  qr: 'lobby-qr', html: 'lobby-poster.html', card: 'deadly-sins-lobby-poster'
+  qr: 'banner-qr', html: 'banner-poster.html', card: 'deadly-sins-banner-poster'
 } : MENU ? {
   title: '메뉴판 카드', kicker: 'WHISKY · COCKTAILS · BITES',
   cta: 'QR을 찍으면 메뉴판이 열려요', sub: '이름을 누르면 사진과 설명이 나와요', en: 'OPEN THE MENU',
@@ -225,13 +225,13 @@ function decode(file) {
     await pdfPage.pdf({ path: path.join(OUT, KIND.card + '.pdf'), width: pw, height: ph, printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
     await pdfCtx.close();
 
-    // 소개 페이지 링크 미리보기: 일곱 죄 포스터 벽 사진 + 워드마크
+    // 홍보 사이트 링크 미리보기: 일곱 죄 포스터 벽 사진 + 워드마크
     if (LOBBY) {
       const og = await browser.newContext({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1, ignoreHTTPSErrors: true });
       const p3 = await og.newPage();
       await p3.setContent(lobbyOgHtml(), { waitUntil: 'networkidle' });
       await p3.evaluate(() => document.fonts.ready);
-      await p3.screenshot({ path: path.join(PUBLIC, 'og-lobby.jpg'), type: 'jpeg', quality: 82 });
+      await p3.screenshot({ path: path.join(ROOT, 'promo', 'og.jpg'), type: 'jpeg', quality: 82 });
       await og.close();
     }
     // 링크 미리보기 (메뉴판 카드를 만들 때는 건드리지 않는다)
@@ -253,7 +253,7 @@ function decode(file) {
   [KIND.qr + '.svg', KIND.qr + '.png', KIND.html, KIND.card + '.pdf', KIND.card + '.png']
     .forEach((f) => console.log('  print/' + f));
   if (!MENU && !LOBBY) console.log('  public/og.jpg');
-  if (LOBBY) console.log('  public/og-lobby.jpg');
+  if (LOBBY) console.log('  promo/og.jpg');
   console.log(`QR 해독: 카드 ${read === url ? '✓' : '✗ (' + read + ')'} · QR PNG ${readQr === url ? '✓' : '✗ (' + readQr + ')'}`);
   if (read !== url || readQr !== url) process.exitCode = 1;
 })().catch((e) => { console.error(e); process.exit(1); });

@@ -1,4 +1,4 @@
-/* DEADLY SINS — 1층 QR 소개 페이지. 사이트(enhance.css)와 같은 검정 · 흰 잉크 · 빨강 */
+/* DEADLY SINS — 1층 배너 QR 홍보 사이트. 설문 사이트(enhance.css)와 같은 검정 · 흰 잉크 · 빨강 */
 :root {
   --red: #c84a50;
   --white: #f7f5f3;
@@ -22,6 +22,8 @@ a { color: inherit; }
   position: fixed; z-index: 20; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 14px;
   display: flex; gap: 8px;
 }
+.lb-top { transition: opacity .3s ease, transform .35s var(--ease); }
+.lb-top.hide { opacity: 0; transform: translateY(-12px); pointer-events: none; }
 .lb-pill {
   min-height: 34px; padding: 0 14px; display: inline-flex; align-items: center;
   background: #000; color: #fff; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px;
@@ -134,9 +136,38 @@ a { color: inherit; }
   background: linear-gradient(transparent, rgba(0, 0, 0, .85)); font-size: 14px; font-weight: 750; color: #fff;
 }
 
-/* 테스트 */
-.lb-test { text-align: center; padding-top: 96px; }
-.lb-test .lb-btn { max-width: 380px; margin: 4px auto 0; }
+/* 테이블에서 기다리는 일곱 질문 (예고) */
+.lb-table { text-align: center; padding-top: 96px; }
+.lb-q { list-style: none; display: flex; justify-content: center; gap: 7px; margin: 22px 0 0; padding: 0; }
+.lb-q li {
+  width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(200, 74, 80, .55); border-radius: 50%;
+  font: 700 13px/1 var(--serif); color: var(--soft);
+}
+.lb-q.lb-in li { animation: lbUp .6s var(--ease) both; }
+.lb-q.lb-in li:nth-child(2) { animation-delay: .07s; } .lb-q.lb-in li:nth-child(3) { animation-delay: .14s; }
+.lb-q.lb-in li:nth-child(4) { animation-delay: .21s; } .lb-q.lb-in li:nth-child(5) { animation-delay: .28s; }
+.lb-q.lb-in li:nth-child(6) { animation-delay: .35s; } .lb-q.lb-in li:nth-child(7) { animation-delay: .42s; color: #fff; border-color: var(--red); background: rgba(200, 74, 80, .2); }
+
+/* 메뉴 전체 (글자로) */
+.lb-menu h3 { margin: 30px 0 4px; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, .18); font: 700 13px/1.2 var(--serif); letter-spacing: .2em; }
+.lb-menu h3:first-child { margin-top: 6px; }
+.lb-menu ul { list-style: none; margin: 0; padding: 0; }
+.lb-mgroup { margin: 14px 0 2px; font-size: 12.5px; font-weight: 850; color: var(--red); }
+.lb-mrow {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, .06); font-size: 14.5px; scroll-margin: 120px;
+  transition: background .6s ease;
+}
+.lb-mgroup + ul .lb-mrow:first-child, h3 + ul .lb-mrow:first-child { border-top: 0; }
+.lb-mname { flex: 1; min-width: 0; }
+.lb-mname small { display: block; margin-top: 1px; font-size: 12px; color: var(--dim); }
+.lb-mprice { flex: none; font: 700 13.5px/1.2 var(--serif); color: var(--soft); white-space: nowrap; }
+.lb-mrow.is-sold .lb-mname { opacity: .45; }
+.lb-mrow.is-sold .lb-mprice { color: var(--red); font-family: var(--sans); }
+.lb-new { display: inline-block; margin-left: 4px; padding: 3px 5px 2px; vertical-align: 2px; background: var(--red); color: #fff; border-radius: 4px; font: 800 9.5px/1 var(--sans); font-style: normal; letter-spacing: .08em; }
+.lb-mnote { margin: 12px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--dim); }
+.lb-mrow.lb-hl { animation: lbHl 1.8s ease; }
+@keyframes lbHl { 0%, 40% { background: rgba(200, 74, 80, .22); } 100% { background: transparent; } }
 
 /* 오시는 길 */
 .lb-lift { display: flex; gap: 6px; margin: 4px 0 22px; }
@@ -171,7 +202,7 @@ a { color: inherit; }
   min-height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;
   font-size: 14.5px; font-weight: 800; text-decoration: none; letter-spacing: -.02em;
 }
-.lb-dock-test { background: var(--white); color: #000; }
+.lb-dock-menu { background: var(--white); color: #000; }
 .lb-dock-way { border: 1px solid rgba(255, 255, 255, .3); color: #fff; }
 
 /* ---------- 움직임 ---------- */

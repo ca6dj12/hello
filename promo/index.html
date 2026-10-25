@@ -6,33 +6,34 @@
 <title>DEADLY SINS · 5F Cocktail &amp; Whisky Bar</title>
 <meta name="description" content="일곱 개의 죄, 일곱 잔의 칵테일. 이 건물 5층의 칵테일 & 위스키 바, DEADLY SINS.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://deadly-sins-mu.vercel.app/lobby">
+<meta property="og:url" content="https://deadly-sins-5f.vercel.app/">
 <meta property="og:title" content="DEADLY SINS · 5층 칵테일 & 위스키 바">
 <meta property="og:description" content="일곱 개의 죄, 일곱 잔의 칵테일. 오늘 밤, 당신은 어떤 죄를 삼키시겠습니까?">
-<meta property="og:image" content="https://deadly-sins-mu.vercel.app/og-lobby.jpg">
+<meta property="og:image" content="https://deadly-sins-5f.vercel.app/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="lobby.css?v=1">
+<link rel="stylesheet" href="promo.css?v=1">
 </head>
 <body>
-<!-- 1층 QR 로 들어오는 첫 화면: 바 소개 · 일곱 잔 · 위스키 · 안주 · 테스트 · 오시는 길.
-     내용은 data.js(메뉴 · lobby 설정) + brand.js(그림 경로, 빌드가 만듦) 에서 읽어 lobby.js 가 그린다. -->
+<!-- 1층 배너 QR 홍보 사이트 (테이블 QR 의 설문 사이트와 별개). 바 소개 · 일곱 잔 · 위스키 · 바 안 · 안주 · 메뉴 · 오시는 길.
+     메뉴 · 가격 · 그림은 설문 사이트의 data.js · brand.js · img/ 를 그대로 읽어서 promo.js 가 그린다 (한쪽만 고치면 됨). -->
 <header class="lb-top">
-  <a class="lb-pill" href="./#menu" data-act="menu">MENU</a>
+  <a class="lb-pill" href="#menu" data-act="menu">MENU</a>
   <button type="button" class="lb-pill" id="lbLang" data-act="lang" aria-label="Language">EN</button>
 </header>
 <main id="lb">
   <!-- 스크립트가 못 돌 때를 위한 최소 내용 -->
   <section class="lb-hero"><div class="lb-hero-copy"><p class="lb-floor"><span>5F</span> COCKTAIL &amp; WHISKY BAR</p>
-    <h1>일곱 개의 죄,<br>일곱 잔의 칵테일</h1><div class="lb-cta"><a class="lb-btn lb-primary" href="./">나의 죄 알아보기</a></div></div></section>
+    <h1>일곱 개의 죄,<br>일곱 잔의 칵테일</h1></div></section>
 </main>
 <nav class="lb-dock" id="lbDock" aria-label="바로가기"></nav>
-<script src="brand.js"></script>
-<script src="data.js"></script>
-<script src="lobby.js?v=1"></script>
+<!-- 설문 사이트 주소가 바뀌면 아래 세 줄의 주소만 바꾸면 된다 -->
+<script src="https://deadly-sins-mu.vercel.app/brand.js"></script>
+<script src="https://deadly-sins-mu.vercel.app/data.js"></script>
+<script src="promo.js?v=1" data-base="https://deadly-sins-mu.vercel.app/"></script>
 </body>
 </html>

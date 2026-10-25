@@ -63,12 +63,13 @@ function fakeRes() {
   await send({ sid: 'abc', type: 'quit', q: 2, answered: 1 });
   check((await send({ sid: 'q3', type: 'quit', q: 'drop' })).code === 400, '이탈 문항이 숫자가 아니면 → 400');
   check((await send({ sid: 'q3', type: 'quit', q: 99 })).code === 400, '이탈 문항이 범위 밖이면 → 400');
-  // 1층 QR 소개 페이지: lb1 은 들어와서 테스트를 눌렀고, 테스트 세션 t1 은 1층에서 시작해 결과까지
-  check((await send({ sid: 'lb1', type: 'visit', from: 'lobby', act: 'open' })).code === 204, '1층 소개 페이지 방문 저장');
-  await send({ sid: 'lb1', type: 'visit', from: 'lobby', act: 'test' });
-  await send({ sid: 'lb2', type: 'visit', from: 'lobby', act: 'open' });
-  await send({ sid: 'lb2', type: 'visit', from: 'lobby', act: 'bottle' });
-  await send({ sid: 't1', type: 'start', from: 'lobby' });
+  // 1층 배너 홍보 사이트: lb1 은 들어와서 오시는 길 · 인스타, lb2 는 위스키 병을 눌러 메뉴로
+  check((await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'open' })).code === 204, '1층 홍보 사이트 방문 저장');
+  await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'way' });
+  await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'instagram' });
+  await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'open' });
+  await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'bottle' });
+  await send({ sid: 't1', type: 'start' });
   await send({ sid: 't1', type: 'result', sin: '교만', second: '질투', points: '교만 9', picks: 'Q1A' });
   check((await send({ sid: 'x', type: 'drop table' })).code === 400, '모르는 종류 → 400');
   check((await send({ sid: 'x', type: 'result', sin: '<script>' })).code === 400, '이상한 죄 이름의 결과 → 400');
@@ -110,8 +111,8 @@ function fakeRes() {
   check(Array.isArray(st.recent) && st.recent.length === rows.length, '최근 기록', st.recent && st.recent.length);
   check(Array.isArray(st.errors) && st.errors.some((r) => r.message === 'boom'), '최근 오류', st.errors);
   check(Array.isArray(st.items) && st.items.some((r) => r.id === 'lagavulin-16' && r.n === 1), '많이 눌러 본 메뉴', st.items);
-  check(st.lobby && st.lobby.opened === 2 && st.lobby.clicked_test === 1 && st.lobby.clicked_menu === 1 && st.lobby.started === 1 && st.lobby.finished === 1,
-    '1층 → 테스트 흐름 (들어옴 2 · 테스트 1 · 메뉴 1 · 시작 1 · 결과 1)', st.lobby);
+  check(st.promo && st.promo.opened === 2 && st.promo.clicked_menu === 1 && st.promo.clicked_way === 1 && st.promo.clicked_contact === 1,
+    '1층 홍보 사이트 (들어옴 2 · 메뉴 1 · 오시는 길 1 · 인스타/전화 1)', st.promo);
   check(JSON.stringify(st.quits) === JSON.stringify([{ q: 4, n: 1 }, { q: 5, n: 1 }]),
     '그만둔 문항: 세션마다 마지막 것, 끝까지 한 세션은 빼고', st.quits);
   delete process.env.VERCEL_URL;
