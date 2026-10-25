@@ -1156,6 +1156,27 @@ window.DS_DATA = {
     }
   },
 
+  /* 1층 QR 소개 페이지 (/lobby). null 인 칸은 화면에 나오지 않습니다 — 알게 되면 채워 주세요.
+     hours: 요일(0=일 … 6=토)마다 여는 시각 · 닫는 시각. 닫는 시각이 여는 시각보다 이르면 다음 날 새벽.
+       예) [{ days: [0,2,3,4,5,6], open: "19:00", close: "02:00" }]  ← 월요일 휴무 */
+  lobby: {
+    floor: 5,
+    address: null,       // { ko: "서울 ○○구 ○○로 00, 5층", en: "5F, 00 ○○-ro, Seoul" }
+    mapUrl: null,        // 네이버 · 카카오 지도 링크
+    directions: null,    // { ko: "1층 엘리베이터를 타고 5층", en: "Take the lift to 5F" }
+    hours: null,
+    hoursNote: null,     // { ko: "매주 월요일 휴무", en: "Closed on Mondays" }
+    instagram: null,     // "deadlysins" (@ 없이)
+    phone: null,         // "02-000-0000"
+    offer: null,         // { ko: "1층 QR 보고 왔다고 말씀해 주세요", en: "…" }
+    // 바 안 사진 (사장님 제공 2026-10-25, 원본은 photos/room/). 빼고 싶으면 그 칸을 null 로
+    photos: {
+      wall: "img/room/sin-wall.webp",       // 일곱 죄 포스터 벽 — 콘셉트 아래
+      entrance: "img/room/entrance.webp",   // 입구 간판 — 오시는 길
+      room: ["img/room/couple.webp", "img/room/table.webp", "img/room/long-table.webp"]   // 바 안 풍경
+    }
+  },
+
   /* 결과 · 오류 익명 기록 (→ /api/track → Neon). 끄려면 false.
      Neon 이 Vercel 프로젝트에 연결되기 전에는 서버가 받은 기록을 그냥 버립니다. README 의 "결과 기록" 참고. */
   collect: { enabled: true }

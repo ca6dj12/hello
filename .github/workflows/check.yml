@@ -19,7 +19,7 @@ jobs:
       - name: 빌드 결과가 커밋된 것과 같은지 (source 만 바꾸고 빌드를 안 돌렸으면 실패)
         run: |
           python tools/build.py
-          git diff --exit-code -- public/index.html
+          git diff --exit-code -- public/index.html public/brand.js
 
       - uses: actions/setup-node@v4
         with:

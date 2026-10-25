@@ -63,6 +63,13 @@ function fakeRes() {
   await send({ sid: 'abc', type: 'quit', q: 2, answered: 1 });
   check((await send({ sid: 'q3', type: 'quit', q: 'drop' })).code === 400, '이탈 문항이 숫자가 아니면 → 400');
   check((await send({ sid: 'q3', type: 'quit', q: 99 })).code === 400, '이탈 문항이 범위 밖이면 → 400');
+  // 1층 QR 소개 페이지: lb1 은 들어와서 테스트를 눌렀고, 테스트 세션 t1 은 1층에서 시작해 결과까지
+  check((await send({ sid: 'lb1', type: 'visit', from: 'lobby', act: 'open' })).code === 204, '1층 소개 페이지 방문 저장');
+  await send({ sid: 'lb1', type: 'visit', from: 'lobby', act: 'test' });
+  await send({ sid: 'lb2', type: 'visit', from: 'lobby', act: 'open' });
+  await send({ sid: 'lb2', type: 'visit', from: 'lobby', act: 'bottle' });
+  await send({ sid: 't1', type: 'start', from: 'lobby' });
+  await send({ sid: 't1', type: 'result', sin: '교만', second: '질투', points: '교만 9', picks: 'Q1A' });
   check((await send({ sid: 'x', type: 'drop table' })).code === 400, '모르는 종류 → 400');
   check((await send({ sid: 'x', type: 'result', sin: '<script>' })).code === 400, '이상한 죄 이름의 결과 → 400');
   check((await send({ type: 'start' })).code === 400, '세션 없음 → 400');
@@ -74,7 +81,7 @@ function fakeRes() {
   const results = rows.filter((r) => r.type === 'result');
   const abc = results.filter((r) => r.sid === 'abc');
   check(abc.length === 1 && abc[0].sin === '나태' && abc[0].picks === 'Q1D Q2A' && abc[0].tie === false, '세션 abc 의 결과는 마지막 것 한 줄', abc);
-  check(results.length === 2, '결과 줄은 세션 수만큼 (2)', results.map((r) => r.sid));
+  check(results.length === 3, '결과 줄은 세션 수만큼 (3)', results.map((r) => r.sid));
   const err = rows.find((r) => r.sid === 'x' && r.type === 'error');
   check(err && err.extra && err.extra.message === 'boom' && err.extra.line === 3, '오류의 기타 칸', err && err.extra);
   const big = rows.find((r) => r.sid === 'big');
@@ -96,13 +103,15 @@ function fakeRes() {
   check(fwd.code === 404, 'x-forwarded-host 를 꾸며 보내도 404');
   const own = await call('GET', undefined, { query: { stats: '1' }, headers: { host: 'deadly-sins-abc123-ca6dj12s-projects.vercel.app' } });
   const st = own.body || {};
-  check(own.code === 200 && st.results && st.results.total === 2, '배포 고유 주소에서는 통계 (완주 2)', st.results);
-  check(st.results && st.results.bySin.some((r) => r.sin === '나태' && r.n === 1 && r.pct === 50), '죄별 명수 · 비율', st.results && st.results.bySin);
-  check(Array.isArray(st.days) && st.days.length >= 1 && st.days[0].finished === 2, '날짜별 (한국 시간)', st.days);
+  check(own.code === 200 && st.results && st.results.total === 3, '배포 고유 주소에서는 통계 (완주 3)', st.results);
+  check(st.results && st.results.bySin.some((r) => r.sin === '나태' && r.n === 1 && r.pct === 33.3), '죄별 명수 · 비율', st.results && st.results.bySin);
+  check(Array.isArray(st.days) && st.days.length >= 1 && st.days[0].finished === 3, '날짜별 (한국 시간)', st.days);
   check(Array.isArray(st.picks) && st.picks.some((r) => r.pick === 'Q1D' && r.n === 1), '보기별 선택 수', st.picks);
   check(Array.isArray(st.recent) && st.recent.length === rows.length, '최근 기록', st.recent && st.recent.length);
   check(Array.isArray(st.errors) && st.errors.some((r) => r.message === 'boom'), '최근 오류', st.errors);
   check(Array.isArray(st.items) && st.items.some((r) => r.id === 'lagavulin-16' && r.n === 1), '많이 눌러 본 메뉴', st.items);
+  check(st.lobby && st.lobby.opened === 2 && st.lobby.clicked_test === 1 && st.lobby.clicked_menu === 1 && st.lobby.started === 1 && st.lobby.finished === 1,
+    '1층 → 테스트 흐름 (들어옴 2 · 테스트 1 · 메뉴 1 · 시작 1 · 결과 1)', st.lobby);
   check(JSON.stringify(st.quits) === JSON.stringify([{ q: 4, n: 1 }, { q: 5, n: 1 }]),
     '그만둔 문항: 세션마다 마지막 것, 끝까지 한 세션은 빼고', st.quits);
   delete process.env.VERCEL_URL;

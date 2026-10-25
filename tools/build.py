@@ -202,6 +202,18 @@ def main() -> None:
                         "body 주입")
 
     (OUT / "index.html").write_text(html, encoding="utf-8")
+
+    # 5) 1층 소개 페이지(lobby.html) 등 다른 페이지가 쓰는 브랜드 그림 목록
+    #    (그림 파일 이름이 내용 해시라 원본이 바뀌면 이름도 바뀐다 → 손으로 적지 않고 여기서 만든다)
+    drinks = re.search(r"SIGNATURE_DRINKS=(\{.*?\}\});", html)
+    wordmark = re.search(r'<img class="wordmark-img" src="(img/[0-9a-f]+\.webp)"', html)
+    if not drinks or not wordmark:
+        fail("SIGNATURE_DRINKS 나 워드마크(.wordmark-img)를 못 찾음")
+    brand = {"cover": cover.group(1), "wordmark": wordmark.group(1),
+             "drinks": json.loads(drinks.group(1)), "symbols": symbols}
+    (OUT / "brand.js").write_text(
+        "/* tools/build.py 가 만든 파일 — 고치지 말 것. 표지 · 워드마크 · 일곱 잔 그림 경로 */\n"
+        "window.DS_BRAND = " + json.dumps(brand, ensure_ascii=False, indent=1) + ";\n", encoding="utf-8")
     img_kb = sum(p.stat().st_size for p in IMG.glob("*.webp")) / 1024
     out_kb = len(html.encode()) / 1024
     print(f"원본 {src_kb:.0f}KB → index.html {out_kb:.0f}KB + 이미지 {n_img}장 {img_kb:.0f}KB"

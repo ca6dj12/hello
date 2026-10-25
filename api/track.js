@@ -16,7 +16,7 @@
 'use strict';
 const { neon } = require('@neondatabase/serverless');
 
-const TYPES = ['start', 'quit', 'result', 'signature', 'order', 'menu', 'item', 'share', 'restart', 'lang', 'error'];
+const TYPES = ['visit', 'start', 'quit', 'result', 'signature', 'order', 'menu', 'item', 'share', 'restart', 'lang', 'error'];
 const SINS = ['교만', '질투', '분노', '나태', '탐욕', '탐식', '색욕'];
 const KNOWN = ['sid', 'type', 'lang', 'v', 'sin', 'second', 'tie', 'points', 'picks'];
 
@@ -100,7 +100,7 @@ function canSeeStats(req) {
 const KST = "(created_at at time zone 'Asia/Seoul')";
 async function stats(sql) {
   const q = (text) => sql.query(text);
-  const [types, sins, days, picks, recent, errors, items, quits] = await Promise.all([
+  const [types, sins, days, picks, recent, errors, items, quits, lobby] = await Promise.all([
     q(`select type, count(*)::int as n, count(distinct sid)::int as sessions
        from deadly_sins_events group by type order by n desc`),
     q(`select sin, count(*)::int as n, count(*) filter (where tie)::int as ties
@@ -125,7 +125,17 @@ async function stats(sql) {
        from (select distinct on (sid) sid, extra from deadly_sins_events
              where type = 'quit' order by sid, id desc) last
        where not exists (select 1 from deadly_sins_events r where r.type = 'result' and r.sid = last.sid)
-       group by 1 order by 1`)
+       group by 1 order by 1`),
+    // 1층 QR 소개 페이지(/lobby): 들어온 사람 → 테스트 · 메뉴 · 오시는 길 → 테스트 시작 → 결과
+    q(`select
+         count(distinct sid) filter (where type = 'visit' and extra->>'act' = 'open')::int as opened,
+         count(distinct sid) filter (where type = 'visit' and extra->>'act' = 'test')::int as clicked_test,
+         count(distinct sid) filter (where type = 'visit' and extra->>'act' in ('menu', 'bottle', 'bite'))::int as clicked_menu,
+         count(distinct sid) filter (where type = 'visit' and extra->>'act' = 'way')::int as clicked_way,
+         count(distinct sid) filter (where type = 'start' and extra->>'from' = 'lobby')::int as started,
+         (select count(*)::int from deadly_sins_events r where r.type = 'result' and exists (
+            select 1 from deadly_sins_events s where s.sid = r.sid and s.type = 'start' and s.extra->>'from' = 'lobby')) as finished
+       from deadly_sins_events`)
   ]);
   const total = sins.reduce((a, r) => a + r.n, 0);
   return {
@@ -136,6 +146,7 @@ async function stats(sql) {
     picks,
     items,      // 메뉴판에서 많이 눌러 본 항목
     quits,      // 퀴즈를 그만둔 문항 (q 번에서 n 명)
+    lobby: lobby[0],   // 1층 QR 소개 페이지 → 테스트 흐름 (세션 수)
     recent,
     errors
   };

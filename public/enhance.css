@@ -167,6 +167,11 @@ button.ds-row:focus-visible { outline: 1px solid var(--ds-red); outline-offset: 
 }
 .ds-actions button:active { transform: scale(.98); }
 
+/* 1층 QR 로 들어와 아직 아래층에 있는 손님에게: 5층에서 만나요 */
+.ds-lobby { border-color: rgba(200, 74, 80, .6); background: rgba(200, 74, 80, .1); }
+.ds-lobby-body { margin: 6px 0 10px; font-size: 13.5px; line-height: 1.6; color: rgba(255, 255, 255, .9); }
+.ds-lobby-link { font-size: 13.5px; font-weight: 800; color: #fff; }
+
 /* 칵테일 이름 바로 아래 공유 버튼 */
 .ds-share-top {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
