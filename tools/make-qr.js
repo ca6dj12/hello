@@ -18,6 +18,11 @@
      print/menu-qr.svg · print/menu-qr.png · print/menu-card.html
      print/deadly-sins-menu-card.pdf · print/deadly-sins-menu-card.png
 
+   --lobby 일 때는 1층에 붙일 A4 포스터 (주소 끝에 /lobby — 바 소개 페이지)
+     print/lobby-qr.svg · print/lobby-qr.png · print/lobby-poster.html
+     print/deadly-sins-lobby-poster.pdf · print/deadly-sins-lobby-poster.png
+     public/og-lobby.jpg   소개 페이지 링크 미리보기 (일곱 죄 포스터 벽 사진)
+
    카드와 미리보기는 사이트 첫 화면 그림을 그대로 씁니다.
    그림의 위는 순백, 아래는 순흑이고 경계가 748px 줄에서 곧게 떨어지므로,
    그림을 줄여 놓고 바탕을 같은 높이에서 흰색/검은색으로 나누면 이음매 없이 이어집니다.
@@ -32,8 +37,10 @@ const jsQR = require('jsqr');
 const { PNG } = require('pngjs');
 
 const MENU = process.argv.includes('--menu');
+const LOBBY = process.argv.includes('--lobby');
 let url = process.argv.slice(2).find((a) => /^https?:\/\//.test(a));
 if (MENU && url && !/#menu$/.test(url)) url = url.replace(/\/?$/, '/') + '#menu';
+if (LOBBY && url && !/\/lobby$/.test(url)) url = url.replace(/\/?$/, '') + '/lobby';
 if (!url) {
   console.error('주소를 넣어주세요.  예)  node make-qr.js https://deadly-sins.vercel.app');
   process.exit(1);
@@ -53,7 +60,13 @@ if (!price) { console.error('public/data.js 에서 signaturePrice 를 못 찾음
 const priceText = price.toLocaleString('ko-KR');
 
 /* 카드 문구와 파일 이름: 기본(퀴즈) / 메뉴판 */
-const KIND = MENU ? {
+const floor = Number((fs.readFileSync(path.join(PUBLIC, 'data.js'), 'utf8').match(/floor:\s*(\d+)/) || [])[1]) || 5;
+const KIND = LOBBY ? {
+  title: '1층 포스터', kicker: 'COCKTAIL & WHISKY BAR', k: 2, floor: floor + 'F',
+  cta: '일곱 개의 죄, 일곱 잔의 칵테일', sub: '시그니처 칵테일 ' + priceText + '원 · 커버차지 없음',
+  scan: 'QR을 찍고 올라오세요', en: '',
+  qr: 'lobby-qr', html: 'lobby-poster.html', card: 'deadly-sins-lobby-poster'
+} : MENU ? {
   title: '메뉴판 카드', kicker: 'WHISKY · COCKTAILS · BITES',
   cta: 'QR을 찍으면 메뉴판이 열려요', sub: '이름을 누르면 사진과 설명이 나와요', en: 'OPEN THE MENU',
   qr: 'menu-qr', html: 'menu-card.html', card: 'deadly-sins-menu-card'
@@ -69,43 +82,49 @@ const ART = { w: 1024, h: 1536, horizon: 748 };
 const FONTS = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gelasio:wght@500;700&family=Noto+Sans+KR:wght@500;700;900&display=block">';
 
 function cardHtml(qrSvg) {
-  // A6 105×148mm. 그림 폭 88mm, 경계선은 위에서 40mm.
+  // A6 105×148mm. 그림 폭 88mm, 경계선은 위에서 40mm. k 배로 키우면 A4(k=2) 포스터.
+  const k = KIND.k || 1, mm = (v) => (v * k).toFixed(2) + 'mm';
   const W = 88, HORIZON = 40, s = W / ART.w, top = HORIZON - ART.horizon * s;
   return `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <title>DEADLY SINS — ${KIND.title}</title>
 ${FONTS}
 <style>
- @page{size:105mm 148mm;margin:0}
+ @page{size:${mm(105)} ${mm(148)};margin:0}
  *{margin:0;padding:0;box-sizing:border-box}
  html,body{background:#3a3a3a}
  body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
  .card{
-   width:105mm;height:148mm;position:relative;overflow:hidden;
-   background:linear-gradient(#fff 0 ${HORIZON}mm,#000 ${HORIZON}mm);
+   width:${mm(105)};height:${mm(148)};position:relative;overflow:hidden;
+   background:linear-gradient(#fff 0 ${mm(HORIZON)},#000 ${mm(HORIZON)});
    -webkit-print-color-adjust:exact;print-color-adjust:exact;
  }
- .art{position:absolute;width:105mm;left:0;top:${top.toFixed(2)}mm}
+ .art{position:absolute;width:${mm(105)};left:0;top:${mm(top)}}
  .kicker{
-   position:absolute;top:7.2mm;left:0;right:0;text-align:center;
-   font:500 2.5mm/1 'Gelasio',Georgia,serif;letter-spacing:.42em;text-indent:.42em;color:#000;
+   position:absolute;top:${mm(7.2)};left:0;right:0;text-align:center;
+   font:500 ${mm(2.5)}/1 'Gelasio',Georgia,serif;letter-spacing:.42em;text-indent:.42em;color:#000;
  }
- .bottom{position:absolute;top:80mm;left:0;right:0;display:flex;flex-direction:column;align-items:center}
- .qr{background:#fff;padding:3mm;border-radius:2.2mm;line-height:0}
- .qr svg{width:30mm;height:30mm;display:block;shape-rendering:crispEdges}
- .cta{margin-top:5mm;font:900 4.1mm/1.3 'Noto Sans KR',sans-serif;letter-spacing:-.04em;color:#f7f5f3}
- .price{margin-top:2.2mm;font:700 2.7mm/1 'Noto Sans KR',sans-serif;letter-spacing:.08em;color:#c84a50}
- .en{margin-top:2.6mm;font:500 2.2mm/1 'Gelasio',Georgia,serif;letter-spacing:.3em;text-indent:.3em;color:rgba(247,245,243,.45)}
+ .bottom{position:absolute;top:${mm(KIND.floor ? 78.5 : 80)};left:0;right:0;display:flex;flex-direction:column;align-items:center}
+ .floor{margin-bottom:${mm(3.2)};padding:${mm(1)} ${mm(2.4)} ${mm(.8)};border:${mm(.3)} solid #c84a50;border-radius:${mm(1)};
+   font:700 ${mm(4.2)}/1 'Gelasio',Georgia,serif;letter-spacing:.06em;color:#f7f5f3;background:rgba(200,74,80,.2)}
+ .qr{background:#fff;padding:${mm(3)};border-radius:${mm(2.2)};line-height:0}
+ .qr svg{width:${mm(30)};height:${mm(30)};display:block;shape-rendering:crispEdges}
+ .scan{margin-top:${mm(2.6)};font:700 ${mm(2.6)}/1 'Noto Sans KR',sans-serif;letter-spacing:.02em;color:rgba(247,245,243,.8)}
+ .cta{margin-top:${mm(KIND.floor ? 3.6 : 5)};font:900 ${mm(4.1)}/1.3 'Noto Sans KR',sans-serif;letter-spacing:-.04em;color:#f7f5f3}
+ .price{margin-top:${mm(2.2)};font:700 ${mm(2.7)}/1 'Noto Sans KR',sans-serif;letter-spacing:.08em;color:#c84a50}
+ .en{margin-top:${mm(2.6)};font:500 ${mm(2.2)}/1 'Gelasio',Georgia,serif;letter-spacing:.3em;text-indent:.3em;color:rgba(247,245,243,.45)}
  @media print{html,body{background:none}body{padding:0;min-height:0;display:block}}
 </style></head><body>
 <div class="card">
   <canvas class="art" width="${Math.round(ART.w * 105 / W)}" height="${ART.h}" aria-label="Deadly Sins"></canvas>
   <p class="kicker">${KIND.kicker}</p>
   <div class="bottom">
+    ${KIND.floor ? `<p class="floor">${KIND.floor}</p>` : ''}
     <div class="qr">${qrSvg}</div>
+    ${KIND.scan ? `<p class="scan">${KIND.scan}</p>` : ''}
     <p class="cta">${KIND.cta}</p>
     <p class="price">${KIND.sub}</p>
-    <p class="en">${KIND.en}</p>
+    ${KIND.en ? `<p class="en">${KIND.en}</p>` : ''}
   </div>
 </div>
 <script>
@@ -142,6 +161,29 @@ function ogHtml() {
 </body></html>`;
 }
 
+function lobbyOgHtml() {
+  // 1200×630: 왼쪽 절반 포스터 벽 사진, 오른쪽 검정 위에 워드마크 · 5F · 한 줄
+  const brand = fs.readFileSync(path.join(PUBLIC, 'brand.js'), 'utf8');
+  const wm = (brand.match(/"wordmark":\s*"([^"]+)"/) || [])[1];
+  const b64 = (f) => 'data:image/webp;base64,' + fs.readFileSync(path.join(PUBLIC, f)).toString('base64');
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8">${FONTS}
+<style>
+ *{margin:0;padding:0;box-sizing:border-box}
+ body{width:1200px;height:630px;overflow:hidden;position:relative;background:#000}
+ .photo{position:absolute;left:0;top:0;width:640px;height:630px;object-fit:cover;object-position:50% 40%}
+ .fade{position:absolute;left:440px;top:0;width:200px;height:630px;background:linear-gradient(90deg,rgba(0,0,0,0),#000)}
+ .wm{position:absolute;left:690px;top:150px;width:420px}
+ .floor{position:absolute;left:692px;top:290px;font:700 22px/1 'Gelasio',Georgia,serif;letter-spacing:.32em;color:rgba(247,245,243,.75)}
+ .floor b{display:inline-block;margin-right:14px;padding:6px 10px 5px;border:2px solid #c84a50;border-radius:5px;color:#fff;letter-spacing:.06em;background:rgba(200,74,80,.2)}
+ h1{position:absolute;left:690px;top:370px;font:900 50px/1.3 'Noto Sans KR',sans-serif;letter-spacing:-.05em;color:#f7f5f3}
+</style></head><body>
+<img class="photo" src="${b64('img/room/sin-wall.webp')}" alt=""><div class="fade"></div>
+<img class="wm" src="${b64(wm)}" alt="">
+<p class="floor"><b>${floor}F</b>COCKTAIL &amp; WHISKY</p>
+<h1>일곱 개의 죄,<br>일곱 잔의 칵테일</h1>
+</body></html>`;
+}
+
 function decode(file) {
   const png = PNG.sync.read(fs.readFileSync(file));
   const r = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
@@ -157,7 +199,8 @@ function decode(file) {
   const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
   try {
     // 카드: PNG(약 600dpi 상당) + PDF
-    const ctx = await browser.newContext({ viewport: { width: 520, height: 700 }, deviceScaleFactor: 6, ignoreHTTPSErrors: true });
+    const k = KIND.k || 1;
+    const ctx = await browser.newContext({ viewport: { width: 520 * k, height: 700 * k }, deviceScaleFactor: 6 / k, ignoreHTTPSErrors: true });
     const page = await ctx.newPage();
     await page.goto('file://' + path.join(OUT, KIND.html), { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
@@ -176,13 +219,23 @@ function decode(file) {
     const pdfCtx = await browser.newContext();
     const pdfPage = await pdfCtx.newPage();
     const png = fs.readFileSync(path.join(OUT, KIND.card + '.png')).toString('base64');
-    await pdfPage.setContent(`<!doctype html><style>@page{size:105mm 148mm;margin:0}*{margin:0}
-      img{display:block;width:105mm;height:148mm}</style><img src="data:image/png;base64,${png}">`, { waitUntil: 'load' });
-    await pdfPage.pdf({ path: path.join(OUT, KIND.card + '.pdf'), width: '105mm', height: '148mm', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
+    const pw = (105 * k) + 'mm', ph = (148 * k) + 'mm';
+    await pdfPage.setContent(`<!doctype html><style>@page{size:${pw} ${ph};margin:0}*{margin:0}
+      img{display:block;width:${pw};height:${ph}}</style><img src="data:image/png;base64,${png}">`, { waitUntil: 'load' });
+    await pdfPage.pdf({ path: path.join(OUT, KIND.card + '.pdf'), width: pw, height: ph, printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
     await pdfCtx.close();
 
+    // 소개 페이지 링크 미리보기: 일곱 죄 포스터 벽 사진 + 워드마크
+    if (LOBBY) {
+      const og = await browser.newContext({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1, ignoreHTTPSErrors: true });
+      const p3 = await og.newPage();
+      await p3.setContent(lobbyOgHtml(), { waitUntil: 'networkidle' });
+      await p3.evaluate(() => document.fonts.ready);
+      await p3.screenshot({ path: path.join(PUBLIC, 'og-lobby.jpg'), type: 'jpeg', quality: 82 });
+      await og.close();
+    }
     // 링크 미리보기 (메뉴판 카드를 만들 때는 건드리지 않는다)
-    if (!MENU) {
+    if (!MENU && !LOBBY) {
     const og = await browser.newContext({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1, ignoreHTTPSErrors: true });
     const p2 = await og.newPage();
     await p2.setContent(ogHtml(), { waitUntil: 'networkidle' });
@@ -199,7 +252,8 @@ function decode(file) {
   console.log('만들었습니다 →', url);
   [KIND.qr + '.svg', KIND.qr + '.png', KIND.html, KIND.card + '.pdf', KIND.card + '.png']
     .forEach((f) => console.log('  print/' + f));
-  if (!MENU) console.log('  public/og.jpg');
+  if (!MENU && !LOBBY) console.log('  public/og.jpg');
+  if (LOBBY) console.log('  public/og-lobby.jpg');
   console.log(`QR 해독: 카드 ${read === url ? '✓' : '✗ (' + read + ')'} · QR PNG ${readQr === url ? '✓' : '✗ (' + readQr + ')'}`);
   if (read !== url || readQr !== url) process.exitCode = 1;
 })().catch((e) => { console.error(e); process.exit(1); });

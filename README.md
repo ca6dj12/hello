@@ -215,6 +215,20 @@ from deadly_sins_events where type = 'error'
 order by created_at desc limit 30;
 ```
 
+## 1층 QR 소개 페이지 (https://deadly-sins-mu.vercel.app/lobby)
+
+건물 1층에 붙인 QR 로 들어오는 사람을 5층까지 올라오게 하는 페이지입니다.
+바 소개 → 일곱 잔 → 위스키 → 바 안 사진 → 안주 → "올라오기 전, 나의 죄 테스트" → 오시는 길.
+
+- 내용은 `public/data.js` 의 메뉴 · `lobby` 설정에서 읽습니다. **주소 · 오시는 길 · 영업시간 · 인스타 · 전화 · 이벤트 문구는
+  `lobby` 에서 null 을 채우면 바로 나타납니다** (null 이면 숨김). 영업시간을 넣으면 첫 화면에 "지금 영업 중 · 새벽 2시까지" 가 뜹니다.
+- 사진: `lobby.photos` (바 안 사진 원본은 `photos/room/`). 그림 경로(표지 · 일곱 잔)는 빌드가 만드는 `public/brand.js`.
+- /admin 에서 고친 가격 · 숨김도 이 페이지에 반영됩니다.
+- 여기서 테스트로 넘어간 손님은 결과 화면에 "5층에서 만나요"와 오시는 길 링크가 나옵니다.
+- 통계(`?stats=1`)의 `lobby`: 들어온 사람 → 테스트 · 메뉴 · 오시는 길을 누른 사람 → 테스트 시작 → 결과까지 (세션 수).
+- 1층 포스터: `node tools/make-qr.js https://deadly-sins-mu.vercel.app --lobby` →
+  `print/deadly-sins-lobby-poster.pdf` (A4) + 링크 미리보기 `public/og-lobby.jpg`.
+
 ## 테이블 QR 카드
 
 ```bash
