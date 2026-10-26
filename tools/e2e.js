@@ -624,23 +624,31 @@ async function promoSite(browser, base) {
   const info = await page.evaluate(() => ({
     h1: document.querySelector('.lb-hero h1').textContent,
     cards: document.querySelectorAll('.lb-card').length,
-    bottles: document.querySelectorAll('.lb-bottle').length,
-    bites: document.querySelectorAll('.lb-shot').length,
     room: document.querySelectorAll('.lb-room img').length,
-    menuRows: document.querySelectorAll('.lb-mrow').length,
+    cats: [...document.querySelectorAll('.lb-cats a')].map((a) => a.textContent).join(' '),
+    grid: Object.fromEntries([...document.querySelectorAll('.lb-cat')].map((c) => [c.id, c.querySelectorAll('.lb-item').length])),
+    noPhoto: [...document.querySelectorAll('.lb-item')].filter((b) => !b.querySelector('.lb-item-img img')).map((b) => b.id),
+    // 가격은 이 사이트에 싣지 않는다: 16,000 · 9,000원 · 8,000 같은 숫자가 하나도 없어야
+    prices: (document.getElementById('lb').innerText.match(/\d{1,3}(,\d{3})+|\d+\s*원|KRW/g) || []),
+    rental: (document.querySelector('[data-act="rental"]') || {}).href,
+    credits: document.querySelectorAll('.lb-credits li').length,
     table: !!document.getElementById('table'),
-    toQuiz: [...document.querySelectorAll('a[href]')].filter((a) => !a.closest('.lb-info')).map((a) => a.getAttribute('href')).filter((h) => !h.startsWith('#')),
+    toQuiz: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')).filter((h) => /deadly-sins-mu|^\/|^[a-z-]+\.html/.test(h)),
     info: document.querySelector('.lb-info').textContent,
     maps: [...document.querySelectorAll('.lb-maps a')].map((a) => a.textContent + ' ' + a.getAttribute('href')),
     ig: (document.querySelector('[data-act="instagram"]') || {}).href,
     cta: Math.round(document.querySelector('.lb-cta').getBoundingClientRect().top),
     vh: innerHeight
   }));
-  check(info.h1.includes('일곱 개의 죄') && info.cards === 7 && info.bottles >= 10 && info.bites === 3 && info.room === 3,
-    '홍보 사이트: 첫 화면 · 일곱 잔 · 위스키 · 바 안 사진 · 안주', info);
-  check(info.menuRows > 30 && info.table && info.toQuiz.length === 0, '메뉴는 사이트 안에서, 설문 사이트로 가는 링크 없음 (테이블 질문은 예고만)', info.toQuiz);
-  check(['백제고분로41길 42-20', '잠실역 2·8호선 10번 출구', '엘리베이터', '주차', '화–일 20:00 – 02:00', '라스트오더 01:30 · 매주 월요일 휴무', '@deadlysins.bar', '16,000', '커버차지 없음']
-    .every((w) => info.info.includes(w)), '오시는 길: 주소 · 역 · 엘리베이터 · 주차 · 영업시간 · 인스타 · 가격', info.info);
+  check(info.h1.includes('일곱 개의 죄') && info.cards === 7 && info.room === 3, '홍보 사이트: 첫 화면 · 일곱 잔 · 바 안 사진', info);
+  check(info.cats === '시그니처 위스키 칵테일 안주 음료' && info.grid['cat-sig'] === 7 && info.grid['cat-whisky'] >= 15 && info.grid['cat-bites'] === 3 && info.grid['cat-bev'] === 5 && info.noPhoto.length === 0,
+    '메뉴: 종류 칸 다섯 + 종류별 사진 격자 (모든 칸에 사진)', info.grid);
+  check(info.prices.length === 0, '가격은 어디에도 없음', info.prices);
+  check(info.credits >= 5, '공용 사진 출처는 메뉴 맨 아래 접어 둠', info.credits);
+  check(info.table && info.toQuiz.length === 0, '설문 사이트로 가는 링크 없음 (테이블 질문은 예고만)', info.toQuiz);
+  check(['백제고분로41길 42-20', '잠실역 2·8호선 10번 출구', '엘리베이터', '주차', '화–일 20:00 – 02:00', '라스트오더 01:30 · 매주 월요일 휴무', '@deadlysins.bar', '커버차지 없음', '대관 문의 환영']
+    .every((w) => info.info.includes(w)), '오시는 길: 주소 · 역 · 엘리베이터 · 주차 · 영업시간 · 인스타 · 커버차지 없음 · 대관 문의', info.info);
+  check(info.rental === 'https://www.instagram.com/deadlysins.bar/', '바 안 사진 아래 "대관 문의하기" → 인스타그램', info.rental);
   check(info.maps.length === 2 && /네이버 지도.*naver\.me/.test(info.maps[0]) && /카카오맵.*kko\.to/.test(info.maps[1]) && info.ig === 'https://www.instagram.com/deadlysins.bar/',
     '지도 버튼 둘(네이버 · 카카오) · 인스타 링크', info.maps.concat(info.ig));
   check(await status(page) === '● 지금 영업 중 · 새벽 2시까지', '화요일 밤 9시: 첫 화면에 "지금 영업 중"', await status(page));
@@ -657,17 +665,44 @@ async function promoSite(browser, base) {
   await page.waitForTimeout(1200);
   const wayTop = await page.evaluate(() => Math.round(document.getElementById('way').getBoundingClientRect().top));
   check(wayTop >= -5 && wayTop < 300, '"5층으로 오는 길" → 오시는 길로 내려감', wayTop);
-  // 위스키 병을 누르면 메뉴의 그 줄로
-  await page.evaluate(() => window.scrollTo(0, document.getElementById('whisky').offsetTop));
-  await page.waitForTimeout(500);
-  const bottle = await page.$('.lb-bottle');
-  const target = (await bottle.getAttribute('href')).slice(1);
-  await bottle.click();
+  // 메뉴 종류 칸 → 그 종류로, 칸은 위에 붙어 있고 불이 옮겨감
+  await page.click('.lb-hero [data-act="menu"]');
   await page.waitForTimeout(1200);
-  const hl = await page.evaluate((id) => { const r = document.getElementById(id); const b = r.getBoundingClientRect(); return { inView: b.top > 0 && b.bottom < innerHeight, hl: r.classList.contains('lb-hl') }; }, target);
-  check(hl.inView && hl.hl, '위스키 병 → 메뉴의 그 줄로 가서 잠깐 표시', hl);
-  check(BEACONS.some((x) => x.body && x.body.act === 'bottle'), '누른 것도 기록');
+  await page.click('.lb-cats a[href="#cat-bites"]');
+  await page.waitForTimeout(1400);
+  const cat = await page.evaluate(() => ({
+    top: Math.round(document.getElementById('cat-bites').getBoundingClientRect().top),
+    chips: Math.round(document.querySelector('.lb-cats').getBoundingClientRect().top),
+    on: (document.querySelector('.lb-cats a.on') || {}).textContent
+  }));
+  check(cat.top >= 0 && cat.top < 160 && Math.abs(cat.chips) < 2 && cat.on === '안주', '종류 칸 "안주" → 안주로 내려가고, 칸은 화면 위에 붙어 불이 옮겨감', cat);
   check(await page.evaluate(() => document.querySelector('.lb-top').classList.contains('hide')), '스크롤하면 위의 MENU · EN 은 숨김 (글자를 가리지 않게)');
+  // 사진을 누르면 설명 판, 뒤로 가기 · 바깥 · ✕ 로 닫힘
+  await page.click('#m-dalmore-15');
+  await page.waitForTimeout(700);
+  const sh = await page.evaluate(() => {
+    const el = document.querySelector('.lb-sheet');
+    const r = el.querySelector('.lb-sheet-panel').getBoundingClientRect();
+    return { open: !el.hidden && el.classList.contains('open'), inView: r.top >= 0 && r.top < innerHeight / 2, text: el.innerText, lock: document.documentElement.classList.contains('lb-lock') };
+  });
+  check(sh.open && sh.inView && sh.lock && /달모어 15/.test(sh.text) && /하이랜드/.test(sh.text) && /캐스크/.test(sh.text) && !/\d,\d{3}|원\b/.test(sh.text),
+    '사진을 누르면 아래에서 설명 판 (산지 · 도수 · 향 · 맛, 가격 없음)', sh.text.slice(0, 120));
+  check(BEACONS.some((x) => x.body && x.body.act === 'item' && x.body.id === 'dalmore-15'), '어떤 메뉴를 열었는지 기록');
+  await page.goBack();
+  await page.waitForTimeout(600);
+  check(await page.evaluate(() => document.querySelector('.lb-sheet').hidden && !document.documentElement.classList.contains('lb-lock')), '폰의 "뒤로"로 설명 판이 닫힘 (사이트를 떠나지 않음)', page.url());
+  await page.click('#m-sig-교');
+  await page.waitForTimeout(700);
+  const sig = await page.evaluate(() => document.querySelector('.lb-sheet').innerText);
+  check(/교만의 술/.test(sig) && /깊고 우아한/.test(sig) && /강도/.test(sig), '시그니처: 이름 · 스타일 · 설명 · 향/맛/강도', sig.slice(0, 120));
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(600);
+  await page.click('#m-cheesecake');
+  await page.waitForTimeout(600);
+  await page.mouse.click(195, 30);   // 판 바깥 (어두운 곳)
+  await page.waitForTimeout(600);
+  const closed = await page.evaluate(() => ({ hidden: document.querySelector('.lb-sheet').hidden, url: location.pathname }));
+  check(closed.hidden && /promo/.test(closed.url), 'Esc · 바깥을 눌러도 닫힘', closed);
   await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(500);
   await page.click('#lbLang');
   check((await page.textContent('.lb-hero h1')).includes('Seven sins'), '영어 전환');
@@ -699,10 +734,11 @@ async function promoSite(browser, base) {
   const st = await o2.page.evaluate(() => ({
     status: !!document.querySelector('.lb-status'), info: document.querySelector('.lb-info').textContent,
     dim: document.querySelectorAll('.lb-info .lb-dim, .lb-maps, [data-act="instagram"]').length,
-    lag: (document.querySelector('#m-lagavulin-16 .lb-mprice') || {}).textContent
+    rental: !!document.querySelector('[data-act="rental"]'),
+    lag: (document.querySelector('#m-lagavulin-16 .lb-sold') || {}).textContent
   }));
-  check(!st.status && st.dim === 0 && !st.info.includes('영업시간') && st.info.includes('16,000'), '비워 둔 칸(주소 · 영업시간 · 인스타)은 숨기고 가격은 안내', st);
-  check(st.lag === '품절', '/admin 에서 품절로 바꾸면 홍보 사이트 메뉴에도 품절', st.lag);
+  check(!st.status && st.dim === 0 && !st.info.includes('영업시간') && st.info.includes('커버차지 없음') && !st.rental, '비워 둔 칸(주소 · 영업시간 · 인스타)은 숨김', st);
+  check(st.lag === '품절', '/admin 에서 품절로 바꾸면 홍보 사이트 메뉴 사진에도 품절', st.lag);
   await o2.ctx.close();
   LIVE = { v: 0, at: null, data: null };
 }

@@ -63,7 +63,7 @@ const priceText = price.toLocaleString('ko-KR');
 const floor = Number((fs.readFileSync(path.join(PUBLIC, 'data.js'), 'utf8').match(/floor:\s*(\d+)/) || [])[1]) || 5;
 const KIND = LOBBY ? {
   title: '1층 포스터', kicker: 'COCKTAIL & WHISKY BAR', k: 2, floor: floor + 'F',
-  cta: '일곱 개의 죄, 일곱 잔의 칵테일', sub: '시그니처 칵테일 ' + priceText + '원 · 커버차지 없음',
+  cta: '일곱 개의 죄, 일곱 잔의 칵테일', sub: '커버차지 없음 · 대관 문의 환영',
   scan: 'QR을 찍고 올라오세요', en: '',
   qr: 'banner-qr', html: 'banner-poster.html', card: 'deadly-sins-banner-poster'
 } : MENU ? {

@@ -1,7 +1,8 @@
 /* =============================================================
    DEADLY SINS — 1층 배너 QR 홍보 사이트 (테이블 QR 의 설문 사이트와 별개)
-   지나가던 사람이 QR 을 찍고 3초 안에 알아야 할 것: 무슨 곳인지 · 분위기 · 가격 · 어떻게 올라가는지.
+   지나가던 사람이 QR 을 찍고 3초 안에 알아야 할 것: 무슨 곳인지 · 분위기 · 무엇을 마시는지 · 어떻게 올라가는지.
    설문(나의 죄 테스트)은 테이블에서 하는 경험이라 여기서는 예고만 한다.
+   가격은 이 사이트에 싣지 않는다 (사장님 2026-10-26). 메뉴는 사진 격자, 누르면 설명.
 
    그림 · 메뉴 · 가격은 설문 사이트(BASE)의 data.js · brand.js · img/ 를 그대로 읽는다.
    → 메뉴를 고치면(data.js 나 /admin) 이 사이트도 따라 바뀐다. 따로 고칠 것 없음.
@@ -27,48 +28,52 @@
     ko: {
       lang: 'EN', floorLine: 'COCKTAIL & WHISKY BAR',
       heroTitle: '일곱 개의 죄,<br>일곱 잔의 칵테일',
-      ctaWay: '5층으로 오는 길', ctaMenu: '메뉴 · 가격 보기',
+      ctaWay: '5층으로 오는 길', ctaMenu: '메뉴 보기',
       conceptTitle: '오늘 밤, 당신은<br>어떤 죄를 삼키시겠습니까?',
       conceptBody: '데들리 신스는 일곱 가지 죄를 일곱 잔의 칵테일로 빚었습니다. 교만, 질투, 분노, 나태, 탐욕, 폭식, 색욕 — 오늘 밤 당신은 어느 쪽인가요?',
-      sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: '일곱 잔의 시그니처', sevenNote: (p) => '모든 잔 ' + p + '원', swipe: '옆으로 넘겨 보세요',
-      whiskyBody: (g) => '죄마다 어울리는 위스키를 골라 두었습니다. 글라스 ' + g + '원부터.',
+      sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: '일곱 잔의 시그니처', swipe: '옆으로 넘겨 보세요',
       roomKicker: 'THE ROOM', roomTitle: '5층의 밤', roomBody: '낮은 조명, 거친 벽, 그리고 일곱 개의 죄. 혼자여도, 둘이어도 좋은 자리.',
-      bitesKicker: 'BITES', bitesTitle: '곁들이는 것들', entrance: '이 간판이 보이면 도착이에요',
+      rental: '대관 문의 환영', rentalBody: '인스타그램 DM으로 편하게 문의해 주세요.', rentalCta: '대관 문의하기',
+      entrance: '이 간판이 보이면 도착이에요',
       tableKicker: 'AT YOUR TABLE', tableTitle: '자리에 앉으면,<br>일곱 개의 질문이 기다립니다',
       tableBody: '테이블 위 QR을 찍고 질문 일곱 개에 답하면, 일곱 잔 중 당신의 죄에 맞는 한 잔을 골라 드려요. 그 답은 5층에서만.',
-      menuKicker: 'MENU', menuTitle: '메뉴', menuSig: '시그니처 칵테일', menuWhisky: '위스키', menuCocktails: '칵테일', menuBites: '안주', menuBev: '음료',
-      menuNote: 'G 글라스 · B 보틀 · 가격은 매장 사정에 따라 바뀔 수 있어요.', soldOut: '품절',
+      menuKicker: 'MENU', menuTitle: '메뉴', menuHint: '사진을 누르면 설명이 나와요',
+      menuSig: '시그니처', menuWhisky: '위스키', menuCocktails: '칵테일', menuBites: '안주', menuBev: '음료',
+      menuWhiskyNote: '죄마다 어울리는 위스키를 골라 두었습니다', soldOut: '품절', soldOutNote: '오늘은 품절이에요',
+      aroma: '향', taste: '맛', finish: '피니시', strength: '강도', cask: '캐스크', nose: '향', palate: '맛', recipe: '재료', plate: '구성', close: '닫기',
+      photoCredits: '사진 출처', photoEdited: '배경 제거 · 크기 조정', photoEditedGray: '배경 제거 · 흑백 · 크기 조정',
       wayKicker: 'FIND US', wayTitle: (f) => f + '층에서<br>기다리고 있어요',
       here: (f) => '지금 계신 이 건물 ' + f + '층', map: '지도에서 보기',
-      where: '위치', hours: '영업시간', price: '가격', contact: '문의',
-      priceSig: (p) => '시그니처 칵테일 ' + p + '원', priceWhisky: (g) => '위스키 글라스 ' + g + '원부터', noCover: '커버차지 없음',
+      where: '위치', hours: '영업시간', good: '안내', contact: '문의', noCover: '커버차지 없음',
       openNow: (c) => '지금 영업 중 · ' + c + '까지', opensAt: (o) => '오늘 ' + o + ' 오픈', closedToday: '오늘은 쉬어요',
       opensNext: (w, o) => w + ' ' + o + ' 오픈', tomorrow: '내일', dayName: (d) => d + '요일',
       lastOrder: (x) => '라스트오더 ' + x, lastDone: '오늘 주문은 마감됐어요',
-      dockMenu: '메뉴', dockWay: '오시는 길', won: '원'
+      dockMenu: '메뉴', dockWay: '오시는 길'
     },
     en: {
       lang: '한국어', floorLine: 'COCKTAIL & WHISKY BAR',
       heroTitle: 'Seven sins.<br>Seven glasses.',
-      ctaWay: 'How to find us · 5F', ctaMenu: 'Menu & prices',
+      ctaWay: 'How to find us · 5F', ctaMenu: 'See the menu',
       conceptTitle: 'Tonight, which sin<br>will you swallow?',
       conceptBody: 'Deadly Sins turns the seven deadly sins into seven cocktails. Pride, envy, wrath, sloth, greed, gluttony, lust — which one are you tonight?',
-      sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: 'Seven signatures', sevenNote: (p) => p + ' KRW each', swipe: 'Swipe to see them all',
-      whiskyBody: (g) => 'A whisky for every sin. Glasses from ' + g + ' KRW.',
+      sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: 'Seven signatures', swipe: 'Swipe to see them all',
       roomKicker: 'THE ROOM', roomTitle: 'Nights on 5F', roomBody: 'Low light, rough walls and seven sins. A seat for one, or for two.',
-      bitesKicker: 'BITES', bitesTitle: 'On the side', entrance: 'You have arrived when you see this sign',
+      rental: 'Private hire welcome', rentalBody: 'Send us a DM on Instagram.', rentalCta: 'Ask about private hire',
+      entrance: 'You have arrived when you see this sign',
       tableKicker: 'AT YOUR TABLE', tableTitle: 'Take a seat,<br>seven questions are waiting',
       tableBody: 'Scan the QR on your table and answer seven questions — we will pick the one glass that matches your sin. Only on the 5th floor.',
-      menuKicker: 'MENU', menuTitle: 'Menu', menuSig: 'Signature cocktails', menuWhisky: 'Whisky', menuCocktails: 'Cocktails', menuBites: 'Bites', menuBev: 'Beverages',
-      menuNote: 'G glass · B bottle · prices may change.', soldOut: 'Sold out',
+      menuKicker: 'MENU', menuTitle: 'Menu', menuHint: 'Tap a photo for details',
+      menuSig: 'Signature', menuWhisky: 'Whisky', menuCocktails: 'Cocktails', menuBites: 'Bites', menuBev: 'Drinks',
+      menuWhiskyNote: 'A whisky for every sin', soldOut: 'Sold out', soldOutNote: 'Sold out today',
+      aroma: 'Aroma', taste: 'Taste', finish: 'Finish', strength: 'Strength', cask: 'Cask', nose: 'Nose', palate: 'Palate', recipe: 'Build', plate: 'On the plate', close: 'Close',
+      photoCredits: 'Photo credits', photoEdited: 'background removed, resized', photoEditedGray: 'background removed, black and white, resized',
       wayKicker: 'FIND US', wayTitle: (f) => 'We are waiting<br>on the ' + f + 'th floor',
       here: (f) => 'This building, ' + f + 'th floor', map: 'Open in maps',
-      where: 'Where', hours: 'Hours', price: 'Prices', contact: 'Contact',
-      priceSig: (p) => 'Signature cocktails ' + p + ' KRW', priceWhisky: (g) => 'Whisky by the glass from ' + g + ' KRW', noCover: 'No cover charge',
+      where: 'Where', hours: 'Hours', good: 'Good to know', contact: 'Contact', noCover: 'No cover charge',
       openNow: (c) => 'Open now · until ' + c, opensAt: (o) => 'Opens today at ' + o, closedToday: 'Closed today',
       opensNext: (w, o) => 'opens ' + w + ' at ' + o, tomorrow: 'tomorrow', dayName: (d) => d,
       lastOrder: (x) => 'Last order ' + x, lastDone: 'Last orders are done for tonight',
-      dockMenu: 'Menu', dockWay: 'Find us', won: ' KRW'
+      dockMenu: 'Menu', dockWay: 'Find us'
     }
   };
   let lang = 'ko';
@@ -77,20 +82,17 @@
   const t = (k, ...a) => { const v = T[lang][k]; return typeof v === 'function' ? v(...a) : v; };
   const esc = (s) => String(s === undefined || s === null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const L10 = (o) => (o && typeof o === 'object' ? (o[lang] || o.ko || '') : (o || ''));
-  const num = (s) => Number(String(s || '').replace(/[^\d]/g, '')) || 0;
-  const money = (n) => Number(n).toLocaleString('ko-KR');
 
-  /* ---------- 사장님이 /admin 에서 고친 가격 · 품절 · 숨김 · 새 메뉴 ---------- */
+  /* ---------- 사장님이 /admin 에서 고친 품절 · 숨김 · NEW · 새 메뉴 (가격은 이 사이트에 안 나옴) ---------- */
   const SIG_FLAGS = {};
   function applyLive(live) {
     const d = live && live.data;
     if (!d) return;
     const m = D.menu;
-    if (Number.isInteger(d.signaturePrice) && d.signaturePrice > 0) D.signaturePrice = d.signaturePrice;
     const items = d.items || {};
     [].concat(...m.whisky.map((w) => w.items), m.final.items, m.cocktails, m.bites, m.beverages).forEach((it) => {
       const o = it.id && items[it.id];
-      if (o) ['g', 'b', 'p', 'hidden', 'soldOut', 'new'].forEach((k) => { if (o[k] !== undefined) it[k] = o[k]; });
+      if (o) ['hidden', 'soldOut', 'new'].forEach((k) => { if (o[k] !== undefined) it[k] = o[k]; });
     });
     Object.keys(items).forEach((id) => { if (id.indexOf('sig:') === 0) SIG_FLAGS[id.slice(4)] = items[id]; });
     (Array.isArray(d.extra) ? d.extra : []).forEach((x) => {
@@ -99,7 +101,7 @@
         : sec.indexOf('whisky:') === 0 ? (m.whisky.find((w) => w.sin === sec.slice(7)) || {}).items
         : ['cocktails', 'bites', 'beverages'].includes(sec) ? m[sec] : null;
       if (!Array.isArray(list) || !x.id || list.some((it) => it.id === x.id)) return;
-      list.push({ id: x.id, ko: x.ko || x.en, en: x.en || x.ko, g: x.g, b: x.b, p: x.p, soldOut: x.soldOut, hidden: x.hidden, new: x.new });
+      list.push({ id: x.id, ko: x.ko || x.en, en: x.en || x.ko, about: x.about, soldOut: x.soldOut, hidden: x.hidden, new: x.new });
     });
   }
 
@@ -163,49 +165,130 @@
       (notes.length ? '<br><small>' + esc(notes.join(' · ')) + '</small>' : '');
   }
 
-  /* ---------- 메뉴 (이 사이트 안에서 다 보이게, 글자로 간단히) ---------- */
+  /* ---------- 메뉴: 종류별 사진 격자, 누르면 설명 ---------- */
   const shown = (it) => !it.hidden;
-  function row(id, name, sub, price, flags) {
-    const f = flags || {};
-    return '<li class="lb-mrow' + (f.soldOut ? ' is-sold' : '') + '" id="m-' + esc(id || '') + '"><span class="lb-mname">' + esc(name) +
-      (f.new ? ' <i class="lb-new">NEW</i>' : '') + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>' +
-      '<span class="lb-mprice">' + esc(f.soldOut ? t('soldOut') : price) + '</span></li>';
-  }
-  function menuHtml(sigPrice) {
-    const m = D.menu;
-    const gb = (it) => [it.g && 'G ' + it.g, it.b && 'B ' + it.b].filter(Boolean).join(' · ');
-    const other = (it) => (lang === 'en' ? it.ko : it.en);
-    let h = '<div class="lb-menu lb-r">';
-    h += '<h3>' + esc(t('menuSig')) + '</h3><ul>' + SINS.map(([k, , en]) => {
+  const det = (id) => (D.details || {})[id] || {};
+  const sinName = (k) => { const x = SINS.find((s) => s[0] === k); return x ? (lang === 'en' ? x[2] : x[1]) : ''; };
+  let ITEMS = {};
+  function menuCats() {
+    const m = D.menu, other = (it) => (lang === 'en' ? it.ko : it.en);
+    const cats = [];
+    cats.push({ key: 'sig', title: t('menuSig'), en: 'SEVEN SINS', items: SINS.map(([k, ko, en]) => {
       const d = D.drinks[k] || {}, dr = (B.drinks || {})[k] || {};
-      return row('sig-' + k, en + ' · ' + (lang === 'en' ? (d.style ? d.style.en : '') : dr.kr), lang === 'ko' && d.style ? d.style.ko : '', sigPrice, SIG_FLAGS[k]);
-    }).join('') + '</ul>';
-    h += '<h3>' + esc(t('menuWhisky')) + '</h3>';
-    m.whisky.forEach((w) => {
-      const items = w.items.filter(shown);
-      if (!items.length) return;
-      h += '<p class="lb-mgroup">' + esc(L10(w.label)) + '</p><ul>' + items.map((it) => row(it.id, it[lang] || it.ko, '', gb(it), it)).join('') + '</ul>';
-    });
-    const finals = m.final.items.filter(shown);
-    if (finals.length) h += '<p class="lb-mgroup">' + esc(m.final.title) + ' ' + esc(L10(m.final.label)) + '</p><ul>' + finals.map((it) => row(it.id, it[lang] || it.ko, '', gb(it), it)).join('') + '</ul>';
-    [['menuCocktails', m.cocktails], ['menuBites', m.bites], ['menuBev', m.beverages]].forEach(([key, list]) => {
-      const items = list.filter(shown);
-      if (!items.length) return;
-      h += '<h3>' + esc(t(key)) + '</h3><ul>' + items.map((it) => row(it.id, lang === 'en' ? it.en : it.ko, other(it), it.p, it)).join('') + '</ul>';
-    });
-    h += '<p class="lb-mnote">' + esc(t('menuNote')) + '</p>';
-    (m.info || []).forEach((i) => { h += '<p class="lb-mnote">' + esc(L10(i)) + '</p>'; });
-    return h + '</div>';
+      return { id: 'sig-' + k, art: true, img: dr.image, tag: { sym: k, text: lang === 'en' ? 'SIGNATURE' : en }, name: lang === 'en' ? en : dr.kr,
+        sub: L10(d.style), flags: SIG_FLAGS[k] || {}, about: L10(d.desc), quote: d.line && d.line.confirmed ? L10(d.line) : '',
+        rows: [['aroma', L10(d.aroma)], ['taste', L10(d.taste)], ['finish', L10(d.finish)], ['strength', L10(d.strength)]] };
+    }) });
+    const whisky = [];
+    m.whisky.forEach((g) => g.items.filter(shown).forEach((it) => whisky.push({ it, tag: { sym: g.sin, text: sinName(g.sin) }, quote: L10(g.label) })));
+    m.final.items.filter(shown).forEach((it) => whisky.push({ it, tag: { text: m.final.title }, quote: L10(m.final.label) }));
+    const plain = (it, extra) => {
+      const d = det(it.id);
+      return Object.assign({ id: it.id, img: d.photo, scene: !!d.scene, name: it[lang] || it.ko || it.en, alt: other(it), flags: it, detail: d,
+        sub: L10(d.region) || L10(d.kind), meta: [L10(d.kind), L10(d.region), d.abv].filter(Boolean).join(' · '), about: L10(d.about || it.about),
+        rows: [['cask', L10(d.cask)], ['nose', L10(d.nose)], ['palate', L10(d.palate)], ['finish', L10(d.finish)], ['recipe', L10(d.recipe)], ['plate', L10(d.plate)]] }, extra || {});
+    };
+    cats.push({ key: 'whisky', title: t('menuWhisky'), en: 'WHISKY', note: t('menuWhiskyNote'), items: whisky.map((w) => plain(w.it, { tag: w.tag, quote: w.quote })) });
+    cats.push({ key: 'cocktails', title: t('menuCocktails'), en: 'COCKTAILS', items: m.cocktails.filter(shown).map((it) => plain(it, { sub: L10(det(it.id).kind) })) });
+    cats.push({ key: 'bites', title: t('menuBites'), en: 'BITES', items: m.bites.filter(shown).map((it) => plain(it, { sub: L10(det(it.id).plate) })) });
+    cats.push({ key: 'bev', title: t('menuBev'), en: 'DRINKS', items: m.beverages.filter(shown).map((it) => plain(it, { sub: other(it) })) });
+    return cats.filter((c) => c.items.length);
   }
+  const symImg = (k) => (k && (B.symbols || {})[k] ? '<img src="' + esc(A(B.symbols[k])) + '" alt="">' : '');
+  function itemHtml(x) {
+    const f = x.flags || {};
+    return '<button type="button" class="lb-item lb-r' + (x.art ? ' is-art' : '') + (x.scene ? ' is-scene' : '') + (x.img ? '' : ' no-img') + (f.soldOut ? ' is-sold' : '') +
+      '" id="m-' + esc(x.id) + '" data-act="item" data-id="' + esc(x.id) + '">' +
+      '<span class="lb-item-img">' + (x.img ? '<img src="' + esc(A(x.img)) + '" alt="" loading="lazy">' : '<span class="lb-item-ph">' + esc(String(x.name).slice(0, 1)) + '</span>') +
+        (f.new ? '<i class="lb-new">NEW</i>' : '') + (f.soldOut ? '<i class="lb-sold">' + esc(t('soldOut')) + '</i>' : '') + '</span>' +
+      (x.tag ? '<span class="lb-item-tag">' + symImg(x.tag.sym) + esc(x.tag.text) + '</span>' : '') +
+      '<b class="lb-item-name">' + esc(x.name) + '</b>' +
+      (x.sub ? '<small class="lb-item-sub">' + esc(x.sub) + '</small>' : '') +
+    '</button>';
+  }
+  // 위키미디어 공용 사진(CC)은 출처를 밝혀야 해서, 메뉴 맨 아래 접어 둔다 (설문 사이트 메뉴판과 같은 방식)
+  function creditsHtml(cats) {
+    const rows = [].concat(...cats.map((c) => c.items)).filter((x) => x.detail && x.detail.photo && x.detail.photoCredit);
+    if (!rows.length) return '';
+    return '<details class="lb-credits"><summary>' + esc(t('photoCredits')) + '</summary><ul>' + rows.map((x) => {
+      const c = x.detail.photoCredit, who = esc([c.author, c.license].filter(Boolean).join(' · '));
+      return '<li>' + esc(x.name) + ' — ' + (c.url ? '<a href="' + esc(c.url) + '" target="_blank" rel="noopener">' + who + '</a>' : who) +
+        ' (' + esc(t(c.gray ? 'photoEditedGray' : 'photoEdited')) + ')</li>';
+    }).join('') + '</ul></details>';
+  }
+  function menuHtml() {
+    const cats = menuCats();
+    ITEMS = {};
+    cats.forEach((c) => c.items.forEach((x) => { ITEMS[x.id] = x; }));
+    return '<nav class="lb-cats" aria-label="' + esc(t('menuTitle')) + '">' + cats.map((c, i) =>
+      '<a href="#cat-' + c.key + '" data-act="cat"' + (i ? '' : ' class="on"') + '>' + esc(c.title) + '</a>').join('') + '</nav>' +
+      cats.map((c) => '<div class="lb-cat" id="cat-' + c.key + '"><h3>' + esc(c.title) + '<small>' + esc(c.en) + '</small></h3>' +
+        (c.note ? '<p class="lb-cat-note">' + esc(c.note) + '</p>' : '') +
+        '<div class="lb-grid">' + c.items.map(itemHtml).join('') + '</div></div>').join('') +
+      creditsHtml(cats);
+  }
+
+  /* ---------- 설명 (아래에서 올라오는 판) ---------- */
+  let sheet = null, sheetFrom = null, sheetPushed = false;
+  function sheetEl() {
+    if (sheet) return sheet;
+    sheet = document.createElement('div');
+    sheet.className = 'lb-sheet';
+    sheet.hidden = true;
+    sheet.innerHTML = '<div class="lb-sheet-bg" data-close></div><div class="lb-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="lbSheetTitle">' +
+      '<button type="button" class="lb-sheet-x" data-close></button><div class="lb-sheet-body"></div></div>';
+    document.body.appendChild(sheet);
+    return sheet;
+  }
+  function sheetHtml(x) {
+    const f = x.flags || {};
+    const rows = (x.rows || []).filter((r) => r[1]);
+    return '<div class="lb-sheet-img' + (x.art ? ' is-art' : '') + (x.scene ? ' is-scene' : '') + '">' + (x.img ? '<img src="' + esc(A(x.img)) + '" alt="">' : '') + '</div>' +
+      '<div class="lb-sheet-text">' +
+        (x.tag ? '<p class="lb-item-tag">' + symImg(x.tag.sym) + esc(x.tag.text) + (x.quote && !x.art ? ' · ' + esc(x.quote) : '') + '</p>' : '') +
+        '<h3 id="lbSheetTitle">' + esc(x.name) + (f.new ? ' <i class="lb-new">NEW</i>' : '') + '</h3>' +
+        (x.alt && x.alt !== x.name ? '<p class="lb-sheet-alt">' + esc(x.alt) + '</p>' : '') +
+        (x.meta ? '<p class="lb-sheet-meta">' + esc(x.meta) + '</p>' : x.art && x.sub ? '<p class="lb-sheet-meta">' + esc(x.sub) + '</p>' : '') +
+        (f.soldOut ? '<p class="lb-sheet-sold">' + esc(t('soldOutNote')) + '</p>' : '') +
+        (x.art && x.quote ? '<p class="lb-sheet-quote">' + esc(x.quote) + '</p>' : '') +
+        (x.about ? '<p class="lb-sheet-about">' + esc(x.about) + '</p>' : '') +
+        (rows.length ? '<dl class="lb-sheet-dl">' + rows.map(([k, v]) => '<dt>' + esc(t(k)) + '</dt><dd>' + esc(v) + '</dd>').join('') + '</dl>' : '') +
+      '</div>';
+  }
+  function openSheet(id, from) {
+    const x = ITEMS[id];
+    if (!x) return;
+    const el = sheetEl();
+    el.querySelector('.lb-sheet-body').innerHTML = sheetHtml(x);
+    el.querySelector('.lb-sheet-x').setAttribute('aria-label', t('close'));
+    el.querySelector('.lb-sheet-panel').scrollTop = 0;
+    sheetFrom = from || null;
+    el.hidden = false;
+    void el.offsetWidth;
+    el.classList.add('open');
+    document.documentElement.classList.add('lb-lock');
+    // 폰의 '뒤로'로도 닫히게
+    if (!sheetPushed) { try { history.pushState({ lbSheet: 1 }, ''); sheetPushed = true; } catch (e) {} }
+    el.querySelector('.lb-sheet-x').focus({ preventScroll: true });
+  }
+  function closeSheet(fromHistory) {
+    if (!sheet || sheet.hidden) return;
+    sheet.classList.remove('open');
+    document.documentElement.classList.remove('lb-lock');
+    const el = sheet;
+    setTimeout(() => { if (!el.classList.contains('open')) el.hidden = true; }, REDUCED ? 0 : 380);
+    if (sheetPushed) { sheetPushed = false; if (!fromHistory) history.back(); }
+    if (sheetFrom) sheetFrom.focus({ preventScroll: true });
+  }
+  window.addEventListener('popstate', () => { if (sheetPushed) { sheetPushed = false; closeSheet(true); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
 
   /* ---------- 그리기 ---------- */
   function render() {
-    const m = D.menu, F = L.floor || 5;
-    const sigPrice = money(D.signaturePrice);
-    const whiskies = [].concat(...m.whisky.map((w) => w.items), m.final.items).filter(shown);
-    const minGlass = money(Math.min(...whiskies.map((it) => num(it.g)).filter(Boolean)));
-    const detail = (id) => (D.details || {})[id] || {};
+    const F = L.floor || 5;
     const P = L.photos && typeof L.photos === 'object' ? L.photos : {};
+    const ig = L.instagram ? String(L.instagram).replace(/^@/, '') : '';
+    const igUrl = ig ? 'https://www.instagram.com/' + ig + '/' : '';
     let h = '';
 
     // 첫 화면
@@ -238,7 +321,7 @@
     h += '<section class="lb-sec" id="seven">' +
       '<p class="lb-kicker lb-r">' + esc(t('sevenKicker')) + '</p>' +
       '<h2 class="lb-r">' + esc(t('sevenTitle')) + '</h2>' +
-      '<p class="lb-note lb-r">' + esc(t('sevenNote', sigPrice)) + ' · ' + esc(t('swipe')) + '</p>' +
+      '<p class="lb-note lb-r">' + esc(t('swipe')) + '</p>' +
       '<div class="lb-carousel lb-r" id="lbCarousel" tabindex="0">' + SINS.map(([k, ko, en]) => {
         const dr = (B.drinks || {})[k] || {}, d = D.drinks[k] || {};
         return '<article class="lb-card">' +
@@ -248,7 +331,7 @@
           '<p class="lb-card-ko">' + esc(lang === 'en' ? (d.style ? d.style.en : '') : dr.kr) + '</p>' +
           (d.style && lang === 'ko' ? '<p class="lb-chip">' + esc(d.style.ko) + '</p>' : '') +
           (d.desc ? '<p class="lb-card-desc">' + esc(L10(d.desc)) + '</p>' : '') +
-          '<p class="lb-card-price">' + esc((SIG_FLAGS[k] || {}).soldOut ? t('soldOut') : sigPrice + t('won')) + '</p>' +
+          ((SIG_FLAGS[k] || {}).soldOut ? '<p class="lb-card-sold">' + esc(t('soldOut')) + '</p>' : '') +
         '</article>';
       }).join('') + '</div>' +
       '<div class="lb-dots" aria-hidden="true">' + SINS.map((_, i) => '<i' + (i ? '' : ' class="on"') + '></i>').join('') + '</div>' +
@@ -262,44 +345,26 @@
       '<ol class="lb-q lb-r" aria-hidden="true">' + [1, 2, 3, 4, 5, 6, 7].map((n) => '<li>' + n + '</li>').join('') + '</ol>' +
     '</section>';
 
-    // 위스키 선반
-    h += '<section class="lb-sec" id="whisky">' +
-      '<p class="lb-kicker lb-r">WHISKY</p>' +
-      '<h2 class="lb-r">' + esc(L10(m.whiskyHead)) + '</h2>' +
-      '<p class="lb-body lb-r">' + esc(t('whiskyBody', minGlass)) + '</p>' +
-      '<div class="lb-shelf lb-r">' + whiskies.filter((it) => detail(it.id).photo).map((it) =>
-        '<a class="lb-bottle" href="#m-' + esc(it.id) + '" data-act="bottle">' +
-          '<span class="lb-bottle-img"><img src="' + esc(A(detail(it.id).photo)) + '" alt="" loading="lazy"></span>' +
-          '<b>' + esc(it[lang] || it.ko) + '</b><small>G ' + esc(it.g) + '</small></a>').join('') + '</div>' +
-    '</section>';
-
-    // 바 안 풍경 · 안주
+    // 바 안 풍경 + 대관 문의
     const room = Array.isArray(P.room) ? P.room.filter(Boolean) : [];
-    const bites = m.bites.filter((it) => shown(it) && detail(it.id).photo);
-    if (room.length) {
-      h += '<section class="lb-sec" id="room"><p class="lb-kicker lb-r">' + t('roomKicker') + '</p><h2 class="lb-r">' + esc(t('roomTitle')) + '</h2>' +
-        '<p class="lb-body lb-r">' + esc(t('roomBody')) + '</p>' +
-        '<div class="lb-room">' + room.map((p) => '<figure class="lb-r"><img src="' + esc(A(p)) + '" alt="" loading="lazy"></figure>').join('') + '</div></section>';
-    }
-    if (bites.length) {
-      h += '<section class="lb-sec" id="bites"><p class="lb-kicker lb-r">' + t('bitesKicker') + '</p><h2 class="lb-r">' + esc(t('bitesTitle')) + '</h2>' +
-        '<div class="lb-gallery">' + bites.map((it) =>
-          '<a class="lb-shot lb-r" href="#m-' + esc(it.id) + '" data-act="bite"><img src="' + esc(A(detail(it.id).photo)) + '" alt="" loading="lazy">' +
-          '<span><b>' + esc(lang === 'en' ? it.en : it.ko) + '</b><small>' + esc(it.soldOut ? t('soldOut') : it.p + t('won')) + '</small></span></a>').join('') +
-        '</div></section>';
-    }
+    h += '<section class="lb-sec" id="room"><p class="lb-kicker lb-r">' + t('roomKicker') + '</p><h2 class="lb-r">' + esc(t('roomTitle')) + '</h2>' +
+      '<p class="lb-body lb-r">' + esc(t('roomBody')) + '</p>' +
+      (room.length ? '<div class="lb-room">' + room.map((p) => '<figure class="lb-r"><img src="' + esc(A(p)) + '" alt="" loading="lazy"></figure>').join('') + '</div>' : '') +
+      '<div class="lb-rent lb-r"><p class="lb-rent-title">' + esc(t('rental')) + '</p>' +
+        (igUrl ? '<p>' + esc(t('rentalBody')) + '</p><a class="lb-btn" href="' + esc(igUrl) + '" target="_blank" rel="noopener" data-act="rental">' + esc(t('rentalCta')) + ' →</a>' : '') +
+      '</div></section>';
 
-    // 메뉴 전체
-    h += '<section class="lb-sec" id="menu">' +
+    // 메뉴: 종류별 사진 격자
+    h += '<section class="lb-sec lb-menu" id="menu">' +
       '<p class="lb-kicker lb-r">' + t('menuKicker') + '</p>' +
-      '<h2 class="lb-r">' + esc(t('menuTitle')) + '</h2>' + menuHtml(sigPrice) +
+      '<h2 class="lb-r">' + esc(t('menuTitle')) + '</h2>' +
+      '<p class="lb-note lb-r">' + esc(t('menuHint')) + '</p>' + menuHtml() +
     '</section>';
 
-    // 오시는 길 · 시간 · 가격
-    const ig = L.instagram ? String(L.instagram).replace(/^@/, '') : '';
+    // 오시는 길 · 시간 · 안내
     const maps = Array.isArray(L.maps) ? L.maps.filter((x) => x && x.url) : L.mapUrl ? [{ url: L.mapUrl }] : [];
     const dim = (o) => (o ? '<br><span class="lb-dim">' + esc(L10(o)) + '</span>' : '');
-    const contact = [ig ? '<a href="https://www.instagram.com/' + esc(ig) + '/" target="_blank" rel="noopener" data-act="instagram">@' + esc(ig) + '</a>' : '',
+    const contact = [ig ? '<a href="' + esc(igUrl) + '" target="_blank" rel="noopener" data-act="instagram">@' + esc(ig) + '</a>' : '',
       L.phone ? '<a href="tel:' + esc(String(L.phone).replace(/[^\d+]/g, '')) + '" data-act="phone">' + esc(L.phone) + '</a>' : ''].filter(Boolean);
     h += '<section class="lb-sec lb-way" id="way">' +
       '<p class="lb-kicker lb-r">' + t('wayKicker') + '</p>' +
@@ -312,7 +377,7 @@
           (maps.length ? '<span class="lb-maps">' + maps.map((x) => '<a href="' + esc(x.url) + '" target="_blank" rel="noopener" data-act="map">' +
             esc(x.name ? L10(x.name) : t('map')) + ' →</a>').join('') + '</span>' : '') + '</dd>' +
         (hoursHtml() ? '<dt>' + esc(t('hours')) + '</dt><dd>' + hoursHtml() + '</dd>' : '') +
-        '<dt>' + esc(t('price')) + '</dt><dd>' + esc(t('priceSig', sigPrice)) + '<br>' + esc(t('priceWhisky', minGlass)) + '<br>' + esc(t('noCover')) + '</dd>' +
+        '<dt>' + esc(t('good')) + '</dt><dd>' + esc(t('noCover')) + '<br>' + esc(t('rental')) + '</dd>' +
         (contact.length ? '<dt>' + esc(t('contact')) + '</dt><dd>' + contact.join('<br>') + '</dd>' : '') +
       '</dl>' +
       (L.offer ? '<p class="lb-offer lb-r">' + esc(L10(L.offer)) + '</p>' : '') +
@@ -329,7 +394,7 @@
   }
 
   /* ---------- 움직임 ---------- */
-  let io = null, heroIo = null;
+  let io = null, heroIo = null, catIo = null;
   function motion() {
     // 사진은 받아진 뒤 부드럽게
     ROOT.querySelectorAll('img').forEach((img) => {
@@ -363,6 +428,22 @@
       }, { threshold: 0.15 });
       heroIo.observe(hero);
     }
+    // 메뉴 종류 칸: 지금 보고 있는 종류에 불
+    if (catIo) catIo.disconnect();
+    const chips = ROOT.querySelectorAll('.lb-cats a');
+    if (chips.length && 'IntersectionObserver' in window) {
+      catIo = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          chips.forEach((c) => {
+            const on = c.getAttribute('href') === '#' + e.target.id;
+            c.classList.toggle('on', on);
+            if (on && c.parentNode.scrollWidth > c.parentNode.clientWidth) c.parentNode.scrollTo({ left: c.offsetLeft - 22, behavior: REDUCED ? 'auto' : 'smooth' });
+          });
+        });
+      }, { rootMargin: '-90px 0px -65% 0px' });
+      ROOT.querySelectorAll('.lb-cat').forEach((el) => catIo.observe(el));
+    }
     // 일곱 잔 넘김 점
     const car = document.getElementById('lbCarousel');
     if (car) {
@@ -376,7 +457,7 @@
     }
   }
 
-  /* ---------- 기록: 배너 QR 로 몇 명이 들어와서 메뉴 · 오시는 길 · 인스타를 눌렀는지 ---------- */
+  /* ---------- 기록: 배너 QR 로 몇 명이 들어와서 메뉴 · 오시는 길 · 인스타 · 대관 문의를 눌렀는지 ---------- */
   const SID = Math.random().toString(36).slice(2, 10);
   function track(type, data) {
     if (D.collect && D.collect.enabled === false) return;
@@ -393,12 +474,20 @@
     if (id.indexOf('m-') === 0) { el.classList.remove('lb-hl'); void el.offsetWidth; el.classList.add('lb-hl'); }
   }
   document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close]')) { closeSheet(); return; }
     const a = e.target.closest('[data-act]');
     if (!a) return;
     const act = a.getAttribute('data-act');
+    if (act === 'item') {
+      const id = a.getAttribute('data-id');
+      openSheet(id, a);
+      track('visit', { act, id });
+      return;
+    }
     if (act === 'lang') {
       lang = lang === 'ko' ? 'en' : 'ko';
       try { localStorage.setItem('ds_lang', lang); } catch (err) {}
+      closeSheet();
       render();
       return;
     }

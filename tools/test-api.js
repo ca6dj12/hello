@@ -68,7 +68,8 @@ function fakeRes() {
   await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'way' });
   await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'instagram' });
   await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'open' });
-  await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'bottle' });
+  await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'item', id: 'dalmore-15' });
+  await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'rental' });
   await send({ sid: 't1', type: 'start' });
   await send({ sid: 't1', type: 'result', sin: '교만', second: '질투', points: '교만 9', picks: 'Q1A' });
   check((await send({ sid: 'x', type: 'drop table' })).code === 400, '모르는 종류 → 400');
@@ -111,8 +112,8 @@ function fakeRes() {
   check(Array.isArray(st.recent) && st.recent.length === rows.length, '최근 기록', st.recent && st.recent.length);
   check(Array.isArray(st.errors) && st.errors.some((r) => r.message === 'boom'), '최근 오류', st.errors);
   check(Array.isArray(st.items) && st.items.some((r) => r.id === 'lagavulin-16' && r.n === 1), '많이 눌러 본 메뉴', st.items);
-  check(st.promo && st.promo.opened === 2 && st.promo.clicked_menu === 1 && st.promo.clicked_way === 1 && st.promo.clicked_contact === 1,
-    '1층 홍보 사이트 (들어옴 2 · 메뉴 1 · 오시는 길 1 · 인스타/전화 1)', st.promo);
+  check(st.promo && st.promo.opened === 2 && st.promo.clicked_menu === 1 && st.promo.clicked_way === 1 && st.promo.clicked_contact === 1 && st.promo.clicked_rental === 1,
+    '1층 홍보 사이트 (들어옴 2 · 메뉴 1 · 오시는 길 1 · 인스타/전화 1 · 대관 문의 1)', st.promo);
   check(JSON.stringify(st.quits) === JSON.stringify([{ q: 4, n: 1 }, { q: 5, n: 1 }]),
     '그만둔 문항: 세션마다 마지막 것, 끝까지 한 세션은 빼고', st.quits);
   delete process.env.VERCEL_URL;

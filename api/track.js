@@ -129,9 +129,10 @@ async function stats(sql) {
     // 1층 배너 홍보 사이트: 들어온 사람 → 메뉴 · 오시는 길 · 인스타/전화/지도를 누른 사람 (세션 수)
     q(`select
          count(distinct sid) filter (where extra->>'act' = 'open')::int as opened,
-         count(distinct sid) filter (where extra->>'act' in ('menu', 'bottle', 'bite'))::int as clicked_menu,
+         count(distinct sid) filter (where extra->>'act' in ('menu', 'cat', 'item', 'bottle', 'bite'))::int as clicked_menu,
          count(distinct sid) filter (where extra->>'act' = 'way')::int as clicked_way,
-         count(distinct sid) filter (where extra->>'act' in ('instagram', 'phone', 'map'))::int as clicked_contact
+         count(distinct sid) filter (where extra->>'act' in ('instagram', 'phone', 'map'))::int as clicked_contact,
+         count(distinct sid) filter (where extra->>'act' = 'rental')::int as clicked_rental
        from deadly_sins_events where type = 'visit' and extra->>'from' = 'promo'`)
   ]);
   const total = sins.reduce((a, r) => a + r.n, 0);
