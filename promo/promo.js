@@ -43,6 +43,8 @@
       where: '위치', hours: '영업시간', price: '가격', contact: '문의',
       priceSig: (p) => '시그니처 칵테일 ' + p + '원', priceWhisky: (g) => '위스키 글라스 ' + g + '원부터', noCover: '커버차지 없음',
       openNow: (c) => '지금 영업 중 · ' + c + '까지', opensAt: (o) => '오늘 ' + o + ' 오픈', closedToday: '오늘은 쉬어요',
+      opensNext: (w, o) => w + ' ' + o + ' 오픈', tomorrow: '내일', dayName: (d) => d + '요일',
+      lastOrder: (x) => '라스트오더 ' + x, lastDone: '오늘 주문은 마감됐어요',
       dockMenu: '메뉴', dockWay: '오시는 길', won: '원'
     },
     en: {
@@ -64,6 +66,8 @@
       where: 'Where', hours: 'Hours', price: 'Prices', contact: 'Contact',
       priceSig: (p) => 'Signature cocktails ' + p + ' KRW', priceWhisky: (g) => 'Whisky by the glass from ' + g + ' KRW', noCover: 'No cover charge',
       openNow: (c) => 'Open now · until ' + c, opensAt: (o) => 'Opens today at ' + o, closedToday: 'Closed today',
+      opensNext: (w, o) => 'opens ' + w + ' at ' + o, tomorrow: 'tomorrow', dayName: (d) => d,
+      lastOrder: (x) => 'Last order ' + x, lastDone: 'Last orders are done for tonight',
       dockMenu: 'Menu', dockWay: 'Find us', won: ' KRW'
     }
   };
@@ -119,21 +123,44 @@
     const { day, min } = seoulNow();
     const entryFor = (d) => H.find((h) => Array.isArray(h.days) && h.days.includes(d));
     const today = entryFor(day), yday = entryFor((day + 6) % 7);
+    // 열려 있어도 라스트오더가 지났으면 올라와도 주문을 못 하니 그렇게 알린다
+    const during = (h) => {
+      const o = toMin(h.open), since = (min - o + 1440) % 1440;
+      if (h.last && since >= (toMin(h.last) - o + 1440) % 1440) return { open: false, text: t('lastDone') };
+      return { open: true, text: t('openNow', pretty(h.close)) };
+    };
     // 어제 연 영업이 자정을 넘겨 지금까지 이어지는지
-    if (yday && toMin(yday.close) < toMin(yday.open) && min < toMin(yday.close)) return { open: true, text: t('openNow', pretty(yday.close)) };
+    if (yday && toMin(yday.close) < toMin(yday.open) && min < toMin(yday.close)) return during(yday);
     if (today) {
       const o = toMin(today.open), c = toMin(today.close);
       const past = c < o ? min >= o : (min >= o && min < c);
-      if (past) return { open: true, text: t('openNow', pretty(today.close)) };
+      if (past) return during(today);
       if (min < o) return { open: false, text: t('opensAt', pretty(today.open)) };
     }
+    // 쉬는 날이면 다음에 여는 날까지
+    for (let k = 1; k <= 7; k++) {
+      const next = entryFor((day + k) % 7);
+      if (next) return { open: false, text: t('closedToday') + ' · ' + t('opensNext', k === 1 ? t('tomorrow') : t('dayName', DAYS[lang][(day + k) % 7]), pretty(next.open)) };
+    }
     return { open: false, text: t('closedToday') };
+  }
+  // [0,2,3,4,5,6] → "화–일" (월요일부터 세어 사흘 이상 이어지면 줄여 쓴다)
+  function dayRange(days) {
+    const idx = days.map((d) => (d + 6) % 7).sort((a, b) => a - b), name = (i) => DAYS[lang][(i + 1) % 7], out = [];
+    for (let i = 0; i < idx.length;) {
+      let j = i;
+      while (j + 1 < idx.length && idx[j + 1] === idx[j] + 1) j++;
+      out.push(j - i >= 2 ? name(idx[i]) + '–' + name(idx[j]) : idx.slice(i, j + 1).map(name).join(' · '));
+      i = j + 1;
+    }
+    return out.join(' · ');
   }
   function hoursHtml() {
     const H = Array.isArray(L.hours) ? L.hours : [];
     if (!H.length) return '';
-    return H.map((h) => '<span>' + esc(h.days.slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map((d) => DAYS[lang][d]).join(' · ')) +
-      '</span> ' + esc(h.open) + ' – ' + esc(h.close)).join('<br>') + (L.hoursNote ? '<br><small>' + esc(L10(L.hoursNote)) + '</small>' : '');
+    const notes = [...new Set(H.filter((h) => h.last).map((h) => t('lastOrder', h.last)))].concat(L.hoursNote ? [L10(L.hoursNote)] : []);
+    return H.map((h) => '<span>' + esc(dayRange(h.days)) + '</span> ' + esc(h.open) + ' – ' + esc(h.close)).join('<br>') +
+      (notes.length ? '<br><small>' + esc(notes.join(' · ')) + '</small>' : '');
   }
 
   /* ---------- 메뉴 (이 사이트 안에서 다 보이게, 글자로 간단히) ---------- */
@@ -270,7 +297,9 @@
 
     // 오시는 길 · 시간 · 가격
     const ig = L.instagram ? String(L.instagram).replace(/^@/, '') : '';
-    const contact = [ig ? '<a href="https://instagram.com/' + esc(ig) + '" target="_blank" rel="noopener" data-act="instagram">@' + esc(ig) + '</a>' : '',
+    const maps = Array.isArray(L.maps) ? L.maps.filter((x) => x && x.url) : L.mapUrl ? [{ url: L.mapUrl }] : [];
+    const dim = (o) => (o ? '<br><span class="lb-dim">' + esc(L10(o)) + '</span>' : '');
+    const contact = [ig ? '<a href="https://www.instagram.com/' + esc(ig) + '/" target="_blank" rel="noopener" data-act="instagram">@' + esc(ig) + '</a>' : '',
       L.phone ? '<a href="tel:' + esc(String(L.phone).replace(/[^\d+]/g, '')) + '" data-act="phone">' + esc(L.phone) + '</a>' : ''].filter(Boolean);
     h += '<section class="lb-sec lb-way" id="way">' +
       '<p class="lb-kicker lb-r">' + t('wayKicker') + '</p>' +
@@ -279,9 +308,9 @@
       '<div class="lb-lift lb-r" aria-hidden="true">' + Array.from({ length: F }, (_, i) => '<i' + (i === F - 1 ? ' class="on"' : '') + '>' + (i + 1) + '</i>').join('') + '</div>' +
       '<dl class="lb-info lb-r">' +
         '<dt>' + esc(t('where')) + '</dt><dd><b>' + esc(t('here', F)) + '</b>' +
-          (L.directions ? '<br>' + esc(L10(L.directions)) : '') +
-          (L.address ? '<br><span class="lb-dim">' + esc(L10(L.address)) + '</span>' : '') +
-          (L.mapUrl ? '<br><a href="' + esc(L.mapUrl) + '" target="_blank" rel="noopener" data-act="map">' + esc(t('map')) + ' →</a>' : '') + '</dd>' +
+          (L.directions ? '<br>' + esc(L10(L.directions)) : '') + dim(L.address) + dim(L.station) + dim(L.parking) +
+          (maps.length ? '<span class="lb-maps">' + maps.map((x) => '<a href="' + esc(x.url) + '" target="_blank" rel="noopener" data-act="map">' +
+            esc(x.name ? L10(x.name) : t('map')) + ' →</a>').join('') + '</span>' : '') + '</dd>' +
         (hoursHtml() ? '<dt>' + esc(t('hours')) + '</dt><dd>' + hoursHtml() + '</dd>' : '') +
         '<dt>' + esc(t('price')) + '</dt><dd>' + esc(t('priceSig', sigPrice)) + '<br>' + esc(t('priceWhisky', minGlass)) + '<br>' + esc(t('noCover')) + '</dd>' +
         (contact.length ? '<dt>' + esc(t('contact')) + '</dt><dd>' + contact.join('<br>') + '</dd>' : '') +

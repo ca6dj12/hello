@@ -1158,16 +1158,23 @@ window.DS_DATA = {
 
   /* 1층 배너 QR 홍보 사이트 (promo/ — 테이블 설문 사이트와 별개의 주소). 그 사이트가 이 파일을 읽어 그립니다.
      null 인 칸은 화면에 나오지 않습니다 — 알게 되면 채워 주세요.
-     hours: 요일(0=일 … 6=토)마다 여는 시각 · 닫는 시각. 닫는 시각이 여는 시각보다 이르면 다음 날 새벽.
-       예) [{ days: [0,2,3,4,5,6], open: "19:00", close: "02:00" }]  ← 월요일 휴무 */
+     hours: 요일(0=일 … 6=토)마다 여는 시각 · 닫는 시각 · 라스트오더(last, 없어도 됨).
+       닫는 시각이 여는 시각보다 이르면 다음 날 새벽. 빠진 요일은 쉬는 날. */
   promo: {
     floor: 5,
-    address: null,       // { ko: "서울 ○○구 ○○로 00, 5층", en: "5F, 00 ○○-ro, Seoul" }
-    mapUrl: null,        // 네이버 · 카카오 지도 링크
-    directions: null,    // { ko: "1층 엘리베이터를 타고 5층", en: "Take the lift to 5F" }
-    hours: null,
-    hoursNote: null,     // { ko: "매주 월요일 휴무", en: "Closed on Mondays" }
-    instagram: null,     // "deadlysins" (@ 없이)
+    // 사장님 제공 2026-10-26 (네이버 · 카카오 지도 등록 내용)
+    address: { ko: "서울 송파구 백제고분로41길 42-20, 5층", en: "5F, 42-20 Baekjegobun-ro 41-gil, Songpa-gu, Seoul" },
+    station: { ko: "잠실역 2·8호선 10번 출구에서 900m", en: "900 m from Jamsil Stn. (Line 2·8) Exit 10" },
+    directions: { ko: "건물 입구로 들어오시면 바로 엘리베이터가 있어요. 5층으로 올라와 주세요.", en: "The lift is right inside the building entrance. Come up to the 5th floor." },
+    parking: { ko: "주차는 지원되지 않아요 · 근처 주차장을 이용해 주세요", en: "No parking on site · please use a nearby car park" },
+    maps: [
+      { name: { ko: "네이버 지도", en: "Naver Map" }, url: "https://naver.me/GUTF4SLo" },
+      { name: { ko: "카카오맵", en: "Kakao Map" }, url: "https://kko.to/4nOHx5G0m" }
+    ],
+    // 월요일만 휴무 (일요일도 영업 — 네이버에는 아직 일요일 휴무로 나옴, 사장님이 바꿀 예정)
+    hours: [{ days: [0, 2, 3, 4, 5, 6], open: "20:00", close: "02:00", last: "01:30" }],
+    hoursNote: { ko: "매주 월요일 휴무", en: "Closed on Mondays" },
+    instagram: "deadlysins.bar",   // @ 없이
     phone: null,         // "02-000-0000"
     offer: null,         // { ko: "1층 QR 보고 왔다고 말씀해 주세요", en: "…" }
     // 바 안 사진 (사장님 제공 2026-10-25, 원본은 photos/room/). 빼고 싶으면 그 칸을 null 로

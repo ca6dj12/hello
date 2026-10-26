@@ -596,7 +596,7 @@ const PROMO_BASE = 'https://deadly-sins-mu.vercel.app/';
 async function promoSite(browser, base) {
   console.log('\n■ 1층 배너 홍보 사이트 (promo/)');
   BEACONS.length = 0;
-  const open = async (dataPatch) => {
+  const open = async (dataPatch, at) => {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ko-KR', isMobile: true, hasTouch: true });
     await ctx.route(PROMO_BASE + '**', async (route) => {
       const req = route.request(), u = new URL(req.url());
@@ -612,9 +612,11 @@ async function promoSite(browser, base) {
       return route.fulfill({ status: 200, contentType: TYPES[path.extname(file)] || 'application/octet-stream', body });
     });
     const page = await ctx.newPage();
+    if (at) await page.clock.setFixedTime(new Date(at));   // 영업 상태는 한국 시간 기준이라 시각을 고정
     return { ctx, page };
   };
-  const { ctx, page } = await open();
+  const status = (page) => page.evaluate(() => { const s = document.querySelector('.lb-status'); return s ? (s.classList.contains('is-open') ? '● ' : '○ ') + s.textContent : null; });
+  const { ctx, page } = await open(null, '2026-10-27T12:00:00Z');   // 화요일 밤 9시 (한국)
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
   page.on('response', (r) => { if (r.status() >= 400) errors.push(r.status() + ' ' + r.url()); });
@@ -627,17 +629,21 @@ async function promoSite(browser, base) {
     room: document.querySelectorAll('.lb-room img').length,
     menuRows: document.querySelectorAll('.lb-mrow').length,
     table: !!document.getElementById('table'),
-    toQuiz: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')).filter((h) => !h.startsWith('#') && !/instagram|tel:|map/.test(h)),
+    toQuiz: [...document.querySelectorAll('a[href]')].filter((a) => !a.closest('.lb-info')).map((a) => a.getAttribute('href')).filter((h) => !h.startsWith('#')),
     info: document.querySelector('.lb-info').textContent,
-    address: !!document.querySelector('.lb-info .lb-dim'),
-    status: !!document.querySelector('.lb-status'),
+    maps: [...document.querySelectorAll('.lb-maps a')].map((a) => a.textContent + ' ' + a.getAttribute('href')),
+    ig: (document.querySelector('[data-act="instagram"]') || {}).href,
     cta: Math.round(document.querySelector('.lb-cta').getBoundingClientRect().top),
     vh: innerHeight
   }));
   check(info.h1.includes('일곱 개의 죄') && info.cards === 7 && info.bottles >= 10 && info.bites === 3 && info.room === 3,
     '홍보 사이트: 첫 화면 · 일곱 잔 · 위스키 · 바 안 사진 · 안주', info);
   check(info.menuRows > 30 && info.table && info.toQuiz.length === 0, '메뉴는 사이트 안에서, 설문 사이트로 가는 링크 없음 (테이블 질문은 예고만)', info.toQuiz);
-  check(info.info.includes('16,000') && info.info.includes('커버차지 없음') && !info.address && !info.status, '모르는 정보(주소 · 영업시간)는 숨기고 가격은 안내', info.info);
+  check(['백제고분로41길 42-20', '잠실역 2·8호선 10번 출구', '엘리베이터', '주차', '화–일 20:00 – 02:00', '라스트오더 01:30 · 매주 월요일 휴무', '@deadlysins.bar', '16,000', '커버차지 없음']
+    .every((w) => info.info.includes(w)), '오시는 길: 주소 · 역 · 엘리베이터 · 주차 · 영업시간 · 인스타 · 가격', info.info);
+  check(info.maps.length === 2 && /네이버 지도.*naver\.me/.test(info.maps[0]) && /카카오맵.*kko\.to/.test(info.maps[1]) && info.ig === 'https://www.instagram.com/deadlysins.bar/',
+    '지도 버튼 둘(네이버 · 카카오) · 인스타 링크', info.maps.concat(info.ig));
+  check(await status(page) === '● 지금 영업 중 · 새벽 2시까지', '화요일 밤 9시: 첫 화면에 "지금 영업 중"', await status(page));
   check(info.cta < info.vh - 60, '첫 화면 안에 버튼이 보임', info);
   check(BEACONS.some((x) => x.body && x.body.type === 'visit' && x.body.act === 'open' && x.body.from === 'promo'), '들어오면 방문 기록 (설문 사이트의 기록 API 로)');
 
@@ -669,17 +675,33 @@ async function promoSite(browser, base) {
   check(errors.length === 0, '홍보 사이트 스크립트 오류 · 404 없음', errors);
   await ctx.close();
 
-  // 영업시간을 넣으면 첫 화면에 '지금 영업 중', 사장님이 품절로 바꾸면 메뉴에 '품절'
+  // 시각마다 첫 화면의 영업 상태 (화–일 20:00–02:00, 라스트오더 01:30, 월요일 휴무 · 한국 시간)
+  const WHEN = [
+    ['2026-10-27T06:00:00Z', '○ 오늘 오후 8시 오픈', '화요일 오후 3시'],
+    ['2026-10-27T16:45:00Z', '○ 오늘 주문은 마감됐어요', '화요일 영업 중 새벽 1:45 (라스트오더 지남)'],
+    ['2026-10-27T17:30:00Z', '○ 오늘 오후 8시 오픈', '수요일 새벽 2:30 (닫은 뒤)'],
+    ['2026-10-25T16:00:00Z', '● 지금 영업 중 · 새벽 2시까지', '월요일 새벽 1시 (일요일 영업이 이어짐)'],
+    ['2026-10-26T06:00:00Z', '○ 오늘은 쉬어요 · 내일 오후 8시 오픈', '월요일 오후 3시 (휴무)']
+  ];
+  for (const [at, want, what] of WHEN) {
+    const o = await open(null, at);
+    await o.page.goto(base + 'promo/index.html', { waitUntil: 'networkidle' });
+    const got = await status(o.page);
+    check(got === want, '영업 상태 · ' + what + ' → ' + want.slice(2), got);
+    await o.ctx.close();
+  }
+
+  // 모르는 칸(null)은 안 보이고, 사장님이 품절로 바꾸면 메뉴에 '품절'
   LIVE = { v: 1, at: null, data: { items: { 'lagavulin-16': { soldOut: true } } } };
-  const o2 = await open((txt) => txt.replace('    hours: null,', '    hours: [{ days: [0, 1, 2, 3, 4, 5, 6], open: "00:00", close: "23:59" }],'));
+  const o2 = await open((txt) => txt + '\nwindow.DS_DATA.promo = Object.assign({}, window.DS_DATA.promo, { address: null, station: null, directions: null, parking: null, maps: null, hours: null, hoursNote: null, instagram: null });');
   await o2.page.goto(base + 'promo/index.html', { waitUntil: 'networkidle' });
   await o2.page.waitForTimeout(300);
-  const st = await o2.page.evaluate(() => {
-    const s = document.querySelector('.lb-status');
-    return { status: s && s.textContent, open: s && s.classList.contains('is-open'), hours: document.querySelector('.lb-info').textContent.includes('00:00'),
-      lag: (document.querySelector('#m-lagavulin-16 .lb-mprice') || {}).textContent };
-  });
-  check(st.open && /영업 중/.test(st.status) && st.hours, '영업시간을 넣으면 "지금 영업 중" + 오시는 길에 시간', st);
+  const st = await o2.page.evaluate(() => ({
+    status: !!document.querySelector('.lb-status'), info: document.querySelector('.lb-info').textContent,
+    dim: document.querySelectorAll('.lb-info .lb-dim, .lb-maps, [data-act="instagram"]').length,
+    lag: (document.querySelector('#m-lagavulin-16 .lb-mprice') || {}).textContent
+  }));
+  check(!st.status && st.dim === 0 && !st.info.includes('영업시간') && st.info.includes('16,000'), '비워 둔 칸(주소 · 영업시간 · 인스타)은 숨기고 가격은 안내', st);
   check(st.lag === '품절', '/admin 에서 품절로 바꾸면 홍보 사이트 메뉴에도 품절', st.lag);
   await o2.ctx.close();
   LIVE = { v: 0, at: null, data: null };

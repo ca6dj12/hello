@@ -225,8 +225,10 @@ order by created_at desc limit 30;
 - 홍보 사이트에는 테스트로 가는 링크가 없습니다. 테스트는 5층 테이블에서 하는 경험이라 "자리에 앉으면 일곱 개의 질문이 기다립니다"로 예고만 합니다.
 - 홍보 사이트는 메뉴 · 가격 · 그림을 **설문 사이트의 `data.js` · `brand.js` · `img/` 에서 그대로 읽습니다** (`promo/index.html` 맨 아래 주소).
   그래서 data.js 나 /admin 에서 고친 가격 · 품절 · 숨김 · 새 메뉴가 두 사이트에 함께 반영됩니다.
-- **주소 · 오시는 길 · 영업시간 · 인스타 · 전화 · 이벤트 문구는 `public/data.js` 의 `promo` 에서 null 을 채우면 바로 나타납니다.**
-  영업시간을 넣으면 첫 화면에 "지금 영업 중 · 새벽 2시까지" 가 뜹니다. 사진은 `promo.photos` (원본 `photos/room/`).
+- **주소 · 역 · 오시는 길 · 주차 · 지도(네이버 · 카카오) · 영업시간 · 인스타 · 전화 · 이벤트 문구는 `public/data.js` 의 `promo` 에 있습니다.**
+  null 인 칸(지금은 전화 · 이벤트 문구)은 화면에 나오지 않습니다. 영업시간이 바뀌면 `promo.hours` 만 고치면 됩니다.
+  첫 화면의 영업 상태는 한국 시간 기준: "지금 영업 중 · 새벽 2시까지" / 라스트오더(01:30)가 지나면 "오늘 주문은 마감됐어요" /
+  "오늘 오후 8시 오픈" / 쉬는 날은 "오늘은 쉬어요 · 내일 오후 8시 오픈". 사진은 `promo.photos` (원본 `photos/room/`).
 - 방문 기록은 설문 사이트의 /api/track 으로 보냅니다(`from: 'promo'`). 통계(`?stats=1`)의 `promo`: 들어온 사람 → 메뉴 · 오시는 길 · 인스타/전화/지도를 누른 사람.
 - 배너 QR · A4 포스터: `node tools/make-qr.js https://<홍보 사이트 주소> --promo` →
   `print/banner-qr.svg` (배너 디자인에 얹을 QR) · `print/deadly-sins-banner-poster.pdf` (A4) · 링크 미리보기 `promo/og.jpg`.
