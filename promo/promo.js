@@ -394,7 +394,7 @@
   }
 
   /* ---------- 움직임 ---------- */
-  let io = null, heroIo = null, catIo = null;
+  let io = null, heroIo = null, catIo = null, topBound = false;
   function motion() {
     // 사진은 받아진 뒤 부드럽게
     ROOT.querySelectorAll('img').forEach((img) => {
@@ -421,11 +421,8 @@
     const hero = ROOT.querySelector('.lb-hero');
     if (heroIo) heroIo.disconnect();
     if (hero && 'IntersectionObserver' in window) {
-      // 위의 MENU · EN 은 첫 화면에서만 (스크롤하면 글자를 가리므로 숨기고 아래 막대가 대신)
-      heroIo = new IntersectionObserver(([e]) => {
-        DOCK.classList.toggle('show', !e.isIntersecting);
-        TOP.classList.toggle('hide', !e.isIntersecting);
-      }, { threshold: 0.15 });
+      // 아래 바로가기 막대는 첫 화면을 벗어나면
+      heroIo = new IntersectionObserver(([e]) => { DOCK.classList.toggle('show', !e.isIntersecting); }, { threshold: 0.15 });
       heroIo.observe(hero);
     }
     // 메뉴 종류 칸: 지금 보고 있는 종류에 불
@@ -444,6 +441,8 @@
       }, { rootMargin: '-90px 0px -65% 0px' });
       ROOT.querySelectorAll('.lb-cat').forEach((el) => catIo.observe(el));
     }
+    // 위의 MENU · EN 은 맨 위에서만 (조금이라도 내리면 첫 화면 글자 위로 지나가므로 숨김)
+    if (!topBound) { topBound = true; const f = () => TOP.classList.toggle('hide', window.scrollY > 40); window.addEventListener('scroll', f, { passive: true }); f(); }
     // 일곱 잔 넘김 점
     const car = document.getElementById('lbCarousel');
     if (car) {

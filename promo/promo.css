@@ -14,6 +14,12 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: #000; color: var(--white); font-family: var(--sans); word-break: keep-all; overflow-x: hidden; }
+/* 바탕: 어둡고 거친 벽 (tools/make-wall.py 로 만든 이음매 없는 무늬, 밝기 4~28/255).
+   화면에 고정해 두고 내용만 지나가게 해서 무늬 반복이 눈에 띄지 않고, 가장자리는 한 번 더 어둡게 눌러 글자 · 사진을 해치지 않는다 */
+body::before {
+  content: ''; position: fixed; z-index: -1; left: 0; right: 0; top: 0; height: 100vh; height: 100lvh; pointer-events: none;
+  background: radial-gradient(ellipse 130% 90% at 50% 38%, transparent 30%, rgba(0, 0, 0, .6) 100%), url(wall.jpg) 0 0 / 512px 512px repeat;
+}
 img { display: block; max-width: 100%; }
 a { color: inherit; }
 
@@ -34,7 +40,7 @@ a { color: inherit; }
 .lb-hero {
   --w: min(100vw, 560px);   /* 표지 그림 폭. 그림은 2:3, 흰색/검정 경계는 그림 높이의 48.7% (= 폭 × .73) */
   position: relative; min-height: 100svh; display: flex; flex-direction: column; overflow: hidden;
-  background: linear-gradient(to bottom, #fff 0, #fff calc(var(--w) * .73), #000 calc(var(--w) * .73));
+  background: linear-gradient(to bottom, #fff 0, #fff calc(var(--w) * .73), #000 calc(var(--w) * .73), #000 calc(100% - 140px), transparent);   /* 아래 끝은 벽 무늬로 스며들게 */
 }
 .lb-hero-art { position: relative; flex: none; width: var(--w); height: auto; margin: 0 auto; }
 /* 문구는 잉크가 다 흘러내린 아래쪽 검정(잉크 방울 끝 = 그림 높이의 76% 아래) 위에 */
