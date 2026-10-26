@@ -219,7 +219,7 @@ order by created_at desc limit 30;
 
 | | 테이블 QR | 1층 배너 QR |
 |---|---|---|
-| 사이트 | 이 저장소의 `public/` → https://deadly-sins-mu.vercel.app | 이 저장소의 `promo/` → 별도 Vercel 프로젝트 (Root Directory = `promo`) |
+| 사이트 | 이 저장소의 `public/` → https://deadly-sins-mu.vercel.app | 이 저장소의 `promo/` → 별도 Vercel 프로젝트 `hello-promo` (Root Directory = `promo`) → https://hello-promo.vercel.app |
 | 하는 일 | 나의 죄 테스트(설문) · 메뉴판 · 바텐더 화면 | 바 소개 · 일곱 잔 · 위스키 · 바 안 사진 · 안주 · 메뉴(글자) · 오시는 길 |
 
 - 홍보 사이트에는 테스트로 가는 링크가 없습니다. 테스트는 5층 테이블에서 하는 경험이라 "자리에 앉으면 일곱 개의 질문이 기다립니다"로 예고만 합니다.
