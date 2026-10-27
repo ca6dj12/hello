@@ -647,11 +647,13 @@ async function promoSite(browser, base) {
   check(info.prices.length === 0, '가격은 어디에도 없음', info.prices);
   check(info.credits >= 5, '공용 사진 출처는 메뉴 맨 아래 접어 둠', info.credits);
   check(info.table && info.toQuiz.length === 0, '설문 사이트로 가는 링크 없음 (테이블 질문은 예고만)', info.toQuiz);
-  check(['백제고분로41길 42-20', '잠실역 2·8호선 10번 출구', '엘리베이터', '주차', '화–일 20:00 – 02:00', '라스트오더 01:30 · 매주 월요일 휴무', '@deadlysins.bar', '010-6639-6522', 'deadly_sins@naver.com', '커버차지 없음', '대관 문의 환영']
+  check(['백제고분로41길 42-20', '잠실역 2·8호선 10번 출구', '엘리베이터', '주차', '화–일 20:00 – 02:00', '라스트오더 01:30 · 매주 월요일 휴무', '@deadlysins.bar', 'deadly_sins@naver.com', '커버차지 없음', '대관 문의 환영']
     .every((w) => info.info.includes(w)), '오시는 길: 주소 · 역 · 엘리베이터 · 주차 · 영업시간 · 인스타 · 전화 · 메일 · 커버차지 없음 · 대관 문의', info.info);
-  check(info.contact.join(' ') === 'tel:01066396522 mailto:deadly_sins@naver.com', '문의: 전화는 누르면 바로 걸리고, 메일은 메일 앱으로', info.contact);
-  check(info.rental.join(' | ') === 'ig https://www.instagram.com/deadlysins.bar/ | phone tel:01066396522 | email mailto:deadly_sins@naver.com',
-    '바 안 사진 아래 "대관 문의 환영": 인스타 DM · 전화 · 메일', info.rental);
+  // 전화는 data.js 에 번호가 있을 때만 (가상번호를 받기 전엔 비어 있음 — 아래에서 번호를 넣어 따로 확인)
+  const tel = await page.evaluate(() => (window.DS_DATA.promo.phone ? 'tel:' + window.DS_DATA.promo.phone.replace(/[^\d+]/g, '') : ''));
+  check(info.contact.join(' ') === [tel, 'mailto:deadly_sins@naver.com'].filter(Boolean).join(' '), '문의: 메일은 메일 앱으로 (번호가 있으면 누르면 바로 전화)', info.contact);
+  check(info.rental.join(' | ') === ['ig https://www.instagram.com/deadlysins.bar/', tel && 'phone ' + tel, 'email mailto:deadly_sins@naver.com'].filter(Boolean).join(' | '),
+    '바 안 사진 아래 "대관 문의 환영": 인스타 DM · (전화) · 메일', info.rental);
   check(info.maps.length === 2 && /네이버 지도.*naver\.me/.test(info.maps[0]) && /카카오맵.*kko\.to/.test(info.maps[1]) && info.ig === 'https://www.instagram.com/deadlysins.bar/',
     '지도 버튼 둘(네이버 · 카카오) · 인스타 링크', info.maps.concat(info.ig));
   check(await status(page) === '● 지금 영업 중 · 새벽 2시까지', '화요일 밤 9시: 첫 화면에 "지금 영업 중"', await status(page));
@@ -728,6 +730,18 @@ async function promoSite(browser, base) {
     check(got === want, '영업 상태 · ' + what + ' → ' + want.slice(2), got);
     await o.ctx.close();
   }
+
+  // 가상번호를 넣으면: 문의 칸에 번호(누르면 전화), 대관 문의에 전화 버튼 (인스타 DM 은 위에 가득, 전화 · 메일은 나란히)
+  const o3 = await open((txt) => txt + '\nwindow.DS_DATA.promo = Object.assign({}, window.DS_DATA.promo, { phone: "0507-1234-5678" });');
+  await o3.page.goto(base + 'promo/index.html', { waitUntil: 'networkidle' });
+  const ph = await o3.page.evaluate(() => ({
+    info: (document.querySelector('.lb-info [data-act="phone"]') || {}).outerHTML,
+    ways: [...document.querySelectorAll('.lb-rent-ways a')].map((a) => a.dataset.via + ':' + Math.round(a.getBoundingClientRect().width))
+  }));
+  const wide = Number((ph.ways[0] || ':0').split(':')[1]), half = Number((ph.ways[1] || ':0').split(':')[1]);
+  check(/href="tel:050712345678"[^>]*>0507-1234-5678</.test(ph.info || '') && ph.ways.length === 3 && /^phone:/.test(ph.ways[1]) && half > 0 && wide > half * 1.8,
+    '번호를 넣으면 누르면 바로 전화 + 대관 문의 버튼 셋 (인스타 가득, 전화 · 메일 나란히)', ph);
+  await o3.ctx.close();
 
   // 모르는 칸(null)은 안 보이고, 사장님이 품절로 바꾸면 메뉴에 '품절'
   LIVE = { v: 1, at: null, data: { items: { 'lagavulin-16': { soldOut: true } } } };
