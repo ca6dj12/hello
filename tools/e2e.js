@@ -630,7 +630,8 @@ async function promoSite(browser, base) {
     noPhoto: [...document.querySelectorAll('.lb-item')].filter((b) => !b.querySelector('.lb-item-img img')).map((b) => b.id),
     // 가격은 이 사이트에 싣지 않는다: 16,000 · 9,000원 · 8,000 같은 숫자가 하나도 없어야
     prices: (document.getElementById('lb').innerText.match(/\d{1,3}(,\d{3})+|\d+\s*원|KRW/g) || []),
-    rental: (document.querySelector('[data-act="rental"]') || {}).href,
+    rental: [...document.querySelectorAll('[data-act="rental"]')].map((a) => a.dataset.via + ' ' + a.getAttribute('href')),
+    contact: [...document.querySelectorAll('.lb-info [data-act="phone"], .lb-info [data-act="email"]')].map((a) => a.getAttribute('href')),
     credits: document.querySelectorAll('.lb-credits li').length,
     table: !!document.getElementById('table'),
     toQuiz: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')).filter((h) => /deadly-sins-mu|^\/|^[a-z-]+\.html/.test(h)),
@@ -646,9 +647,11 @@ async function promoSite(browser, base) {
   check(info.prices.length === 0, '가격은 어디에도 없음', info.prices);
   check(info.credits >= 5, '공용 사진 출처는 메뉴 맨 아래 접어 둠', info.credits);
   check(info.table && info.toQuiz.length === 0, '설문 사이트로 가는 링크 없음 (테이블 질문은 예고만)', info.toQuiz);
-  check(['백제고분로41길 42-20', '잠실역 2·8호선 10번 출구', '엘리베이터', '주차', '화–일 20:00 – 02:00', '라스트오더 01:30 · 매주 월요일 휴무', '@deadlysins.bar', '커버차지 없음', '대관 문의 환영']
-    .every((w) => info.info.includes(w)), '오시는 길: 주소 · 역 · 엘리베이터 · 주차 · 영업시간 · 인스타 · 커버차지 없음 · 대관 문의', info.info);
-  check(info.rental === 'https://www.instagram.com/deadlysins.bar/', '바 안 사진 아래 "대관 문의하기" → 인스타그램', info.rental);
+  check(['백제고분로41길 42-20', '잠실역 2·8호선 10번 출구', '엘리베이터', '주차', '화–일 20:00 – 02:00', '라스트오더 01:30 · 매주 월요일 휴무', '@deadlysins.bar', '010-6639-6522', 'deadly_sins@naver.com', '커버차지 없음', '대관 문의 환영']
+    .every((w) => info.info.includes(w)), '오시는 길: 주소 · 역 · 엘리베이터 · 주차 · 영업시간 · 인스타 · 전화 · 메일 · 커버차지 없음 · 대관 문의', info.info);
+  check(info.contact.join(' ') === 'tel:01066396522 mailto:deadly_sins@naver.com', '문의: 전화는 누르면 바로 걸리고, 메일은 메일 앱으로', info.contact);
+  check(info.rental.join(' | ') === 'ig https://www.instagram.com/deadlysins.bar/ | phone tel:01066396522 | email mailto:deadly_sins@naver.com',
+    '바 안 사진 아래 "대관 문의 환영": 인스타 DM · 전화 · 메일', info.rental);
   check(info.maps.length === 2 && /네이버 지도.*naver\.me/.test(info.maps[0]) && /카카오맵.*kko\.to/.test(info.maps[1]) && info.ig === 'https://www.instagram.com/deadlysins.bar/',
     '지도 버튼 둘(네이버 · 카카오) · 인스타 링크', info.maps.concat(info.ig));
   check(await status(page) === '● 지금 영업 중 · 새벽 2시까지', '화요일 밤 9시: 첫 화면에 "지금 영업 중"', await status(page));
@@ -728,12 +731,12 @@ async function promoSite(browser, base) {
 
   // 모르는 칸(null)은 안 보이고, 사장님이 품절로 바꾸면 메뉴에 '품절'
   LIVE = { v: 1, at: null, data: { items: { 'lagavulin-16': { soldOut: true } } } };
-  const o2 = await open((txt) => txt + '\nwindow.DS_DATA.promo = Object.assign({}, window.DS_DATA.promo, { address: null, station: null, directions: null, parking: null, maps: null, hours: null, hoursNote: null, instagram: null });');
+  const o2 = await open((txt) => txt + '\nwindow.DS_DATA.promo = Object.assign({}, window.DS_DATA.promo, { address: null, station: null, directions: null, parking: null, maps: null, hours: null, hoursNote: null, instagram: null, phone: null, email: null });');
   await o2.page.goto(base + 'promo/index.html', { waitUntil: 'networkidle' });
   await o2.page.waitForTimeout(300);
   const st = await o2.page.evaluate(() => ({
     status: !!document.querySelector('.lb-status'), info: document.querySelector('.lb-info').textContent,
-    dim: document.querySelectorAll('.lb-info .lb-dim, .lb-maps, [data-act="instagram"]').length,
+    dim: document.querySelectorAll('.lb-info .lb-dim, .lb-maps, [data-act="instagram"], [data-act="phone"], [data-act="email"]').length,
     rental: !!document.querySelector('[data-act="rental"]'),
     lag: (document.querySelector('#m-lagavulin-16 .lb-sold') || {}).textContent
   }));

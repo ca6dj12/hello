@@ -69,7 +69,7 @@ function fakeRes() {
   await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'instagram' });
   await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'open' });
   await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'item', id: 'dalmore-15' });
-  await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'rental' });
+  await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'rental', via: 'phone' });
   await send({ sid: 't1', type: 'start' });
   await send({ sid: 't1', type: 'result', sin: '교만', second: '질투', points: '교만 9', picks: 'Q1A' });
   check((await send({ sid: 'x', type: 'drop table' })).code === 400, '모르는 종류 → 400');

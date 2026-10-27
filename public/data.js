@@ -1175,7 +1175,8 @@ window.DS_DATA = {
     hours: [{ days: [0, 2, 3, 4, 5, 6], open: "20:00", close: "02:00", last: "01:30" }],
     hoursNote: { ko: "매주 월요일 휴무", en: "Closed on Mondays" },
     instagram: "deadlysins.bar",   // @ 없이
-    phone: null,         // "02-000-0000"
+    phone: "010-6639-6522",          // 사장님 제공 2026-10-27 — 누르면 바로 전화
+    email: "deadly_sins@naver.com",  // 누르면 메일 앱
     offer: null,         // { ko: "1층 QR 보고 왔다고 말씀해 주세요", en: "…" }
     // 바 안 사진 (사장님 제공 2026-10-25, 원본은 photos/room/). 빼고 싶으면 그 칸을 null 로
     photos: {

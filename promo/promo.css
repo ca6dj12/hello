@@ -118,7 +118,9 @@ a { color: inherit; }
 .lb-rent { margin: 22px 0 0; padding: 18px; border: 1px solid rgba(200, 74, 80, .55); border-radius: 16px; background: linear-gradient(140deg, rgba(200, 74, 80, .16), rgba(200, 74, 80, .04)); }
 .lb-rent-title { margin: 0; font-size: 18px; font-weight: 850; letter-spacing: -.03em; }
 .lb-rent p:not(.lb-rent-title) { margin: 6px 0 0; font-size: 14px; line-height: 1.6; color: var(--soft); }
-.lb-rent .lb-btn { margin-top: 14px; min-height: 46px; font-size: 14.5px; }
+.lb-rent-ways { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+.lb-rent-ways .lb-btn { min-height: 46px; font-size: 14.5px; }
+.lb-rent-ways .lb-btn:first-child:nth-last-child(odd) { grid-column: 1 / -1; }   /* 1개 · 3개면 첫 줄(인스타)을 가득 */
 .lb-entrance { position: relative; margin: 0 -22px 22px; }
 .lb-entrance img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
 .lb-entrance figcaption {

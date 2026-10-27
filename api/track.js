@@ -131,7 +131,7 @@ async function stats(sql) {
          count(distinct sid) filter (where extra->>'act' = 'open')::int as opened,
          count(distinct sid) filter (where extra->>'act' in ('menu', 'cat', 'item', 'bottle', 'bite'))::int as clicked_menu,
          count(distinct sid) filter (where extra->>'act' = 'way')::int as clicked_way,
-         count(distinct sid) filter (where extra->>'act' in ('instagram', 'phone', 'map'))::int as clicked_contact,
+         count(distinct sid) filter (where extra->>'act' in ('instagram', 'phone', 'email', 'map'))::int as clicked_contact,
          count(distinct sid) filter (where extra->>'act' = 'rental')::int as clicked_rental
        from deadly_sins_events where type = 'visit' and extra->>'from' = 'promo'`)
   ]);

@@ -33,7 +33,7 @@
       conceptBody: '데들리 신스는 일곱 가지 죄를 일곱 잔의 칵테일로 빚었습니다. 교만, 질투, 분노, 나태, 탐욕, 폭식, 색욕 — 오늘 밤 당신은 어느 쪽인가요?',
       sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: '일곱 잔의 시그니처', swipe: '옆으로 넘겨 보세요',
       roomKicker: 'THE ROOM', roomTitle: '5층의 밤', roomBody: '낮은 조명, 거친 벽, 그리고 일곱 개의 죄. 혼자여도, 둘이어도 좋은 자리.',
-      rental: '대관 문의 환영', rentalBody: '인스타그램 DM으로 편하게 문의해 주세요.', rentalCta: '대관 문의하기',
+      rental: '대관 문의 환영', rentalBody: '편한 방법으로 문의해 주세요.', viaIg: '인스타그램 DM', viaPhone: '전화', viaEmail: '메일',
       entrance: '이 간판이 보이면 도착이에요',
       tableKicker: 'AT YOUR TABLE', tableTitle: '자리에 앉으면,<br>일곱 개의 질문이 기다립니다',
       tableBody: '테이블 위 QR을 찍고 질문 일곱 개에 답하면, 일곱 잔 중 당신의 죄에 맞는 한 잔을 골라 드려요. 그 답은 5층에서만.',
@@ -58,7 +58,7 @@
       conceptBody: 'Deadly Sins turns the seven deadly sins into seven cocktails. Pride, envy, wrath, sloth, greed, gluttony, lust — which one are you tonight?',
       sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: 'Seven signatures', swipe: 'Swipe to see them all',
       roomKicker: 'THE ROOM', roomTitle: 'Nights on 5F', roomBody: 'Low light, rough walls and seven sins. A seat for one, or for two.',
-      rental: 'Private hire welcome', rentalBody: 'Send us a DM on Instagram.', rentalCta: 'Ask about private hire',
+      rental: 'Private hire welcome', rentalBody: 'Get in touch however suits you.', viaIg: 'Instagram DM', viaPhone: 'Call', viaEmail: 'Email',
       entrance: 'You have arrived when you see this sign',
       tableKicker: 'AT YOUR TABLE', tableTitle: 'Take a seat,<br>seven questions are waiting',
       tableBody: 'Scan the QR on your table and answer seven questions — we will pick the one glass that matches your sin. Only on the 5th floor.',
@@ -289,6 +289,10 @@
     const P = L.photos && typeof L.photos === 'object' ? L.photos : {};
     const ig = L.instagram ? String(L.instagram).replace(/^@/, '') : '';
     const igUrl = ig ? 'https://www.instagram.com/' + ig + '/' : '';
+    const tel = L.phone ? 'tel:' + String(L.phone).replace(/[^\d+]/g, '') : '';
+    const mail = L.email ? 'mailto:' + String(L.email).trim() : '';
+    // 대관 문의 길: 인스타 DM · 전화 · 메일 중 있는 것만
+    const ways = [[igUrl, 'ig', 'viaIg'], [tel, 'phone', 'viaPhone'], [mail, 'email', 'viaEmail']].filter((w) => w[0]);
     let h = '';
 
     // 첫 화면
@@ -351,7 +355,8 @@
       '<p class="lb-body lb-r">' + esc(t('roomBody')) + '</p>' +
       (room.length ? '<div class="lb-room">' + room.map((p) => '<figure class="lb-r"><img src="' + esc(A(p)) + '" alt="" loading="lazy"></figure>').join('') + '</div>' : '') +
       '<div class="lb-rent lb-r"><p class="lb-rent-title">' + esc(t('rental')) + '</p>' +
-        (igUrl ? '<p>' + esc(t('rentalBody')) + '</p><a class="lb-btn" href="' + esc(igUrl) + '" target="_blank" rel="noopener" data-act="rental">' + esc(t('rentalCta')) + ' →</a>' : '') +
+        (ways.length ? '<p>' + esc(t('rentalBody')) + '</p><div class="lb-rent-ways">' + ways.map(([href, via, label]) =>
+          '<a class="lb-btn" href="' + esc(href) + '"' + (via === 'ig' ? ' target="_blank" rel="noopener"' : '') + ' data-act="rental" data-via="' + via + '">' + esc(t(label)) + '</a>').join('') + '</div>' : '') +
       '</div></section>';
 
     // 메뉴: 종류별 사진 격자
@@ -365,7 +370,8 @@
     const maps = Array.isArray(L.maps) ? L.maps.filter((x) => x && x.url) : L.mapUrl ? [{ url: L.mapUrl }] : [];
     const dim = (o) => (o ? '<br><span class="lb-dim">' + esc(L10(o)) + '</span>' : '');
     const contact = [ig ? '<a href="' + esc(igUrl) + '" target="_blank" rel="noopener" data-act="instagram">@' + esc(ig) + '</a>' : '',
-      L.phone ? '<a href="tel:' + esc(String(L.phone).replace(/[^\d+]/g, '')) + '" data-act="phone">' + esc(L.phone) + '</a>' : ''].filter(Boolean);
+      tel ? '<a href="' + esc(tel) + '" data-act="phone">' + esc(L.phone) + '</a>' : '',
+      mail ? '<a href="' + esc(mail) + '" data-act="email">' + esc(L.email) + '</a>' : ''].filter(Boolean);
     h += '<section class="lb-sec lb-way" id="way">' +
       '<p class="lb-kicker lb-r">' + t('wayKicker') + '</p>' +
       '<h2 class="lb-r">' + t('wayTitle', F) + '</h2>' +
@@ -492,7 +498,7 @@
     }
     const href = a.getAttribute('href') || '';
     if (href.charAt(0) === '#') { e.preventDefault(); goTo(href.slice(1)); }
-    track('visit', { act });
+    track('visit', a.dataset.via ? { act, via: a.dataset.via } : { act });
   });
 
   render();
