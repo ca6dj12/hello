@@ -20,17 +20,17 @@
   const TOP = document.querySelector('.lb-top');
   const REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-  const SINS = [['교', '교만', 'PRIDE'], ['질', '질투', 'ENVY'], ['분', '분노', 'WRATH'], ['나', '나태', 'SLOTH'],
-    ['탐', '탐욕', 'GREED'], ['식', '폭식', 'GLUTTONY'], ['색', '색욕', 'LUST']];
+  // 일곱 죄의 순서 = 바 안 포스터 벽 (왼쪽부터 PRIDE · ENVY · GREED · GLUTTONY · WRATH · LUST · SLOTH). 사이트 어디서나 이 순서
+  const SINS = [['교', '교만', 'PRIDE'], ['질', '질투', 'ENVY'], ['탐', '탐욕', 'GREED'], ['식', '폭식', 'GLUTTONY'],
+    ['분', '분노', 'WRATH'], ['색', '색욕', 'LUST'], ['나', '나태', 'SLOTH']];
+  const ORDER = SINS.map((s) => s[0]);
   const DAYS = { ko: ['일', '월', '화', '수', '목', '금', '토'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
 
   const T = {
     ko: {
-      lang: 'EN', floorLine: 'COCKTAIL & WHISKY BAR',
-      heroTitle: '일곱 개의 죄,<br>일곱 잔의 칵테일',
-      ctaWay: '5층으로 오는 길', ctaMenu: '메뉴 보기',
+      lang: 'EN',
       conceptTitle: '오늘 밤, 당신은<br>어떤 죄를 삼키시겠습니까?',
-      conceptBody: '데들리 신스는 일곱 가지 죄를 일곱 잔의 칵테일로 빚었습니다. 교만, 질투, 분노, 나태, 탐욕, 폭식, 색욕 — 오늘 밤 당신은 어느 쪽인가요?',
+      conceptBody: '데들리 신스는 일곱 가지 죄를 일곱 잔의 칵테일로 빚었습니다. 교만, 질투, 탐욕, 폭식, 분노, 색욕, 나태 — 오늘 밤 당신은 어느 쪽인가요?',
       sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: '일곱 잔의 시그니처', swipe: '옆으로 넘겨 보세요',
       roomKicker: 'THE ROOM', roomTitle: '5층의 밤', roomBody: '낮은 조명, 거친 벽, 그리고 일곱 개의 죄. 혼자여도, 둘이어도 좋은 자리.',
       rental: '대관 문의 환영', rentalBody: '편한 방법으로 문의해 주세요.', viaIg: '인스타그램 DM', viaPhone: '전화', viaEmail: '메일',
@@ -51,11 +51,9 @@
       dockMenu: '메뉴', dockWay: '오시는 길'
     },
     en: {
-      lang: '한국어', floorLine: 'COCKTAIL & WHISKY BAR',
-      heroTitle: 'Seven sins.<br>Seven glasses.',
-      ctaWay: 'How to find us · 5F', ctaMenu: 'See the menu',
+      lang: '한국어',
       conceptTitle: 'Tonight, which sin<br>will you swallow?',
-      conceptBody: 'Deadly Sins turns the seven deadly sins into seven cocktails. Pride, envy, wrath, sloth, greed, gluttony, lust — which one are you tonight?',
+      conceptBody: 'Deadly Sins turns the seven deadly sins into seven cocktails. Pride, envy, greed, gluttony, wrath, lust, sloth — which one are you tonight?',
       sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: 'Seven signatures', swipe: 'Swipe to see them all',
       roomKicker: 'THE ROOM', roomTitle: 'Nights on 5F', roomBody: 'Low light, rough walls and seven sins. A seat for one, or for two.',
       rental: 'Private hire welcome', rentalBody: 'Get in touch however suits you.', viaIg: 'Instagram DM', viaPhone: 'Call', viaEmail: 'Email',
@@ -180,7 +178,7 @@
         rows: [['aroma', L10(d.aroma)], ['taste', L10(d.taste)], ['finish', L10(d.finish)], ['strength', L10(d.strength)]] };
     }) });
     const whisky = [];
-    m.whisky.forEach((g) => g.items.filter(shown).forEach((it) => whisky.push({ it, tag: { sym: g.sin, text: sinName(g.sin) }, quote: L10(g.label) })));
+    m.whisky.slice().sort((a, b) => ORDER.indexOf(a.sin) - ORDER.indexOf(b.sin)).forEach((g) => g.items.filter(shown).forEach((it) => whisky.push({ it, tag: { sym: g.sin, text: sinName(g.sin) }, quote: L10(g.label) })));
     m.final.items.filter(shown).forEach((it) => whisky.push({ it, tag: { text: m.final.title }, quote: L10(m.final.label) }));
     const plain = (it, extra) => {
       const d = det(it.id);
@@ -295,21 +293,9 @@
     const ways = [[igUrl, 'ig', 'viaIg'], [tel, 'phone', 'viaPhone'], [mail, 'email', 'viaEmail']].filter((w) => w[0]);
     let h = '';
 
-    // 첫 화면
-    const st = openStatus();
-    h += '<section class="lb-hero" id="top">' +
-      '<img class="lb-hero-art" src="' + esc(A(B.cover)) + '" alt="Deadly Sins">' +
-      '<div class="lb-hero-copy">' +
-        '<p class="lb-floor"><span>' + F + 'F</span>' + esc(t('floorLine')) + '</p>' +
-        '<h1>' + t('heroTitle') + '</h1>' +
-        (st ? '<p class="lb-status' + (st.open ? ' is-open' : '') + '"><i></i>' + esc(st.text) + '</p>' : '') +
-        '<div class="lb-cta">' +
-          '<a class="lb-btn lb-primary" href="#way" data-act="way">' + esc(t('ctaWay')) + '</a>' +
-          '<a class="lb-btn" href="#menu" data-act="menu">' + esc(t('ctaMenu')) + '</a>' +
-        '</div>' +
-      '</div>' +
-      '<a class="lb-down" href="#concept" aria-label="↓"><span></span></a>' +
-    '</section>';
+    const st = openStatus();   // 오시는 길의 영업시간 칸에 "지금 영업 중"
+    // 첫 화면: 표지 그림만, 잉크가 떨어진 바로 아래에서 "오늘 밤, 당신은 어떤 죄를…" 로 이어진다
+    h += '<section class="lb-hero" id="top"><h1><img class="lb-hero-art" src="' + esc(A(B.cover)) + '" alt="Deadly Sins"></h1></section>';
 
     // 콘셉트 + 일곱 상징 + 포스터 벽
     h += '<section class="lb-sec lb-concept" id="concept">' +
@@ -382,7 +368,7 @@
           (L.directions ? '<br>' + esc(L10(L.directions)) : '') + dim(L.address) + dim(L.station) + dim(L.parking) +
           (maps.length ? '<span class="lb-maps">' + maps.map((x) => '<a href="' + esc(x.url) + '" target="_blank" rel="noopener" data-act="map">' +
             esc(x.name ? L10(x.name) : t('map')) + ' →</a>').join('') + '</span>' : '') + '</dd>' +
-        (hoursHtml() ? '<dt>' + esc(t('hours')) + '</dt><dd>' + hoursHtml() + '</dd>' : '') +
+        (hoursHtml() ? '<dt>' + esc(t('hours')) + '</dt><dd>' + (st ? '<p class="lb-status' + (st.open ? ' is-open' : '') + '"><i></i>' + esc(st.text) + '</p>' : '') + hoursHtml() + '</dd>' : '') +
         '<dt>' + esc(t('good')) + '</dt><dd>' + esc(t('noCover')) + '<br>' + esc(t('rental')) + '</dd>' +
         (contact.length ? '<dt>' + esc(t('contact')) + '</dt><dd>' + contact.join('<br>') + '</dd>' : '') +
       '</dl>' +

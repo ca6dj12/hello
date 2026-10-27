@@ -44,7 +44,7 @@ require(path.join(PUBLIC, 'brand.js'));
 const BRAND = global.window.DS_BRAND;
 const dataUri = (file, type) => 'data:' + type + ';base64,' + fs.readFileSync(file).toString('base64');
 const webp = (rel) => dataUri(path.join(PUBLIC, rel), 'image/webp');
-const SINS = ['교', '질', '분', '나', '탐', '식', '색'];
+const SINS = ['교', '질', '탐', '식', '분', '색', '나'];   // 바 안 포스터 벽 순서 (PRIDE · ENVY · GREED · GLUTTONY · WRATH · LUST · SLOTH)
 const floor = Number((fs.readFileSync(path.join(PUBLIC, 'data.js'), 'utf8').match(/floor:\s*(\d+)/) || [])[1]) || 5;
 
 const FONTS = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gelasio:wght@500;700&family=Noto+Sans+KR:wght@500;700;900&display=block">';

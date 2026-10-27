@@ -622,7 +622,11 @@ async function promoSite(browser, base) {
   page.on('response', (r) => { if (r.status() >= 400) errors.push(r.status() + ' ' + r.url()); });
   await page.goto(base + 'promo/index.html', { waitUntil: 'networkidle' });
   const info = await page.evaluate(() => ({
-    h1: document.querySelector('.lb-hero h1').textContent,
+    hero: [...document.querySelectorAll('.lb-hero *')].map((e) => e.tagName).join(' '),
+    concept: Math.round(document.querySelector('#concept h2').getBoundingClientRect().bottom),
+    order: [...document.querySelectorAll('.lb-syms span')].map((e) => e.textContent).join(' '),
+    sigOrder: [...document.querySelectorAll('#cat-sig .lb-item')].map((e) => e.id.slice(-1)).join(''),
+    whiskyOrder: [...new Set([...document.querySelectorAll('#cat-whisky .lb-item-tag')].map((e) => e.textContent))].join(' '),
     cards: document.querySelectorAll('.lb-card').length,
     room: document.querySelectorAll('.lb-room img').length,
     cats: [...document.querySelectorAll('.lb-cats a')].map((a) => a.textContent).join(' '),
@@ -638,17 +642,19 @@ async function promoSite(browser, base) {
     info: document.querySelector('.lb-info').textContent,
     maps: [...document.querySelectorAll('.lb-maps a')].map((a) => a.textContent + ' ' + a.getAttribute('href')),
     ig: (document.querySelector('[data-act="instagram"]') || {}).href,
-    cta: Math.round(document.querySelector('.lb-cta').getBoundingClientRect().top),
     vh: innerHeight
   }));
-  check(info.h1.includes('일곱 개의 죄') && info.cards === 7 && info.room === 3, '홍보 사이트: 첫 화면 · 일곱 잔 · 바 안 사진', info);
+  check(info.hero === 'H1 IMG' && info.cards === 7 && info.room === 3, '홍보 사이트: 첫 화면은 표지 그림만 · 일곱 잔 · 바 안 사진', info.hero);
+  check(info.concept < info.vh, '첫 화면에서 바로 "오늘 밤, 당신은 어떤 죄를 삼키시겠습니까?"가 보임', info.concept);
+  check(info.order === '교만 질투 탐욕 폭식 분노 색욕 나태' && info.sigOrder === '교질탐식분색나' && info.whiskyOrder.startsWith('교만 질투 탐욕 폭식 분노 색욕 나태'),
+    '일곱 죄 순서 = 바 안 포스터 벽 (상징 · 시그니처 · 위스키)', [info.order, info.sigOrder, info.whiskyOrder]);
   check(info.cats === '시그니처 위스키 칵테일 안주 음료' && info.grid['cat-sig'] === 7 && info.grid['cat-whisky'] >= 15 && info.grid['cat-bites'] === 3 && info.grid['cat-bev'] === 5 && info.noPhoto.length === 0,
     '메뉴: 종류 칸 다섯 + 종류별 사진 격자 (모든 칸에 사진)', info.grid);
   check(info.prices.length === 0, '가격은 어디에도 없음', info.prices);
   check(info.credits >= 5, '공용 사진 출처는 메뉴 맨 아래 접어 둠', info.credits);
   check(info.table && info.toQuiz.length === 0, '설문 사이트로 가는 링크 없음 (테이블 질문은 예고만)', info.toQuiz);
   check(['백제고분로41길 42-20', '잠실역 2·8호선 10번 출구', '엘리베이터', '주차', '화–일 20:00 – 02:00', '라스트오더 01:30 · 매주 월요일 휴무', '@deadlysins.bar', 'deadly_sins@naver.com', '커버차지 없음', '대관 문의 환영']
-    .every((w) => info.info.includes(w)), '오시는 길: 주소 · 역 · 엘리베이터 · 주차 · 영업시간 · 인스타 · 전화 · 메일 · 커버차지 없음 · 대관 문의', info.info);
+    .every((w) => info.info.includes(w)), '오시는 길: 주소 · 역 · 엘리베이터 · 주차 · 영업시간 · 인스타 · 메일 · 커버차지 없음 · 대관 문의', info.info);
   // 전화는 data.js 에 번호가 있을 때만 (가상번호를 받기 전엔 비어 있음 — 아래에서 번호를 넣어 따로 확인)
   const tel = await page.evaluate(() => (window.DS_DATA.promo.phone ? 'tel:' + window.DS_DATA.promo.phone.replace(/[^\d+]/g, '') : ''));
   check(info.contact.join(' ') === [tel, 'mailto:deadly_sins@naver.com'].filter(Boolean).join(' '), '문의: 메일은 메일 앱으로 (번호가 있으면 누르면 바로 전화)', info.contact);
@@ -656,8 +662,7 @@ async function promoSite(browser, base) {
     '바 안 사진 아래 "대관 문의 환영": 인스타 DM · (전화) · 메일', info.rental);
   check(info.maps.length === 2 && /네이버 지도.*naver\.me/.test(info.maps[0]) && /카카오맵.*kko\.to/.test(info.maps[1]) && info.ig === 'https://www.instagram.com/deadlysins.bar/',
     '지도 버튼 둘(네이버 · 카카오) · 인스타 링크', info.maps.concat(info.ig));
-  check(await status(page) === '● 지금 영업 중 · 새벽 2시까지', '화요일 밤 9시: 첫 화면에 "지금 영업 중"', await status(page));
-  check(info.cta < info.vh - 60, '첫 화면 안에 버튼이 보임', info);
+  check(await status(page) === '● 지금 영업 중 · 새벽 2시까지', '화요일 밤 9시: 오시는 길의 영업시간에 "지금 영업 중"', await status(page));
   check(BEACONS.some((x) => x.body && x.body.type === 'visit' && x.body.act === 'open' && x.body.from === 'promo'), '들어오면 방문 기록 (설문 사이트의 기록 API 로)');
 
   const dockY = () => page.evaluate(() => new DOMMatrixReadOnly(getComputedStyle(document.getElementById('lbDock')).transform).m42);
@@ -665,13 +670,12 @@ async function promoSite(browser, base) {
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForTimeout(700);
   check(y0 > 10 && Math.abs(await dockY()) < 1, '첫 화면을 지나면 아래 바로가기 막대가 올라옴', y0);
-  await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(300);
-  await page.click('.lb-hero [data-act="way"]');
+  await page.click('.lb-dock-way');
   await page.waitForTimeout(1200);
   const wayTop = await page.evaluate(() => Math.round(document.getElementById('way').getBoundingClientRect().top));
-  check(wayTop >= -5 && wayTop < 300, '"5층으로 오는 길" → 오시는 길로 내려감', wayTop);
+  check(wayTop >= -5 && wayTop < 300, '아래 막대 "오시는 길" → 오시는 길로', wayTop);
   // 메뉴 종류 칸 → 그 종류로, 칸은 위에 붙어 있고 불이 옮겨감
-  await page.click('.lb-hero [data-act="menu"]');
+  await page.click('.lb-dock-menu');
   await page.waitForTimeout(1200);
   await page.click('.lb-cats a[href="#cat-bites"]');
   await page.waitForTimeout(1400);
@@ -710,7 +714,7 @@ async function promoSite(browser, base) {
   check(closed.hidden && /promo/.test(closed.url), 'Esc · 바깥을 눌러도 닫힘', closed);
   await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(500);
   await page.click('#lbLang');
-  check((await page.textContent('.lb-hero h1')).includes('Seven sins'), '영어 전환');
+  check((await page.textContent('#concept h2')).includes('which sin'), '영어 전환');
   await page.click('#lbLang');
   check(errors.length === 0, '홍보 사이트 스크립트 오류 · 404 없음', errors);
   await ctx.close();
