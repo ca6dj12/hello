@@ -39,3 +39,19 @@ QR 크기는 30mm 입니다. 테이블 위 20~40cm 거리에서 찍는 용도에
 cd tools && npm install
 node make-qr.js https://새주소
 ```
+
+## 1층 X배너 (확정 2026-11-21)
+
+`deadly-sins-xbanner.pdf` — 600×1800mm, 150dpi. 인쇄소에 이 파일을 그대로 넘기면 됩니다 (X배너 실사출력).
+QR 은 **https://deadly-sins-5f.vercel.app/** (1층 배너 홍보 사이트)를 가리키고, 그림에서 실제로 해독해 확인했습니다.
+QR 은 서 있는 사람 가슴 높이(바닥에서 약 1.2m)에 옵니다.
+
+세 시안(`xbanner/` 의 a · b · c) 가운데 **a (한 방울)** 로 정했습니다.
+
+- 글자와 QR 이 전부 또렷하게 나옵니다. b 는 배경으로 깐 포스터 벽 사진이 가로 1,175px 뿐이라
+  600mm 폭으로 뽑으면 약 50dpi — QR 을 찍으려고 가까이 서는 자리라 흐릿해 보일 수 있습니다.
+- 문구("오늘 밤, 어떤 죄를 삼키시겠습니까?")가 QR 을 찍으면 열리는 사이트의 첫 문장과 같아서 그대로 이어집니다.
+- b 로 바꾸려면 원본 사진(가로 3,500px 이상)이 있어야 합니다: `photos/room/sin-wall.jpg` 를 바꾼 뒤
+  `cd tools && node make-banner.js --only b`.
+
+크기가 다른 거치대라면 (예: 500×1800mm) `cd tools && node make-banner.js --only a --size 500x1800` 로 다시 만듭니다.

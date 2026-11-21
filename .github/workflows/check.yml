@@ -1,8 +1,10 @@
 # 푸시할 때마다 자동 점검: 빌드 → 결과 쏠림 시뮬레이션 → 실제 브라우저로 끝까지 눌러 보기
 name: check
 
+# 문서 · 인쇄물 · 사진만 바뀐 푸시에는 돌리지 않는다 (저장소가 비공개면 점검 시간에 무료 한도가 있어서 아낀다)
 on:
   push:
+    paths-ignore: ["README.md", "print/**", "photos/**"]
   pull_request:
 
 jobs:
@@ -37,9 +39,11 @@ jobs:
         run: npx playwright-core install --with-deps chromium
       - name: 한국어 · 영어 · 중국어 · 화면 크기별로 끝까지 눌러 보기
         run: node tools/e2e.js --shots e2e-shots
-      - if: always()
+      # 화면 캡처는 실패했을 때만, 사흘만 보관 (비공개 저장소의 보관 용량 한도 500MB 를 쓰지 않게)
+      - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-shots
           path: e2e-shots
           if-no-files-found: ignore
+          retention-days: 3

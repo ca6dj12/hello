@@ -307,6 +307,7 @@ order by created_at desc limit 30;
   `print/banner-qr.svg` (배너 디자인에 얹을 QR) · `print/deadly-sins-banner-poster.pdf` (A4) · 링크 미리보기 `promo/og.jpg`.
 - 1층 X배너 (600×1800mm, 검은 바탕에 QR 하나): `node tools/make-banner.js [주소] [--only a,b,c] [--dpi 150] [--size 600x1800]` →
   `print/xbanner/xbanner-a|b|c.pdf` (실제 크기, 150dpi) · `preview.png` (세 시안 나란히).
+  **확정본은 `print/deadly-sins-xbanner.pdf` (시안 a, 2026-11-21)** — 고른 이유와 인쇄 안내는 `print/README.md`.
   a 한 방울 (잉크 한 줄기가 QR 위로) · b 5층의 불빛 (어둡게 깐 일곱 죄 포스터 벽 사진) · c 일곱 개의 표식 (상징을 암호처럼 한 줄로).
   QR 은 위에서 500mm (바닥에서 약 1.2m, 서서 폰을 드는 높이), 330mm 칸. 만든 뒤 그림에서 QR 을 해독해 확인합니다.
 
