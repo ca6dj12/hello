@@ -9,7 +9,9 @@
    data.js 가 기본 메뉴이고, 여기 저장되는 건 "기본과 다른 점" 뿐이다:
      { signaturePrice: 16000,
        items: { "<메뉴 id>": { g, b, p, soldOut, hidden, new } },     // 시그니처는 "sig:교" 처럼
-       extra: [ { id: "x-…", section, ko, en, g, b, p, about: { ko, en }, soldOut, hidden, new } ] }   // 새 메뉴
+       extra: [ { id: "x-…", section, ko, en, g, b, p, about: { ko, en }, soldOut, hidden, new } ],   // 새 메뉴
+       info: { hours: { days: [0~6], open: "20:00", close: "02:00", last: "01:30" },                // 가게 정보 (1층 배너 사이트에 나온다)
+               notice: { ko, en, zh }, phone, instagram, email } }
 
    비밀번호는 Vercel 환경 변수 ADMIN_PASSWORD. 없으면 저장은 503 (읽기는 됨).
    틀린 비밀번호는 IP 마다 15분에 10번, 전체 15분에 50번까지 — 넘으면 잠시 막는다.
@@ -58,9 +60,47 @@ const text = (v, n) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, n)
 const flag = (v) => (v === true ? true : v === false ? false : undefined);
 function clean(o) { Object.keys(o).forEach((k) => { if (o[k] === undefined) delete o[k]; }); return o; }
 
+/* 가게 정보: 영업 요일(0 = 일요일 … 6 = 토요일) · 여는 시간 · 닫는 시간 · 라스트오더 · 공지 · 연락처.
+   이상한 값이 하나라도 있으면 null (저장 거절). 비운 연락처('')는 "화면에서 숨김"으로 그대로 저장한다. */
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+function shopInfo(v) {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  const out = {};
+  if (v.hours !== undefined) {
+    const h = v.hours;
+    if (!h || typeof h !== 'object' || !Array.isArray(h.days) || !h.days.length || h.days.length > 7) return null;
+    if (!h.days.every((x) => Number.isInteger(x) && x >= 0 && x <= 6) || new Set(h.days).size !== h.days.length) return null;
+    if (!HHMM.test(h.open) || !HHMM.test(h.close) || h.open === h.close) return null;
+    const last = h.last === undefined || h.last === null || h.last === '' ? undefined : h.last;
+    if (last !== undefined && !HHMM.test(last)) return null;
+    out.hours = clean({ days: h.days.slice().sort((a, b) => a - b), open: h.open, close: h.close, last });
+  }
+  if (v.notice !== undefined && v.notice !== null) {
+    if (typeof v.notice !== 'object' || Array.isArray(v.notice)) return null;
+    const n = clean({ ko: text(v.notice.ko, 120), en: text(v.notice.en, 160), zh: text(v.notice.zh, 120) });
+    if (Object.keys(n).length) out.notice = n;
+  }
+  const field = (k, re, max) => {
+    if (v[k] === undefined || v[k] === null) return true;
+    if (typeof v[k] !== 'string') return false;
+    const s = v[k].trim();
+    if (s !== '' && (s.length > max || !re.test(s))) return false;
+    out[k] = s; return true;
+  };
+  if (!field('phone', /^[\d+\-() ]{7,20}$/, 20)) return null;
+  if (!field('instagram', /^[A-Za-z0-9._]{1,30}$/, 30)) return null;
+  if (!field('email', /^[^\s@<>"']{1,60}@[^\s@<>"']{1,60}\.[A-Za-z]{2,}$/, 100)) return null;
+  return out;
+}
+
 function validate(d) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
   const out = {};
+  if (d.info !== undefined && d.info !== null) {
+    const i = shopInfo(d.info);
+    if (!i) return null;
+    if (Object.keys(i).length) out.info = i;
+  }
   if (d.signaturePrice !== undefined && d.signaturePrice !== null) {
     const n = Number(d.signaturePrice);
     if (!Number.isInteger(n) || n < 0 || n > 1000000) return null;

@@ -29,6 +29,21 @@ body[data-ds-screen="cover"] .ds-top { display: flex; }
   cursor: pointer;
 }
 .ds-pill:active { transform: scale(.97); }
+/* 언어 고르기: 한국어 · EN · 中文 (지금 언어만 흰 바탕) */
+.ds-langs { display: inline-flex; align-items: center; min-height: 34px; padding: 3px; gap: 1px; background: #000; border: 1px solid #000; border-radius: 24px; }
+.ds-langs button {
+  min-height: 28px; padding: 0 9px; border: 0; border-radius: 20px; background: transparent; color: rgba(247, 245, 243, .7);
+  font: 700 11px/1 var(--ds-sans); letter-spacing: .03em; cursor: pointer;
+}
+.ds-langs button.on { background: #f7f5f3; color: #000; }
+
+/* ---------- 中文 (간체) ---------- */
+/* 한글 글꼴(Apple SD Gothic Neo · Malgun Gothic)에는 간체자가 없어서 글자마다 다른 글꼴이 섞여 보인다 → 중국어 글꼴을 먼저 찾게 한다 */
+html[lang^="zh"] { --ds-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif; }
+html[lang^="zh"] body, html[lang^="zh"] #signature .signature-name-ko, html[lang^="zh"] #signature .signature-trait,
+html[lang^="zh"] .signature-korean { font-family: var(--ds-sans); }
+/* 중국어는 띄어쓰기가 없다. 한국어용 keep-all(낱말 단위 줄바꿈)이 걸려 있으면 줄이 안 바뀌고 화면 밖으로 나가므로 글자 단위로 되돌린다 */
+html[lang^="zh"] body, html[lang^="zh"] body * { word-break: normal !important; line-break: strict; }
 
 /* 영어 모드에서는 이름이 이미 영어라 아래 작은 영문 표기가 겹친다 */
 html[lang="en"] .meter-en { display: none; }

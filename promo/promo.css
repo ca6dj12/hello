@@ -30,6 +30,18 @@ a { color: inherit; }
 }
 .lb-top { transition: opacity .3s ease, transform .35s var(--ease); }
 .lb-top.hide { opacity: 0; transform: translateY(-12px); pointer-events: none; }
+/* 사장님이 /admin 에 적은 공지 ("12/25 휴무" 등) — 영업시간 칸 맨 위 */
+.lb-notice { margin: 0 0 8px; padding: 8px 10px; border: 1px solid rgba(200, 74, 80, .6); border-radius: 8px; background: rgba(200, 74, 80, .14); color: #fff; font-size: 13.5px; font-weight: 700; line-height: 1.5; }
+/* 언어 고르기: 한국어 · EN · 中文 (지금 언어만 흰 바탕) */
+.lb-langs { display: inline-flex; align-items: center; min-height: 34px; padding: 3px; gap: 1px; background: #000; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; }
+.lb-langs button {
+  min-height: 28px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: rgba(255, 255, 255, .7);
+  font: 800 11px/1 var(--sans); letter-spacing: .03em; cursor: pointer;
+}
+.lb-langs button.on { background: #fff; color: #000; }
+/* 中文: 한글 글꼴에는 간체자가 없어 글꼴이 섞이므로 중국어 글꼴을 먼저, 줄바꿈은 글자 단위로 (keep-all 이면 줄이 안 바뀐다) */
+html[lang^="zh"] { --sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif; }
+html[lang^="zh"] body, html[lang^="zh"] body * { word-break: normal !important; line-break: strict; }
 .lb-pill {
   min-height: 34px; padding: 0 14px; display: inline-flex; align-items: center;
   background: #000; color: #fff; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px;

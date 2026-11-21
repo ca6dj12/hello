@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#000000">
-<title>메뉴 관리 · DEADLY SINS</title>
+<title>메뉴 · 가게 정보 관리 · DEADLY SINS</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="admin.css?v=2">
+<link rel="stylesheet" href="admin.css?v=3">
 </head>
 <body>
-<!-- 사장님 전용: 품절 · 가격 · 숨김 · NEW · 새 메뉴. 저장은 /api/menu (비밀번호 = Vercel 환경 변수 ADMIN_PASSWORD) -->
+<!-- 사장님 전용: 가게 정보(영업 요일 · 시간 · 공지 · 연락처) + 메뉴(품절 · 가격 · 숨김 · NEW · 새 메뉴). 저장은 /api/menu (비밀번호 = Vercel 환경 변수 ADMIN_PASSWORD) -->
 <main id="app">
   <header class="top">
-    <h1>메뉴 관리</h1>
+    <h1>메뉴 · 가게 정보 관리</h1>
     <p class="brand">DEADLY SINS</p>
   </header>
 
@@ -25,6 +25,7 @@
   </form>
 
   <div id="editor" hidden>
+    <nav class="jump" id="jump" aria-label="바로가기"></nav>
     <p class="help">
       바꾼 뒤 아래 <b>저장하기</b>를 누르면 손님 화면에 10초쯤 뒤 반영돼요.
       <b>품절</b>은 메뉴에 '품절'로 보이고, <b>숨김</b>은 메뉴에서 빠지고, <b>NEW</b>는 이름 옆에 표시돼요.
@@ -45,6 +46,6 @@
 </div>
 
 <script src="data.js"></script>
-<script src="admin.js?v=2"></script>
+<script src="admin.js?v=3"></script>
 </body>
 </html>

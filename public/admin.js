@@ -1,6 +1,6 @@
 /* =============================================================
-   DEADLY SINS — 메뉴 관리 (사장님용)
-   data.js 가 기본 메뉴. 여기서 바꾼 것 중 "기본과 다른 점"만 /api/menu 에 저장하고,
+   DEADLY SINS — 메뉴 · 가게 정보 관리 (사장님용, 한국어만)
+   data.js 가 기본 메뉴 · 기본 가게 정보(promo). 여기서 바꾼 것 중 "기본과 다른 점"만 /api/menu 에 저장하고,
    손님 화면(enhance.js)이 그걸 data.js 위에 덮는다.
    비밀번호는 이 탭이 열려 있는 동안만 기억한다 (sessionStorage).
    ============================================================= */
@@ -12,6 +12,19 @@
   const SIG = [['교', 'PRIDE', '교만의 술'], ['질', 'ENVY', '질투의 술'], ['분', 'WRATH', '분노의 술'], ['나', 'SLOTH', '나태의 술'],
     ['탐', 'GREED', '탐욕의 술'], ['식', 'GLUTTONY', '폭식의 술'], ['색', 'LUST', '색욕의 술']];
   const SIN_NAME = { 교: '교만', 질: '질투', 분: '분노', 나: '나태', 탐: '탐욕', 식: '폭식', 색: '색욕' };
+
+  /* 가게 정보의 기본값 (data.js 의 promo). 요일 번호: 0 = 일요일 … 6 = 토요일. 화면에는 월요일부터 보여 준다. */
+  const P = BASE.promo || {};
+  const H0 = (Array.isArray(P.hours) && P.hours[0]) || { days: [0, 1, 2, 3, 4, 5, 6], open: '20:00', close: '02:00' };
+  const BASE_INFO = {
+    days: (H0.days || []).slice().sort((a, b) => a - b), open: H0.open || '', close: H0.close || '', last: H0.last || '',
+    noticeKo: '', noticeEn: '', noticeZh: '',
+    phone: P.phone || '', instagram: String(P.instagram || '').replace(/^@/, ''), email: P.email || ''
+  };
+  const WEEK = [[1, '월'], [2, '화'], [3, '수'], [4, '목'], [5, '금'], [6, '토'], [0, '일']];
+  const toMin = (s) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(s || '')); return m ? Number(m[1]) * 60 + Number(m[2]) : NaN; };
+  // 인스타그램: 주소를 통째로 붙여 넣거나 @ 를 붙여도 아이디만 남긴다
+  const igId = (v) => String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/[/?#].*$/, '');
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s === undefined || s === null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -42,7 +55,7 @@
     if (res.status === 503 && res.body.error === 'no-password')
       return '아직 관리자 비밀번호가 설정되지 않았어요. Vercel → deadly-sins → Settings → Environment Variables 에 ADMIN_PASSWORD 를 넣고 다시 배포해 주세요.';
     if (res.status === 503) return '데이터베이스(Neon)가 연결되지 않았어요.';
-    if (res.status === 400) return '저장하지 못했어요. 가격은 숫자로, 새 메뉴에는 이름을 넣어 주세요.';
+    if (res.status === 400) return '저장하지 못했어요. 가격은 숫자로, 새 메뉴에는 이름을, 영업시간은 20:00 꼴로 넣어 주세요.';
     return '잠시 문제가 생겼어요 (' + res.status + '). 다시 해 주세요.';
   }
 
@@ -75,7 +88,18 @@
         soldOut: !!x.soldOut, hidden: !!x.hidden, new: !!x.new
       });
     });
+    // 가게 정보: 저장된 것이 있으면 그것, 없으면 data.js 기본값
+    const si = d.info || {}, sh = si.hours || null, sn = si.notice || {};
+    const info = {
+      days: sh && Array.isArray(sh.days) ? sh.days.slice().sort((a, b) => a - b) : BASE_INFO.days.slice(),
+      open: sh ? sh.open || '' : BASE_INFO.open, close: sh ? sh.close || '' : BASE_INFO.close, last: sh ? sh.last || '' : BASE_INFO.last,
+      noticeKo: sn.ko || '', noticeEn: sn.en || '', noticeZh: sn.zh || '',
+      phone: typeof si.phone === 'string' ? si.phone : BASE_INFO.phone,
+      instagram: typeof si.instagram === 'string' ? si.instagram : BASE_INFO.instagram,
+      email: typeof si.email === 'string' ? si.email : BASE_INFO.email
+    };
     return {
+      info,
       v: saved ? saved.v : 0, at: saved ? saved.at : null,
       sigPrice: Number.isInteger(d.signaturePrice) ? d.signaturePrice : BASE.signaturePrice,
       sig: SIG.map(([k, en, ko]) => { const o = items['sig:' + k] || {}; return { k, en, ko, soldOut: !!o.soldOut, new: !!o.new }; }),
@@ -113,6 +137,17 @@
     }));
     if (Object.keys(items).length) out.items = items;
     if (extra.length) out.extra = extra;
+    // 가게 정보: 기본(data.js)과 달라진 것만
+    const i = model.info, info = {};
+    if (i.days.join() !== BASE_INFO.days.join() || i.open !== BASE_INFO.open || i.close !== BASE_INFO.close || (i.last || '') !== BASE_INFO.last)
+      info.hours = { days: i.days.slice(), open: i.open, close: i.close, last: i.last || undefined };
+    const notice = {};
+    [['ko', i.noticeKo], ['en', i.noticeEn], ['zh', i.noticeZh]].forEach(([k, v]) => { if (String(v || '').trim()) notice[k] = String(v).trim(); });
+    if (Object.keys(notice).length) info.notice = notice;
+    if (i.phone.trim() !== BASE_INFO.phone) info.phone = i.phone.trim();
+    if (igId(i.instagram) !== BASE_INFO.instagram) info.instagram = igId(i.instagram);
+    if (i.email.trim() !== BASE_INFO.email) info.email = i.email.trim();
+    if (Object.keys(info).length) out.info = info;
     return out;
   }
 
@@ -122,9 +157,69 @@
   const priceInput = (f, v, label) =>
     '<label class="price"><span>' + label + '</span><input type="text" inputmode="numeric" data-f="' + f + '" value="' + esc(fmt(v)) + '" placeholder="0"></label>';
 
+  /* ---------- 가게 정보: 영업 요일 · 시간 · 공지 · 연락처 ---------- */
+  const timeInput = (f, v, label) =>
+    '<label class="time"><span>' + label + '</span><input type="time" data-i="' + f + '" value="' + esc(v) + '" step="300"></label>';
+  const textInput = (f, v, label, attrs) =>
+    '<label class="txt"><span>' + label + '</span><input data-i="' + f + '" value="' + esc(v) + '" ' + (attrs || 'type="text"') + '></label>';
+  // [0,2,3,4,5,6] → "화–일" (월요일부터 세어 사흘 이상 이어지면 줄여 쓴다 — 손님 화면과 같은 규칙)
+  function dayRange(days) {
+    const name = (i) => WEEK[i][1], idx = days.map((d) => (d + 6) % 7).sort((a, b) => a - b), out = [];
+    for (let a = 0; a < idx.length;) {
+      let b = a;
+      while (b + 1 < idx.length && idx[b + 1] === idx[b] + 1) b++;
+      out.push(b - a >= 2 ? name(idx[a]) + '–' + name(idx[b]) : idx.slice(a, b + 1).map(name).join(' · '));
+      a = b + 1;
+    }
+    return out.join(' · ');
+  }
+  // 넣은 값에 문제가 있으면 그 설명, 없으면 ''
+  function infoProblem() {
+    const i = model.info, o = toMin(i.open), c = toMin(i.close), l = toMin(i.last);
+    if (!i.days.length) return '영업하는 요일을 하나 이상 골라 주세요.';
+    if (isNaN(o) || isNaN(c)) return '여는 시간과 닫는 시간을 넣어 주세요.';
+    if (o === c) return '여는 시간과 닫는 시간이 같아요.';
+    if (i.last && (isNaN(l) || (l - o + 1440) % 1440 >= (c - o + 1440) % 1440)) return '라스트오더는 여는 시간과 닫는 시간 사이로 넣어 주세요.';
+    if (i.phone.trim() && !/^[\d+\-() ]{7,20}$/.test(i.phone.trim())) return '전화번호는 숫자와 - 만 넣어 주세요.';
+    if (igId(i.instagram) && !/^[A-Za-z0-9._]{1,30}$/.test(igId(i.instagram))) return '인스타그램 아이디를 확인해 주세요 (영문 · 숫자 · 마침표 · 밑줄).';
+    if (i.email.trim() && !/^[^\s@<>"']{1,60}@[^\s@<>"']{1,60}\.[A-Za-z]{2,}$/.test(i.email.trim())) return '이메일 주소를 확인해 주세요.';
+    return '';
+  }
+  // 손님 화면에 어떻게 나오는지 미리 보여 준다
+  function updatePreview() {
+    const el = $('hoursPreview');
+    if (!el) return;
+    const i = model.info, bad = infoProblem();
+    const off = WEEK.filter(([d]) => !i.days.includes(d)).map(([, n]) => n);
+    el.classList.toggle('is-bad', !!bad);
+    el.textContent = bad && (/요일|시간|라스트오더/.test(bad)) ? bad
+      : '손님 화면: ' + dayRange(i.days) + ' ' + i.open + ' – ' + i.close + (i.last ? ' · 라스트오더 ' + i.last : '') + ' · ' + (off.length ? '매주 ' + off.join(' · ') + '요일 휴무' : '연중무휴');
+  }
+  function infoHtml() {
+    const i = model.info;
+    return '<section class="sec" id="sec-info" data-sec="info"><h2>가게 정보</h2>' +
+      '<p class="hint">여기서 바꾼 내용은 <b>1층 배너 사이트</b>의 "오시는 길"에 나와요. "매주 월요일 휴무" 같은 안내는 요일을 고르면 알아서 바뀌어요.</p>' +
+      '<div class="card"><p class="lbl">영업하는 요일 <small>흰색으로 켜진 요일에 영업해요</small></p><div class="tgs days">' +
+        WEEK.map(([d, name]) => '<label class="tg"><input type="checkbox" data-day="' + d + '"' + (i.days.includes(d) ? ' checked' : '') + '><span>' + name + '</span></label>').join('') + '</div></div>' +
+      '<div class="card"><p class="lbl">영업시간</p><div class="times">' + timeInput('open', i.open, '여는 시간') + timeInput('close', i.close, '닫는 시간') + timeInput('last', i.last, '라스트오더') + '</div>' +
+        '<p class="hint">자정을 넘겨 새벽에 닫으면 새벽 시간 그대로 넣으면 돼요 (새벽 2시 = 오전 2:00). 라스트오더가 없으면 비워 두세요.</p>' +
+        '<p class="preview" id="hoursPreview" role="status"></p></div>' +
+      '<div class="card"><p class="lbl">공지 <small>선택 · 영업시간 위에 빨간 상자로 나와요</small></p>' +
+        textInput('noticeKo', i.noticeKo, '예: 12/25 휴무 · 이번 주 토요일은 밤 9시에 열어요', 'type="text" maxlength="120"') +
+        '<details class="more"' + (i.noticeEn || i.noticeZh ? ' open' : '') + '><summary>영어 · 중국어 공지도 적기</summary>' +
+          '<p class="hint">비워 두면 영어 · 중국어 화면에도 위의 한국어 공지가 그대로 나와요.</p>' +
+          textInput('noticeEn', i.noticeEn, '공지 (English)', 'type="text" maxlength="160" lang="en"') +
+          textInput('noticeZh', i.noticeZh, '공지 (中文)', 'type="text" maxlength="120" lang="zh-Hans"') + '</details></div>' +
+      '<div class="card"><p class="lbl">연락처 <small>비우면 손님 화면에서 빠져요</small></p>' +
+        textInput('phone', i.phone, '전화번호', 'type="tel" inputmode="tel" maxlength="20" autocomplete="off"') +
+        textInput('instagram', i.instagram, '인스타그램 아이디 (@ 없이)', 'type="text" maxlength="60" autocapitalize="none" autocorrect="off" spellcheck="false"') +
+        textInput('email', i.email, '이메일', 'type="email" inputmode="email" maxlength="100" autocapitalize="none" autocomplete="off"') + '</div>' +
+    '</section>';
+  }
+
   function render() {
-    let h = '';
-    h += '<section class="sec" data-sec="sig"><h2>시그니처 일곱 잔</h2>';
+    let h = infoHtml();
+    h += '<section class="sec" id="sec-sig" data-sec="sig"><h2>시그니처 일곱 잔</h2>';
     h += '<div class="card">' + priceInput('sigPrice', model.sigPrice, '가격 (일곱 잔 공통)') + '</div>';
     model.sig.forEach((s, i) => {
       h += '<div class="card row' + (s.soldOut ? ' is-sold' : '') + '" data-sig="' + i + '"><p class="name">' + esc(s.en) + ' <small>' + esc(s.ko) + '</small></p>' +
@@ -133,7 +228,7 @@
     h += '</section>';
 
     model.groups.forEach((g, gi) => {
-      h += '<section class="sec"><h2>' + esc(g.title) + '</h2>';
+      h += '<section class="sec" id="sec-g' + gi + '"><h2>' + esc(g.title) + '</h2>';
       g.rows.forEach((r, ri) => {
         const at = ' data-g="' + gi + '" data-r="' + ri + '"';
         h += '<div class="card row' + (r.soldOut ? ' is-sold' : '') + (r.hidden ? ' is-hidden' : '') + (r.added ? ' is-added' : '') + '"' + at + '>';
@@ -154,6 +249,11 @@
       h += '</section>';
     });
     $('sections').innerHTML = h;
+    // 위쪽 바로가기: 가게 정보 · 시그니처 · 위스키 · 칵테일 · 안주 · 음료
+    const at = (sec) => model.groups.findIndex((g) => g.section === sec || (sec === 'whisky' && g.section.indexOf('whisky:') === 0));
+    $('jump').innerHTML = [['sec-info', '가게 정보'], ['sec-sig', '시그니처'], ['sec-g' + at('whisky'), '위스키'], ['sec-g' + at('cocktails'), '칵테일'],
+      ['sec-g' + at('bites'), '안주'], ['sec-g' + at('beverages'), '음료']].map(([id, label]) => '<a href="#' + id + '">' + label + '</a>').join('');
+    updatePreview();
     $('lastSaved').textContent = model.at ? '마지막 저장: ' + new Date(model.at).toLocaleString('ko-KR') : '아직 고친 것이 없어요 (data.js 기본 메뉴 그대로).';
   }
 
@@ -179,6 +279,15 @@
   }
   function onField(e) {
     const el = e.target, f = el.getAttribute('data-f');
+    // 가게 정보 칸
+    const day = el.getAttribute('data-day'), key = el.getAttribute('data-i');
+    if (day !== null) {
+      const s = new Set(model.info.days);
+      if (el.checked) s.add(Number(day)); else s.delete(Number(day));
+      model.info.days = [...s].sort((a, b) => a - b);
+      updatePreview(); setDirty(true); return;
+    }
+    if (key) { model.info[key] = el.value; updatePreview(); setDirty(true); return; }
     if (!f) return;
     if (f === 'sigPrice') { model.sigPrice = Number(fmt(el.value).replace(/,/g, '')) || 0; setDirty(true); return; }
     const t = targetOf(el);
@@ -191,11 +300,19 @@
     setDirty(true);
   }
   $('sections').addEventListener('input', onField);
-  $('sections').addEventListener('change', (e) => { if (e.target.type === 'checkbox') onField(e); });   // 체크박스 input 이벤트가 없는 옛 브라우저
+  $('sections').addEventListener('change', (e) => { if (e.target.type === 'checkbox' || e.target.type === 'time') onField(e); });   // 체크박스 input 이벤트가 없는 옛 브라우저
   // 가격 칸은 다 쓰고 나면 23,000 꼴로
   $('sections').addEventListener('focusout', (e) => {
     const el = e.target;
     if (el.closest && el.closest('.price')) el.value = fmt(el.value);
+  });
+  // 위쪽 바로가기: 그 구역으로 부드럽게 (주소 뒤에 #… 를 남기지 않는다)
+  $('jump').addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    e.preventDefault();
+    const to = document.getElementById(a.getAttribute('href').slice(1));
+    if (to) to.scrollIntoView({ block: 'start', behavior: 'smooth' });
   });
   $('sections').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-act]');
@@ -226,6 +343,8 @@
     const data = collect();
     const nameless = (data.extra || []).some((x) => !String(x.ko || '').trim() && !String(x.en || '').trim());
     if (nameless) { setDirty(true, '새 메뉴에 이름을 넣어 주세요.'); return; }
+    const bad = infoProblem();
+    if (bad) { setDirty(true, bad); updatePreview(); $('sec-info').scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
     $('save').disabled = true; $('barMsg').textContent = '저장하는 중…';
     try {
       const res = await post({ action: 'save', data });

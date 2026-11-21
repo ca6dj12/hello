@@ -21,7 +21,7 @@
     return;
   }
 
-  const VERSION = '2026-11-21b';
+  const VERSION = '2026-11-21c';
   const DATA = window.DS_DATA;
   const I18N = window.DS_I18N;
   const QUIZ = window.DS_QUIZ;
@@ -42,7 +42,7 @@
   }
   QUESTIONS.length = 0;
   QUIZ.questions.forEach((q) => {
-    QUESTIONS.push({ q: q.q.ko, _en: q.q.en || q.q.ko, a: q.a.map((o) => ({ text: o.ko, points: o.sin + '3', sin: o.sin, _en: o.en || o.ko })) });
+    QUESTIONS.push({ q: q.q.ko, _t: q.q, a: q.a.map((o) => ({ text: o.ko, points: o.sin + '3', sin: o.sin, _t: o })) });   // _t = { ko, en, zh }
   });
   const N = QUESTIONS.length;
 
@@ -98,14 +98,25 @@
   /* -----------------------------------------------------------
      1. 언어
      ----------------------------------------------------------- */
+  // 한국어 · English · 中文(간체). 폰 언어로 시작하고, 손님이 고르면 그걸 기억한다.
+  const LANGS = ['ko', 'en', 'zh'].filter((l) => I18N[l] && I18N[l].ui);
+  const LANG_LABEL = { ko: '한국어', en: 'EN', zh: '中文' };
+  const HTML_LANG = { ko: 'ko', en: 'en', zh: 'zh-Hans' };
   let lang = (function () {
-    try { const v = localStorage.getItem('ds_lang'); if (v === 'ko' || v === 'en') return v; } catch (e) {}
-    return /^ko\b/i.test(navigator.language || 'ko') ? 'ko' : 'en';
+    try { const v = localStorage.getItem('ds_lang'); if (LANGS.includes(v)) return v; } catch (e) {}
+    const n = navigator.language || 'ko';
+    return /^ko\b/i.test(n) ? 'ko' : /^zh\b/i.test(n) && LANGS.includes('zh') ? 'zh' : 'en';
   })();
+  // 화면 문구. 한국어가 아닌 언어는 그 언어 → 영어 → 한국어 순으로 찾는다 (빠진 문구가 있어도 빈칸이 안 되게)
   const t = (key) => {
-    const v = (I18N[lang].ui[key] !== undefined) ? I18N[lang].ui[key] : I18N.ko.ui[key];
+    const own = I18N[lang].ui[key];
+    const v = own !== undefined ? own : (lang !== 'ko' && I18N.en.ui[key] !== undefined ? I18N.en.ui[key] : I18N.ko.ui[key]);
     return v === undefined ? key : v;
   };
+  // i18n.js 의 묶음(sins · drinkName · traits · aria · reactions): 지금 언어 것, 없으면 영어 것
+  const pack = (name) => (I18N[lang] && I18N[lang][name]) || I18N.en[name] || {};
+  // data.js · stories.js · quiz.js 의 { ko, en, zh } 에서 지금 언어의 글. 없으면 영어 → 한국어 (새로 넣은 메뉴 · 병 이름처럼 번역이 없는 것)
+  const tx = (o) => (o ? (o[lang] || o.en || o.ko || '') : '');
 
   // 문구를 한 번 떠 두고, 언어를 바꿀 때마다 둘 중 하나로 덮어쓴다 (_id = quiz.js 에 적힌 순서)
   QUESTIONS.forEach((q, i) => {
@@ -118,6 +129,7 @@
   const REACTIONS_KO = REACTIONS.slice();
   const TRAITS_KO = JSON.parse(JSON.stringify(RESULT_TRAITS));
   const DRINK_KO = {};
+  const drinkLocal = (k) => (lang === 'ko' ? DRINK_KO[k] : pack('drinkName')[k] || I18N.en.drinkName[k]);   // 술 이름: 교만의 술 · The Drink of Pride · 傲慢之酒
   Object.keys(SIGNATURE_DRINKS).forEach((k) => { DRINK_KO[k] = SIGNATURE_DRINKS[k].kr; });
 
   const STATIC = [
@@ -145,34 +157,36 @@
   }).filter(Boolean);
   function artAlt() {          // 시그니처 그림의 설명 (원본은 "PRIDE 상징과 술잔")
     const art = el('signatureArt');
-    if (art && currentSin && SIGNATURE_DRINKS[currentSin]) art.alt = SIGNATURE_DRINKS[currentSin].en + (lang === 'en' ? (I18N.en.aria || {}).art || '' : ' 상징과 술잔');
+    if (art && currentSin && SIGNATURE_DRINKS[currentSin]) art.alt = SIGNATURE_DRINKS[currentSin].en + (lang !== 'ko' ? pack('aria').art || '' : ' 상징과 술잔');
   }
 
   const TITLE_KO = document.title;
   function applyLang() {
-    document.documentElement.lang = lang;
-    document.title = lang === 'en' ? I18N.en.ui.docTitle || TITLE_KO : TITLE_KO;   // 브라우저 탭 · 방문 기록에 뜨는 제목
-    ARIA.forEach(({ node, attr, key, ko }) => { node.setAttribute(attr, lang === 'en' ? I18N.en.aria[key] : ko); });
+    document.documentElement.lang = HTML_LANG[lang];
+    document.title = lang !== 'ko' ? t('docTitle') || TITLE_KO : TITLE_KO;   // 브라우저 탭 · 방문 기록에 뜨는 제목
+    ARIA.forEach(({ node, attr, key, ko }) => { node.setAttribute(attr, lang !== 'ko' ? pack('aria')[key] || I18N.en.aria[key] : ko); });
     artAlt();
     QUESTIONS.forEach((q) => {
-      q.q = lang === 'en' ? q._en : q._ko;
-      q.a.forEach((o) => { o.text = lang === 'en' ? o._en : o._ko; });
+      q.q = lang === 'ko' ? q._ko : tx(q._t) || q._ko;
+      q.a.forEach((o) => { o.text = lang === 'ko' ? o._ko : tx(o._t) || o._ko; });
     });
     // 화면에 보이는 죄 이름. 한국어는 i18n.js 의 ko.sins 에 적힌 것만 바꿔 보인다 (기록 · 통계에 쓰는 이름 KO 는 원본 그대로)
-    SINS.forEach((s, i) => { s.name = lang === 'en' ? I18N.en.sins[s.k] : (I18N.ko.sins && I18N.ko.sins[s.k]) || SIN_KO[i]; });
+    SINS.forEach((s, i) => { s.name = lang !== 'ko' ? pack('sins')[s.k] : (I18N.ko.sins && I18N.ko.sins[s.k]) || SIN_KO[i]; });
     Object.keys(RESULT_TRAITS).forEach((k) => {
-      RESULT_TRAITS[k] = lang === 'en' ? I18N.en.traits[k] : TRAITS_KO[k];
+      RESULT_TRAITS[k] = lang !== 'ko' ? pack('traits')[k] || I18N.en.traits[k] : TRAITS_KO[k];
     });
     Object.keys(SIGNATURE_DRINKS).forEach((k) => {
-      SIGNATURE_DRINKS[k].kr = lang === 'en' ? I18N.en.drinkName[k] : DRINK_KO[k];
+      SIGNATURE_DRINKS[k].kr = drinkLocal(k);
     });
-    REACTIONS.forEach((_, i) => { REACTIONS[i] = (lang === 'en' && I18N.en.reactions[i]) || REACTIONS_KO[i]; });
+    REACTIONS.forEach((_, i) => { REACTIONS[i] = (lang !== 'ko' && (pack('reactions')[i] || I18N.en.reactions[i])) || REACTIONS_KO[i]; });
     STATIC.forEach(({ node, key, html, ko }) => {
-      const v = lang === 'en' ? t(key) : ko;
+      const v = lang !== 'ko' ? t(key) : ko;
       if (html) node.innerHTML = v; else node.textContent = v;
     });
-    const btn = el('dsLang');
-    if (btn) btn.textContent = t('langToggle');
+    document.querySelectorAll('#dsLang [data-lang]').forEach((b) => {
+      const on = b.getAttribute('data-lang') === lang;
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
     const mb = el('dsMenuBtn');
     if (mb) mb.textContent = t('menu');
     if (document.body.dataset.dsScreen === 'quiz') renderQuestion();
@@ -357,19 +371,19 @@
     if (d) {
       html += '<div class="ds-card ds-taste">';
       html += '<p class="ds-card-head">' + esc(t('tasteHead')) + '</p>';
-      if (d.line && d.line.confirmed) html += '<p class="ds-line">' + esc(d.line[lang]) + '</p>';
+      if (d.line && d.line.confirmed) html += '<p class="ds-line">' + esc(tx(d.line)) + '</p>';
       html += '<dl>';
-      html += '<dt>' + esc(t('aroma')) + '</dt><dd>' + esc(d.aroma[lang]) + '</dd>';
-      html += '<dt>' + esc(t('taste')) + '</dt><dd>' + esc(d.taste[lang]) + '</dd>';
-      html += '<dt>' + esc(t('finish')) + '</dt><dd>' + esc(d.finish[lang]) + '</dd>';
-      html += '<dt>' + esc(t('strength')) + '</dt><dd>' + esc(d.strength[lang]) + ' ' + pips(d.level) + '</dd>';
+      html += '<dt>' + esc(t('aroma')) + '</dt><dd>' + esc(tx(d.aroma)) + '</dd>';
+      html += '<dt>' + esc(t('taste')) + '</dt><dd>' + esc(tx(d.taste)) + '</dd>';
+      html += '<dt>' + esc(t('finish')) + '</dt><dd>' + esc(tx(d.finish)) + '</dd>';
+      html += '<dt>' + esc(t('strength')) + '</dt><dd>' + esc(tx(d.strength)) + ' ' + pips(d.level) + '</dd>';
       html += '<dt>' + esc(t('price')) + '</dt><dd class="ds-price">' + esc(priceOf()) + '</dd>';
       html += '</dl></div>';
     }
     if (pair) {
       html += '<div class="ds-card ds-pair">';
-      html += '<p class="ds-card-head">' + esc(t('pairHead')) + ' <span>' + esc(pair.label[lang]) + '</span></p>';
-      pair.items.filter(shown).forEach((it) => { html += menuRow(it[lang], it.g ? t('glass') + ' ' + it.g : '', '', it.id); });
+      html += '<p class="ds-card-head">' + esc(t('pairHead')) + ' <span>' + esc(tx(pair.label)) + '</span></p>';
+      pair.items.filter(shown).forEach((it) => { html += menuRow(tx(it), it.g ? t('glass') + ' ' + it.g : '', '', it.id); });
       html += '</div>';
     }
     if ((SIG_FLAGS[k] || {}).soldOut) html += '<p class="ds-soldout-note">' + esc(t('sigSoldOut')) + '</p>';
@@ -389,7 +403,7 @@
     originalRenderTrait.apply(this, arguments);
     currentSin = ranked[0].k;
     artAlt();
-    if (lang === 'en') {
+    if (lang !== 'ko') {
       const host = el('signatureTrait');
       const labels = host.querySelectorAll('.trait-label');
       ['love', 'work', 'sex'].forEach((key, i) => { if (labels[i]) labels[i].textContent = t(key); });
@@ -488,7 +502,7 @@
         '<p class="ds-kicker">' + esc(t('orderKicker')) + '</p>' +
         '<img class="ds-order-art" src="' + esc(drink.image) + '" alt="">' +
         '<p class="ds-order-en">' + esc(drink.en) + '</p>' +
-        '<p class="ds-order-ko">' + esc(DRINK_KO[k]) + (lang === 'en' ? '<br><span>' + esc(I18N.en.drinkName[k]) + '</span>' : '') + '</p>' +
+        '<p class="ds-order-ko">' + esc(DRINK_KO[k]) + (lang !== 'ko' ? '<br><span>' + esc(drinkLocal(k)) + '</span>' : '') + '</p>' +
         '<p class="ds-order-price">' + esc(priceOf()) + '</p>' +
         '<p class="ds-order-note">' + esc(t('orderNote')) + '</p>' +
       '</div>';
@@ -582,27 +596,27 @@
     h += '<section><h3>' + esc(t('menuSeven')) + '</h3><p class="ds-note">' + esc(t('menuSevenNote')(DATA.signaturePrice.toLocaleString('ko-KR'))) + '</p>';
     SINS.forEach((s) => {
       const d = DATA.drinks[s.k];
-      const name = lang === 'en' ? SIGNATURE_DRINKS[s.k].en : SIGNATURE_DRINKS[s.k].en + ' · ' + DRINK_KO[s.k];   // 영어는 "PRIDE · The Drink of Pride" 로 같은 말이 겹쳐서 이름만
-      const sub = d ? (d.style ? d.style[lang] : d.aroma[lang]) : '';
-      h += '<div class="ds-sig' + (s.k === mine ? ' mine' : '') + '">' + menuRow(name, priceOf(), sub, 'sig:' + s.k, d && d.desc ? d.desc[lang] : '') +
+      const name = lang === 'en' ? SIGNATURE_DRINKS[s.k].en : SIGNATURE_DRINKS[s.k].en + ' · ' + drinkLocal(s.k);   // 영어는 "PRIDE · The Drink of Pride" 로 같은 말이 겹쳐서 이름만
+      const sub = d ? (d.style ? tx(d.style) : tx(d.aroma)) : '';
+      h += '<div class="ds-sig' + (s.k === mine ? ' mine' : '') + '">' + menuRow(name, priceOf(), sub, 'sig:' + s.k, d && d.desc ? tx(d.desc) : '') +
         (s.k === mine ? '<em>' + esc(t('yourSin')) + '</em>' : '') + '</div>';
     });
     h += '</section>';
 
-    h += '<section><h3>' + esc(t('menuWhisky')) + '</h3><p class="ds-note">' + esc(m.whiskyNote[lang]) + ' · ' + esc(m.whiskyHead[lang]) + '</p>';
+    h += '<section><h3>' + esc(t('menuWhisky')) + '</h3><p class="ds-note">' + esc(tx(m.whiskyNote)) + ' · ' + esc(tx(m.whiskyHead)) + '</p>';
     const gb = (it) => [it.g && 'G ' + it.g, it.b && 'B ' + it.b].filter(Boolean).join(' · ');
     m.whisky.forEach((w) => {
       const items = w.items.filter(shown);
       if (!items.length) return;
-      h += '<div class="ds-group' + (w.sin === mine ? ' mine' : '') + '"><p class="ds-group-head">' + esc(w.label[lang]) +
+      h += '<div class="ds-group' + (w.sin === mine ? ' mine' : '') + '"><p class="ds-group-head">' + esc(tx(w.label)) +
         ' <span>' + esc(SINS.find((s) => s.k === w.sin).name) + '</span>' + (w.sin === mine ? '<em>' + esc(t('yourSin')) + '</em>' : '') + '</p>';
-      items.forEach((it) => { h += menuRow(it[lang], gb(it), '', it.id); });
+      items.forEach((it) => { h += menuRow(tx(it), gb(it), '', it.id); });
       h += '</div>';
     });
     const finals = m.final.items.filter(shown);
     if (finals.length) {
-      h += '<div class="ds-group"><p class="ds-group-head">' + esc(m.final.title) + ' <span>' + esc(m.final.label[lang]) + '</span></p>';
-      finals.forEach((it) => { h += menuRow(it[lang], gb(it), '', it.id); });
+      h += '<div class="ds-group"><p class="ds-group-head">' + esc(m.final.title) + ' <span>' + esc(tx(m.final.label)) + '</span></p>';
+      finals.forEach((it) => { h += menuRow(tx(it), gb(it), '', it.id); });
       h += '</div>';
     }
     h += '</section>';
@@ -611,7 +625,7 @@
       const items = all.filter(shown);
       if (!items.length) return;
       h += '<section><h3>' + esc(t(key)) + '</h3>';
-      items.forEach((it) => { h += menuRow(lang === 'en' ? it.en : it.ko, it.p, lang === 'en' ? '' : it.en, it.id); });   // 보조 이름(영어)은 한국어 화면에서만
+      items.forEach((it) => { h += menuRow(tx(it), it.p, lang === 'en' || tx(it) === it.en ? '' : it.en, it.id); });   // 보조 이름(영어)은 한국어 · 중국어 화면에서만
       h += '</section>';
     };
     list('menuCocktails', m.cocktails);
@@ -619,7 +633,7 @@
     list('menuBeverages', m.beverages);
 
     h += '<section><h3>' + esc(t('menuInfo')) + '</h3>';
-    m.info.forEach((i) => { h += '<p class="ds-info">' + esc(i[lang]) + '</p>'; });
+    m.info.forEach((i) => { h += '<p class="ds-info">' + esc(tx(i)) + '</p>'; });
     h += '<p class="ds-note">' + esc(t('menuNote')) + '</p>' + creditsHtml() + '</section></div>';
 
     openOverlay(layer('dsMenu', h));
@@ -635,7 +649,7 @@
     return '<details class="ds-credits"><summary>' + esc(t('photoCredits')) + '</summary><ul>' + rows.map((id) => {
       const c = detailOf(id).photoCredit;
       const who = esc([c.author, c.license].filter(Boolean).join(' · '));
-      return '<li>' + esc(MENU_INDEX[id].item[lang]) + ' — ' +
+      return '<li>' + esc(tx(MENU_INDEX[id].item)) + ' — ' +
         (c.url ? '<a href="' + esc(c.url) + '" target="_blank" rel="noopener">' + who + '</a>' : who) +
         ' (' + esc(t(c.gray ? 'photoEditedGray' : 'photoEdited')) + ')</li>';
     }).join('') + '</ul></details>';
@@ -658,11 +672,11 @@
   }
   function storyHtml(st) {
     const labels = t('layerLabels');
-    let h = '<h3 class="ds-story-h">' + esc(t('storyHistory')) + '</h3><p class="ds-story-p">' + esc(st.history[lang]) + '</p>';
+    let h = '<h3 class="ds-story-h">' + esc(t('storyHistory')) + '</h3><p class="ds-story-p">' + esc(tx(st.history)) + '</p>';
     h += '<h3 class="ds-story-h">' + esc(t('storyLayers')) + '</h3><ol class="ds-layers">';
-    st.layers.forEach((l, i) => { h += '<li><b>' + esc(labels[i] || '') + '</b><span>' + esc(l[lang]) + '</span></li>'; });
+    st.layers.forEach((l, i) => { h += '<li><b>' + esc(labels[i] || '') + '</b><span>' + esc(tx(l)) + '</span></li>'; });
     h += '</ol>';
-    if (st.serve) h += '<h3 class="ds-story-h">' + esc(t('storyServe')) + '</h3><p class="ds-story-p">' + esc(st.serve[lang]) + '</p>';
+    if (st.serve) h += '<h3 class="ds-story-h">' + esc(t('storyServe')) + '</h3><p class="ds-story-p">' + esc(tx(st.serve)) + '</p>';
     return h;
   }
   function toggleStory(btn) {
@@ -699,18 +713,18 @@
         '<div class="ds-photo ds-photo-ink"><img src="' + esc(drink.image) + '" alt=""></div>' +
         '<p class="ds-kicker">' + esc(t('menuSeven')) + (k === currentSin ? ' · ' + esc(t('yourSin')) : '') + '</p>' +
         '<h2 class="ds-item-en">' + esc(drink.en) + '</h2>' +
-        '<p class="ds-item-ko">' + esc(lang === 'en' ? I18N.en.drinkName[k] : DRINK_KO[k]) + '</p>' +
-        (d.style ? '<ul class="ds-chips"><li>' + esc(d.style[lang]) + '</li></ul>' : '') +
-        (d.desc ? '<p class="ds-about">' + esc(d.desc[lang]) + '</p>' : '') +
-        (d.line && d.line.confirmed ? '<p class="' + (d.desc ? 'ds-quote' : 'ds-about') + '">' + esc(d.line[lang]) + '</p>' : '') +
-        noteList([[t('aroma'), d.aroma[lang]], [t('taste'), d.taste[lang]], [t('finish'), d.finish[lang]], [t('strength'), d.strength[lang]]]) +
+        '<p class="ds-item-ko">' + esc(drinkLocal(k)) + '</p>' +
+        (d.style ? '<ul class="ds-chips"><li>' + esc(tx(d.style)) + '</li></ul>' : '') +
+        (d.desc ? '<p class="ds-about">' + esc(tx(d.desc)) + '</p>' : '') +
+        (d.line && d.line.confirmed ? '<p class="' + (d.desc ? 'ds-quote' : 'ds-about') + '">' + esc(tx(d.line)) + '</p>' : '') +
+        noteList([[t('aroma'), tx(d.aroma)], [t('taste'), tx(d.taste)], [t('finish'), tx(d.finish)], [t('strength'), tx(d.strength)]]) +
         ((SIG_FLAGS[k] || {}).soldOut ? '<p class="ds-soldout-note">' + esc(t('soldOutNote')) + '</p>' : '') +
         '<div class="ds-prices"><div><span>' + esc(t('glass')) + '</span><b>' + esc(priceOf()) + '</b></div></div>' +
       '</div>';
     }
     const ref = MENU_INDEX[id], d = detailOf(id);
     if (!ref || !d) return null;
-    const it = ref.item, L = (o) => (o ? o[lang] : '');
+    const it = ref.item, L = (o) => (o ? tx(o) : '');
     const chips = [L(d.kind), L(d.region), d.abv || L(d.abvNote)].filter(Boolean);
     let kicker = '';
     if (ref.sinKey) kicker = L(ref.group) + ' · ' + SINS.find((s) => s.k === ref.sinKey).name;
@@ -724,7 +738,7 @@
       (d.photo ? '<div class="ds-photo' + (d.scene ? ' ds-photo-scene' : '') + '"><img src="' + esc(d.photo) + '" alt=""></div>' : '') +
       '<p class="ds-kicker">' + esc(kicker) + (ref.sinKey && ref.sinKey === currentSin ? ' · ' + esc(t('yourSin')) : '') + '</p>' +
       '<h2 class="ds-item-en">' + esc(it.en) + (it.new ? ' <span class="ds-new">NEW</span>' : '') + '</h2>' +
-      (lang === 'ko' ? '<p class="ds-item-ko">' + esc(it.ko) + '</p>' : '') +
+      (lang !== 'en' && tx(it) !== it.en ? '<p class="ds-item-ko">' + esc(tx(it)) + '</p>' : '') +
       (chips.length ? '<ul class="ds-chips">' + chips.map((c) => '<li>' + esc(c) + '</li>').join('') + '</ul>' : '') +
       '<p class="ds-about">' + esc(L(d.about)) + '</p>' +
       noteList([[t('plate'), L(d.plate)], [t('recipe'), L(d.recipe)], [t('cask'), L(d.cask)], [t('nose'), L(d.nose)], [t('palate'), L(d.palate)], [t('finish'), L(d.finish)]]) +
@@ -765,11 +779,13 @@
     return c;
   }
   function wrap(ctx, text, maxW) {
-    const words = String(text).split(/\s+/), lines = [];
+    // 중국어는 띄어쓰기가 없어서 글자 단위로 끊는다 (쉼표 · 마침표가 줄 맨 앞에 오지 않게)
+    const cjk = lang === 'zh' && /[\u3400-\u9fff]/.test(text), glue = cjk ? '' : ' ';
+    const words = cjk ? Array.from(String(text)) : String(text).split(/\s+/), lines = [];
     let cur = '';
     words.forEach((w) => {
-      const test = cur ? cur + ' ' + w : w;
-      if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; } else cur = test;
+      const test = cur ? cur + glue + w : w;
+      if (ctx.measureText(test).width > maxW && cur && !(cjk && /[，。！？；：、”’）》]/.test(w))) { lines.push(cur); cur = w; } else cur = test;
     });
     if (cur) lines.push(cur);
     return lines;
@@ -781,7 +797,8 @@
     ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
 
     const serif = 'Georgia, "Times New Roman", serif';
-    const sans = '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif';
+    const sans = lang === 'zh' ? '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif'
+      : '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif';
     ctx.textAlign = 'center';
 
     const mark = document.querySelector('.wordmark-img');
@@ -802,7 +819,7 @@
     ctx.font = '700 132px ' + serif;
     ctx.fillText(SIGNATURE_DRINKS[k].en, W / 2, 1420);
     ctx.font = '800 66px ' + sans;
-    ctx.fillText(lang === 'en' ? I18N.en.drinkName[k] : DRINK_KO[k], W / 2, 1512);
+    ctx.fillText(drinkLocal(k), W / 2, 1512);
 
     // 화면에 보인 연애 성향 문구 그대로 (1·2위가 가까우면 조합 문구가 나오므로 DOM 에서 읽는다)
     const shown = document.querySelector('#signatureTrait .trait-copy');
@@ -848,7 +865,7 @@
       }
       const name = 'deadly-sins-' + SIGNATURE_DRINKS[k].en.toLowerCase() + '.png';
       const file = new File([blob], name, { type: 'image/png' });
-      const text = t('shareText')(SIGNATURE_DRINKS[k].en, lang === 'en' ? I18N.en.drinkName[k] : DRINK_KO[k]) +
+      const text = t('shareText')(SIGNATURE_DRINKS[k].en, drinkLocal(k)) +
         '\n' + t('shareInvite') + ' ' + SITE_URL;
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
@@ -927,7 +944,9 @@
     else if (a === 'restart') restart();
     else if (a === 'close') { if (depth > 0) history.back(); else closeTopOverlay(); }
     else if (a === 'lang') {
-      lang = lang === 'ko' ? 'en' : 'ko';
+      const to = b.getAttribute('data-lang');
+      if (!LANGS.includes(to) || to === lang) return;
+      lang = to;
       try { localStorage.setItem('ds_lang', lang); } catch (err) {}
       applyLang();
       track('lang', { to: lang });
@@ -938,7 +957,8 @@
   top.className = 'ds-top';
   top.innerHTML =
     '<button type="button" class="ds-pill" id="dsMenuBtn" data-ds="menu">MENU</button>' +
-    '<button type="button" class="ds-pill" id="dsLang" data-ds="lang" aria-label="Language"></button>';
+    '<div class="ds-langs" id="dsLang" role="group" aria-label="Language">' + LANGS.map((l) =>
+      '<button type="button" data-ds="lang" data-lang="' + l + '" lang="' + HTML_LANG[l] + '">' + LANG_LABEL[l] + '</button>').join('') + '</div>';
   document.body.appendChild(top);   // #cover 안에 두면 누를 때 표지 전환까지 같이 시작된다
 
   applyLang();

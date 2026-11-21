@@ -24,11 +24,13 @@
   const SINS = [['교', '교만', 'PRIDE'], ['질', '질투', 'ENVY'], ['탐', '탐욕', 'GREED'], ['식', '폭식', 'GLUTTONY'],
     ['분', '분노', 'WRATH'], ['색', '색욕', 'LUST'], ['나', '나태', 'SLOTH']];
   const ORDER = SINS.map((s) => s[0]);
-  const DAYS = { ko: ['일', '월', '화', '수', '목', '금', '토'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
+  const DAYS = { ko: ['일', '월', '화', '수', '목', '금', '토'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], zh: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'] };
+  const DAY_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const ZH_SIN = { 교: '傲慢', 질: '嫉妒', 탐: '贪婪', 식: '暴食', 분: '暴怒', 색: '色欲', 나: '懒惰' };   // 중국어 죄 이름 (술 이름은 뒤에 之酒)
+  const LANGS = ['ko', 'en', 'zh'], LANG_LABEL = { ko: '한국어', en: 'EN', zh: '中文' }, HTML_LANG = { ko: 'ko', en: 'en', zh: 'zh-Hans' };
 
   const T = {
     ko: {
-      lang: 'EN',
       conceptTitle: '오늘 밤, 당신은<br>어떤 죄를 삼키시겠습니까?',
       conceptBody: '데들리 신스는 일곱 가지 죄를 일곱 잔의 칵테일로 빚었습니다. 교만, 질투, 탐욕, 폭식, 분노, 색욕, 나태 — 오늘 밤 당신은 어느 쪽인가요?',
       sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: '일곱 잔의 시그니처', swipe: '옆으로 넘겨 보세요',
@@ -48,10 +50,10 @@
       openNow: (c) => '지금 영업 중 · ' + c + '까지', opensAt: (o) => '오늘 ' + o + ' 오픈', closedToday: '오늘은 쉬어요',
       opensNext: (w, o) => w + ' ' + o + ' 오픈', tomorrow: '내일', dayName: (d) => d + '요일',
       lastOrder: (x) => '라스트오더 ' + x, lastDone: '오늘 주문은 마감됐어요',
+      everyDay: '연중무휴', closedOn: (d) => '매주 ' + d.map((x) => DAYS.ko[x]).join(' · ') + '요일 휴무',
       dockMenu: '메뉴', dockWay: '오시는 길', dockLabel: '바로가기'
     },
     en: {
-      lang: '한국어',
       conceptTitle: 'Which sin will you<br>drink tonight?',
       conceptBody: 'Deadly Sins turns the seven deadly sins into seven cocktails. Pride, envy, greed, gluttony, wrath, lust, sloth — which one are you tonight?',
       sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: 'Seven signature cocktails', swipe: 'Swipe to see all seven',
@@ -71,17 +73,43 @@
       openNow: (c) => 'Open now · until ' + c, opensAt: (o) => 'Opens today at ' + o, closedToday: 'Closed today',
       opensNext: (w, o) => 'opens ' + w + ' at ' + o, tomorrow: 'tomorrow', dayName: (d) => d,
       lastOrder: (x) => 'Last order ' + x, lastDone: 'We’ve stopped taking orders for tonight',
+      everyDay: 'Open every day', closedOn: (d) => 'Closed on ' + d.map((x) => DAY_FULL[x] + 's').join(', ').replace(/, ([^,]*)$/, ' and $1'),
       dockMenu: 'Menu', dockWay: 'Find us', dockLabel: 'Shortcuts'
+    },
+    zh: {
+      conceptTitle: '今晚，你要饮下<br>哪一种罪？',
+      conceptBody: 'Deadly Sins 把七宗罪酿成了七杯鸡尾酒。傲慢、嫉妒、贪婪、暴食、暴怒、色欲、懒惰——今晚的你，是哪一种？',
+      sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: '七杯招牌特调', swipe: '左右滑动查看',
+      roomKicker: 'THE ROOM', roomTitle: '5楼的夜晚', roomBody: '昏暗的灯光，粗粝的墙面，还有七宗罪。一个人来，两个人来，都刚刚好。',
+      rental: '欢迎包场咨询', rentalBody: '请用您方便的方式联系我们。', viaIg: 'Instagram 私信', viaPhone: '电话', viaEmail: '邮件',
+      entrance: '看到这块招牌，就到了',
+      tableKicker: 'AT YOUR TABLE', tableTitle: '入座之后，<br>七个问题在等你',
+      tableBody: '扫一扫桌上的二维码，回答七个问题，我们会从七杯酒里为你挑出与你的罪最相配的那一杯。答案，只在5楼揭晓。',
+      menuKicker: 'MENU', menuTitle: '菜单', menuHint: '点击图片查看介绍',
+      menuSig: '招牌特调', menuWhisky: '威士忌', menuCocktails: '鸡尾酒', menuBites: '小食', menuBev: '软饮',
+      menuWhiskyNote: '为每一种罪挑选了相配的威士忌', soldOut: '售罄', soldOutNote: '今天已售罄',
+      aroma: '香气', taste: '口感', finish: '余韵', strength: '酒精度', cask: '橡木桶', nose: '闻香', palate: '口感', recipe: '配方', plate: '搭配', close: '关闭',
+      photoCredits: '图片来源', photoEdited: '去除背景 · 调整尺寸', photoEditedGray: '去除背景 · 黑白 · 调整尺寸',
+      wayKicker: 'FIND US', wayTitle: (f) => '我们在' + f + '楼<br>等你',
+      here: (f) => '就在这栋楼的' + f + '楼', map: '在地图中查看',
+      where: '位置', hours: '营业时间', good: '须知', contact: '联系', noCover: '不收座位费',
+      openNow: (c) => '营业中 · 至 ' + c, opensAt: (o) => '今天 ' + o + ' 开门', closedToday: '今天休息',
+      opensNext: (w, o) => w + ' ' + o + ' 开门', tomorrow: '明天', dayName: (d) => d,
+      lastOrder: (x) => '最后点单 ' + x, lastDone: '今天已停止点单',
+      everyDay: '全年无休', closedOn: (d) => '每' + d.map((x) => DAYS.zh[x]).join('、') + '休息',
+      dockMenu: '菜单', dockWay: '怎么走', dockLabel: '快捷入口'
     }
   };
   // 5 → 5th, 1 → 1st, 2 → 2nd, 3 → 3rd, 11~13 → th
   function ordinal(n) { const v = Math.abs(+n) % 100, s = ['th', 'st', 'nd', 'rd']; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
-  let lang = 'ko';
-  try { lang = localStorage.getItem('ds_lang') || ((navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en'); } catch (e) {}
-  if (lang !== 'en') lang = 'ko';
-  const t = (k, ...a) => { const v = T[lang][k]; return typeof v === 'function' ? v(...a) : v; };
+  // 한국어 · English · 中文(간체). 고른 언어를 기억하고(설문 사이트와 같은 이름 ds_lang), 처음에는 폰 언어를 따른다.
+  let lang = '';
+  try { lang = localStorage.getItem('ds_lang') || ''; } catch (e) {}
+  if (!LANGS.includes(lang)) { const n = (navigator.language || 'ko').toLowerCase(); lang = n.indexOf('ko') === 0 ? 'ko' : n.indexOf('zh') === 0 ? 'zh' : 'en'; }
+  const t = (k, ...a) => { const v = T[lang][k] !== undefined ? T[lang][k] : T.en[k]; return typeof v === 'function' ? v(...a) : v; };
   const esc = (s) => String(s === undefined || s === null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const L10 = (o) => (o && typeof o === 'object' ? (o[lang] || o.ko || '') : (o || ''));
+  // { ko, en, zh } 에서 지금 언어의 글. 없으면 (한국어 화면이 아닐 때) 영어 → 한국어
+  const L10 = (o) => (o && typeof o === 'object' ? (o[lang] || (lang !== 'ko' && o.en) || o.ko || '') : (o || ''));
 
   /* ---------- 사장님이 /admin 에서 고친 품절 · 숨김 · NEW · 새 메뉴 (가격은 이 사이트에 안 나옴) ---------- */
   const SIG_FLAGS = {};
@@ -103,6 +131,14 @@
       if (!Array.isArray(list) || !x.id || list.some((it) => it.id === x.id)) return;
       list.push({ id: x.id, ko: x.ko || x.en, en: x.en || x.ko, about: x.about, soldOut: x.soldOut, hidden: x.hidden, new: x.new });
     });
+    // 가게 정보: 영업 요일 · 시간 · 라스트오더 · 공지 · 연락처 (비운 연락처는 화면에서 빠진다)
+    const info = d.info;
+    if (info && typeof info === 'object') {
+      const h = info.hours;
+      if (h && Array.isArray(h.days) && h.days.length && h.open && h.close) L.hours = [{ days: h.days, open: h.open, close: h.close, last: h.last || undefined }];
+      if (info.notice && typeof info.notice === 'object') L.notice = info.notice;
+      ['phone', 'instagram', 'email'].forEach((k) => { if (typeof info[k] === 'string') L[k] = info[k]; });
+    }
   }
 
   /* ---------- 영업 중인지 (한국 시간) ---------- */
@@ -114,7 +150,7 @@
   const toMin = (s) => { const [h, m] = String(s).split(':').map(Number); return h * 60 + (m || 0); };
   const pretty = (s) => {
     const m = toMin(s);
-    if (lang === 'en') return s;
+    if (lang !== 'ko') return s;   // 영어 · 중국어는 20:00 꼴 그대로
     const h = Math.floor(m / 60) % 24, mm = m % 60;
     const word = h < 6 ? '새벽 ' + h + '시' : h < 12 ? '오전 ' + h + '시' : h === 12 ? '낮 12시' : '오후 ' + (h - 12) + '시';
     return word + (mm ? ' ' + mm + '분' : '');
@@ -160,7 +196,9 @@
   function hoursHtml() {
     const H = Array.isArray(L.hours) ? L.hours : [];
     if (!H.length) return '';
-    const notes = [...new Set(H.filter((h) => h.last).map((h) => t('lastOrder', h.last)))].concat(L.hoursNote ? [L10(L.hoursNote)] : []);
+    // 쉬는 요일 안내는 영업 요일에서 만든다 ("매주 월요일 휴무" · "Closed on Mondays" · "每周一休息") — 요일을 바꾸면 문구도 같이 바뀌게
+    const open = new Set([].concat(...H.map((h) => h.days || []))), off = [1, 2, 3, 4, 5, 6, 0].filter((d) => !open.has(d));
+    const notes = [...new Set(H.filter((h) => h.last).map((h) => t('lastOrder', h.last)))].concat([off.length ? t('closedOn', off) : t('everyDay')]);
     return H.map((h) => '<span>' + esc(dayRange(h.days)) + '</span> ' + esc(h.open) + ' – ' + esc(h.close)).join('<br>') +
       (notes.length ? '<br><small>' + esc(notes.join(' · ')) + '</small>' : '');
   }
@@ -168,14 +206,15 @@
   /* ---------- 메뉴: 종류별 사진 격자, 누르면 설명 ---------- */
   const shown = (it) => !it.hidden;
   const det = (id) => (D.details || {})[id] || {};
-  const sinName = (k) => { const x = SINS.find((s) => s[0] === k); return x ? (lang === 'en' ? x[2] : x[1]) : ''; };
+  const sinName = (k) => { const x = SINS.find((s) => s[0] === k); return x ? (lang === 'en' ? x[2] : lang === 'zh' ? ZH_SIN[k] : x[1]) : ''; };
+  const drinkName = (k, kr) => (lang === 'zh' ? ZH_SIN[k] + '之酒' : kr);   // 교만의 술 · 傲慢之酒
   let ITEMS = {};
   function menuCats() {
-    const m = D.menu, other = (it) => (lang === 'en' ? '' : it.en);   // 보조 이름은 한국어 화면에서만 (병에 적힌 영어 이름)
+    const m = D.menu, other = (it) => (lang === 'en' || L10(it) === it.en ? '' : it.en);   // 보조 이름(병에 적힌 영어 이름)은 한국어 · 중국어 화면에서만
     const cats = [];
     cats.push({ key: 'sig', title: t('menuSig'), en: 'SEVEN SINS', items: SINS.map(([k, ko, en]) => {
       const d = D.drinks[k] || {}, dr = (B.drinks || {})[k] || {};
-      return { id: 'sig-' + k, art: true, img: dr.image, tag: { sym: k, text: lang === 'en' ? 'SIGNATURE' : en }, name: lang === 'en' ? en : dr.kr,
+      return { id: 'sig-' + k, art: true, img: dr.image, tag: { sym: k, text: lang === 'en' ? 'SIGNATURE' : en }, name: lang === 'en' ? en : drinkName(k, dr.kr),
         sub: L10(d.style), flags: SIG_FLAGS[k] || {}, about: L10(d.desc), quote: d.line && d.line.confirmed ? L10(d.line) : '',
         rows: [['aroma', L10(d.aroma)], ['taste', L10(d.taste)], ['finish', L10(d.finish)], ['strength', L10(d.strength)]] };
     }) });
@@ -184,7 +223,7 @@
     m.final.items.filter(shown).forEach((it) => whisky.push({ it, tag: { text: m.final.title }, quote: L10(m.final.label) }));
     const plain = (it, extra) => {
       const d = det(it.id);
-      return Object.assign({ id: it.id, img: d.photo, scene: !!d.scene, name: it[lang] || it.ko || it.en, alt: other(it), flags: it, detail: d,
+      return Object.assign({ id: it.id, img: d.photo, scene: !!d.scene, name: L10(it) || it.en, alt: other(it), flags: it, detail: d,
         sub: L10(d.region) || L10(d.kind), meta: [L10(d.kind), L10(d.region), d.abv].filter(Boolean).join(' · '), about: L10(d.about || it.about),
         rows: [['cask', L10(d.cask)], ['nose', L10(d.nose)], ['palate', L10(d.palate)], ['finish', L10(d.finish)], ['recipe', L10(d.recipe)], ['plate', L10(d.plate)]] }, extra || {});
     };
@@ -305,7 +344,7 @@
       '<h2 class="lb-r">' + t('conceptTitle') + '</h2>' +
       '<p class="lb-body lb-r">' + esc(t('conceptBody')) + '</p>' +
       '<ul class="lb-syms lb-r">' + SINS.map(([k, ko, en]) =>
-        '<li><img src="' + esc(A((B.symbols || {})[k])) + '" alt=""><span>' + esc(lang === 'en' ? en : ko) + '</span></li>').join('') + '</ul>' +
+        '<li><img src="' + esc(A((B.symbols || {})[k])) + '" alt=""><span>' + esc(lang === 'en' ? en : sinName(k)) + '</span></li>').join('') + '</ul>' +
       (P.wall ? '<figure class="lb-wide lb-r"><img src="' + esc(A(P.wall)) + '" alt="" loading="lazy"></figure>' : '') +
     '</section>';
 
@@ -318,10 +357,10 @@
         const dr = (B.drinks || {})[k] || {}, d = D.drinks[k] || {};
         return '<article class="lb-card">' +
           '<div class="lb-card-art"><img src="' + esc(A(dr.image)) + '" alt="" loading="lazy"></div>' +
-          '<p class="lb-card-sin"><img src="' + esc(A((B.symbols || {})[k])) + '" alt="">' + esc(lang === 'en' ? 'SIGNATURE' : ko) + '</p>' +
+          '<p class="lb-card-sin"><img src="' + esc(A((B.symbols || {})[k])) + '" alt="">' + esc(lang === 'en' ? 'SIGNATURE' : sinName(k)) + '</p>' +
           '<h3>' + esc(en) + '</h3>' +
-          '<p class="lb-card-ko">' + esc(lang === 'en' ? (d.style ? d.style.en : '') : dr.kr) + '</p>' +
-          (d.style && lang === 'ko' ? '<p class="lb-chip">' + esc(d.style.ko) + '</p>' : '') +
+          '<p class="lb-card-ko">' + esc(lang === 'en' ? (d.style ? d.style.en : '') : drinkName(k, dr.kr)) + '</p>' +
+          (d.style && lang !== 'en' ? '<p class="lb-chip">' + esc(L10(d.style)) + '</p>' : '') +
           (d.desc ? '<p class="lb-card-desc">' + esc(L10(d.desc)) + '</p>' : '') +
           ((SIG_FLAGS[k] || {}).soldOut ? '<p class="lb-card-sold">' + esc(t('soldOut')) + '</p>' : '') +
         '</article>';
@@ -370,7 +409,8 @@
           (L.directions ? '<br>' + esc(L10(L.directions)) : '') + dim(L.address) + dim(L.station) + dim(L.parking) +
           (maps.length ? '<span class="lb-maps">' + maps.map((x) => '<a href="' + esc(x.url) + '" target="_blank" rel="noopener" data-act="map">' +
             esc(x.name ? L10(x.name) : t('map')) + ' →</a>').join('') + '</span>' : '') + '</dd>' +
-        (hoursHtml() ? '<dt>' + esc(t('hours')) + '</dt><dd>' + (st ? '<p class="lb-status' + (st.open ? ' is-open' : '') + '"><i></i>' + esc(st.text) + '</p>' : '') + hoursHtml() + '</dd>' : '') +
+        (hoursHtml() ? '<dt>' + esc(t('hours')) + '</dt><dd>' + (L.notice && L10(L.notice) ? '<p class="lb-notice">' + esc(L10(L.notice)) + '</p>' : '') +
+          (st ? '<p class="lb-status' + (st.open ? ' is-open' : '') + '"><i></i>' + esc(st.text) + '</p>' : '') + hoursHtml() + '</dd>' : '') +
         '<dt>' + esc(t('good')) + '</dt><dd>' + esc(t('noCover')) + '<br>' + esc(t('rental')) + '</dd>' +
         (contact.length ? '<dt>' + esc(t('contact')) + '</dt><dd>' + contact.join('<br>') + '</dd>' : '') +
       '</dl>' +
@@ -383,8 +423,9 @@
     DOCK.innerHTML = '<a href="#menu" class="lb-dock-menu" data-act="menu">' + esc(t('dockMenu')) + '</a>' +
       '<a href="#way" class="lb-dock-way" data-act="way">' + esc(t('dockWay')) + ' · ' + F + 'F</a>';
     DOCK.setAttribute('aria-label', t('dockLabel'));
-    document.documentElement.lang = lang;
-    document.getElementById('lbLang').textContent = t('lang');
+    document.documentElement.lang = HTML_LANG[lang];
+    document.getElementById('lbLang').innerHTML = LANGS.map((l) => '<button type="button" data-act="lang" data-lang="' + l + '" lang="' + HTML_LANG[l] + '"' +
+      (l === lang ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + '>' + LANG_LABEL[l] + '</button>').join('');
     motion();
   }
 
@@ -480,7 +521,9 @@
       return;
     }
     if (act === 'lang') {
-      lang = lang === 'ko' ? 'en' : 'ko';
+      const to = a.getAttribute('data-lang');
+      if (!LANGS.includes(to) || to === lang) return;
+      lang = to;
       try { localStorage.setItem('ds_lang', lang); } catch (err) {}
       closeSheet();
       render();

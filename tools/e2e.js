@@ -118,7 +118,7 @@ const KO_OK = '#dsLang, .ds-order-ko';   // 언어 전환 버튼(한국어), 바
 async function englishOnly(page, lang, where) {
   if (lang !== 'en') return;
   const left = await leftoverKorean(page, KO_OK);
-  check(left.length === 0, `영어 화면에 한글이 남지 않음 (${where})`, left.slice(0, 6));
+  check(left.length === 0, `외국어 화면에 한글이 남지 않음 (${where})`, left.slice(0, 6));
 }
 
 async function run(browser, base, lang) {
@@ -410,10 +410,12 @@ async function run(browser, base, lang) {
   await page.goBack();
   await page.waitForTimeout(500);
   if (await screen(page) === 'cover') {
-    await page.click('#dsLang');
-    await page.waitForTimeout(200);
     const other = lang === 'en' ? 'ko' : 'en';
+    await page.click(`#dsLang [data-lang="${other}"]`);
+    await page.waitForTimeout(200);
     check(await page.evaluate(() => document.documentElement.lang) === other, `언어 전환 → ${other}`);
+    const pills = await page.evaluate(() => [...document.querySelectorAll('#dsLang [data-lang]')].map((b) => b.dataset.lang + (b.classList.contains('on') ? '*' : '')).join(' '));
+    check(pills === (other === 'ko' ? 'ko* en zh' : 'ko en* zh'), '언어 고르기 세 칸 (한국어 · EN · 中文), 지금 언어만 켜짐', pills);
   } else check(false, '퀴즈 1번에서 폰 뒤로가기 → 표지', await screen(page));
 
   // 메뉴판 전용 링크: #menu, #menu/<id>
@@ -530,7 +532,8 @@ async function quizV2(browser, base) {
     same: JSON.stringify(QUESTIONS.map((q) => q._ko)) === JSON.stringify(DS_QUIZ.questions.map((q) => q.q.ko)),
     first: document.getElementById('questionText').textContent,
     opts: QUESTIONS.every((q) => q.a.length === 4 && q.a.every((o) => o.points === o.sin + '3')),
-    en: QUESTIONS.every((q) => q._en && q._en !== q._ko && q.a.every((o) => o._en && o._en !== o._ko))
+    en: QUESTIONS.every((q) => q._t.en && q._t.en !== q._ko && q.a.every((o) => o._t.en && o._t.en !== o._ko)),
+    zh: QUESTIONS.every((q) => q._t.zh && !/[가-힣]/.test(q._t.zh) && q.a.every((o) => o._t.zh && !/[가-힣]/.test(o._t.zh)))
   }));
   check(quiz.v === 'v2' && quiz.same && quiz.opts && quiz.first === '식당에서 나보다 늦게 온 옆 테이블 음식이 먼저 나왔다.',
     '문항은 quiz.js (v2) 의 것 · 처음 그려진 1번도 새 문항', quiz);
@@ -741,6 +744,152 @@ async function admin(browser, base) {
   LIVE = { v: 0, at: null, data: null };
 }
 
+/* 중국어(간체): 폰 언어가 중국어면 중국어로 시작하고, 질문 → 결과 → 시그니처 → 메뉴까지 한글이 남지 않아야 한다 */
+async function chinese(browser, base) {
+  console.log('\n■ 中文');
+  const ctx = await browser.newContext({ viewport: { width: 360, height: 740 }, deviceScaleFactor: 2, locale: 'zh-CN' });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e).slice(0, 200)));
+  page.on('response', (r) => { if (r.status() >= 400) errors.push(r.status() + ' ' + r.url()); });
+  await page.goto(base, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(400);
+  const cover = await page.evaluate(() => ({ lang: document.documentElement.lang, start: document.getElementById('start').textContent, title: document.title,
+    on: (document.querySelector('#dsLang .on') || {}).textContent, font: getComputedStyle(document.body).fontFamily }));
+  check(cover.lang === 'zh-Hans' && cover.start === '点击开始' && cover.on === '中文' && /七宗罪/.test(cover.title), '폰 언어가 중국어면 중국어로 시작', cover);
+  check(/PingFang SC/.test(cover.font) && !/Apple SD Gothic/.test(cover.font), '중국어 글꼴을 먼저 찾음 (한글 글꼴이 섞이지 않게)', cover.font);
+  await shot(page, 'zh-cover');
+  await page.click('#start');
+  await page.waitForSelector('#quiz.active', { timeout: 8000 });
+  await page.waitForFunction(() => !coverTransitionBusy, null, { timeout: 8000 });
+  const q = await page.evaluate(() => ({ text: document.getElementById('questionText').textContent, opts: [...document.querySelectorAll('#choices .choice-text')].map((x) => x.textContent),
+    wide: [...document.querySelectorAll('#questionText, #choices .choice')].some((e) => e.getBoundingClientRect().right > innerWidth + 1) }));
+  check(/[\u4e00-\u9fff]/.test(q.text) && !/[가-힣A-Za-z]{6,}/.test(q.text) && q.opts.length === 4 && q.opts.every((o) => /[\u4e00-\u9fff]/.test(o)) && !q.wide,
+    '질문과 선택지가 중국어 · 화면 밖으로 나가지 않음 (띄어쓰기가 없어도 줄이 바뀜)', q);
+  await englishOnly(page, 'en', '中文 질문');
+  await shot(page, 'zh-q1');
+  check(await answerAll(page), '7문항 끝까지 → 결과');
+  await page.waitForTimeout(500);
+  const r = await page.evaluate(() => ({ title: document.getElementById('resultTitle').textContent, k: calculate()[0].k,
+    radar: [...document.querySelectorAll('#radarSvg text')].map((t) => t.textContent).join(' ') }));
+  check(['傲慢', '嫉妒', '暴怒', '懒惰', '贪婪', '暴食', '色欲'].includes(r.title) && r.radar === '傲慢 嫉妒 暴怒 懒惰 贪婪 暴食 色欲', '결과 제목 · 그래프 이름표가 중국어', r);
+  await englishOnly(page, 'en', '中文 결과');
+  await shot(page, 'zh-result');
+  await page.click('#toDesire');
+  await page.waitForSelector('#signatureNameReveal.visible', { timeout: 20000 });
+  await page.waitForTimeout(700);
+  const sig = await page.evaluate(() => ({ en: document.getElementById('signatureNameEn').textContent, name: document.getElementById('signatureNameKo').textContent,
+    extra: document.querySelector('.ds-extra').textContent, label: (document.querySelector('#signatureTrait .trait-label') || {}).textContent,
+    copy: (document.querySelector('#signatureTrait .trait-copy') || {}).textContent,
+    wide: [...document.querySelectorAll('#signatureTrait .trait-copy, .ds-extra p, .ds-extra dd')].some((e) => e.getBoundingClientRect().right > innerWidth + 1) }));
+  check(sig.en === SIGNATURE_EN[r.k] && /之酒$/.test(sig.name) && sig.extra.includes('16,000韩元') && sig.label === '恋爱' && /[\u4e00-\u9fff]{8,}/.test(sig.copy || '') && !sig.wide,
+    '시그니처: 술 이름(…之酒) · 가격(韩元) · 성향이 중국어 · 넘치지 않음', sig);
+  await englishOnly(page, 'en', '中文 시그니처');
+  await shot(page, 'zh-signature');
+  const img = await page.evaluate(async (k) => { const b = await window.DS_makeShareImage(k); const bmp = await createImageBitmap(b); return { size: b.size, w: bmp.width, h: bmp.height }; }, r.k);
+  check(img.w === 1080 && img.h === 1920 && img.size > 50000, '결과 이미지 생성 (중국어)', img);
+  await page.click('.ds-actions [data-ds="menu"]');
+  await page.waitForSelector('#dsMenu.open', { timeout: 3000 });
+  await page.waitForTimeout(400);
+  const menu = await page.evaluate(() => ({ first: document.querySelector('#dsMenu .ds-sig .ds-row-name').childNodes[0].textContent.trim(),
+    whisky: (document.querySelector('#dsMenu button[data-id="lagavulin-16"] .ds-row-name') || {}).textContent,
+    bite: (document.querySelector('#dsMenu button[data-id="cheesecake"] .ds-row-name') || {}).textContent }));
+  check(menu.first === 'PRIDE · 傲慢之酒' && /^Lagavulin 16/.test(menu.whisky || '') && /芝士蛋糕/.test(menu.bite || '') && /Cheesecake/.test(menu.bite || ''),
+    '메뉴판: 일곱 잔은 PRIDE · 傲慢之酒, 위스키는 병에 적힌 영어 이름, 안주는 중국어 + 영어', menu);
+  await page.evaluate(async () => { const m = document.getElementById('dsMenu'); for (let y = 0; y <= m.scrollHeight; y += 300) { m.scrollTop = y; await new Promise((r) => setTimeout(r, 30)); } m.scrollTop = 0; });
+  await englishOnly(page, 'en', '中文 메뉴판');
+  await page.click('#dsMenu button[data-id="lagavulin-16"]');
+  await page.waitForSelector('#dsItem.open', { timeout: 3000 });
+  await page.click('#dsItem [data-ds="more"]');
+  await page.waitForSelector('#dsItem .ds-story .ds-layers li', { timeout: 5000 });
+  await page.waitForTimeout(400);
+  const story = await page.evaluate(() => document.querySelector('#dsItem .ds-story').textContent);
+  check(/艾雷岛/.test(story) && story.length > 100, '술 이야기도 중국어', story.slice(0, 60));
+  await englishOnly(page, 'en', '中文 메뉴 상세 · 이야기');
+  await shot(page, 'zh-menu-item');
+  // 고른 언어는 다음에 열어도 그대로 (폰 언어보다 먼저)
+  const page2 = await ctx.newPage();
+  await page2.goto(base, { waitUntil: 'networkidle' });
+  await page2.click('#dsLang [data-lang="ko"]');
+  await page2.reload({ waitUntil: 'networkidle' });
+  check(await page2.evaluate(() => document.documentElement.lang) === 'ko' && await page2.textContent('#start') === '클릭해주세요', '손님이 고른 언어를 기억함 (중국어 폰에서 한국어를 고르면 다음에도 한국어)');
+  check(errors.length === 0, '중국어 화면 스크립트 오류 · 404 없음', errors);
+  await ctx.close();
+}
+
+/* 사장님이 /admin 의 "가게 정보"에서 바꾼 영업 요일 · 시간 · 공지 · 연락처가 배너 사이트에 나오는지 */
+async function shopInfo(browser, base) {
+  console.log('\n■ 가게 정보 고치기 (/admin → 1층 배너 사이트)');
+  LIVE = { v: 0, at: null, data: null }; ADMIN_POSTS.length = 0;
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ko-KR', isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
+  await page.goto(base + 'admin.html', { waitUntil: 'networkidle' });
+  await page.fill('#pw', ADMIN_KEY); await page.click('#login button');
+  await page.waitForSelector('#editor:not([hidden])', { timeout: 5000 });
+  const first = await page.evaluate(() => ({
+    days: [...document.querySelectorAll('#sec-info input[data-day]:checked')].map((x) => x.dataset.day).join(''),
+    open: document.querySelector('[data-i="open"]').value, close: document.querySelector('[data-i="close"]').value, last: document.querySelector('[data-i="last"]').value,
+    phone: document.querySelector('[data-i="phone"]').value, preview: document.getElementById('hoursPreview').textContent,
+    jump: [...document.querySelectorAll('#jump a')].map((a) => a.textContent).join(' '), saveOff: document.getElementById('save').disabled,
+    clipped: [...document.querySelectorAll('#sec-info input')].some((i) => i.getBoundingClientRect().right > innerWidth)
+  }));
+  check(first.days === '234560' && first.open === '20:00' && first.close === '02:00' && first.last === '01:30' && first.phone === '0507-1304-6522' && first.saveOff && !first.clipped,
+    '가게 정보 칸에 지금 값(화–일 20:00–02:00 · 라스트오더 01:30 · 전화)이 채워져 있음', first);
+  check(first.preview === '손님 화면: 화–일 20:00 – 02:00 · 라스트오더 01:30 · 매주 월요일 휴무' && first.jump === '가게 정보 시그니처 위스키 칵테일 안주 음료',
+    '손님 화면 미리보기 · 위쪽 바로가기', first);
+  // 잘못 넣으면 저장하지 않고 알려 준다
+  await page.fill('[data-i="last"]', '10:00');
+  await page.click('#save'); await page.waitForTimeout(250);
+  check(/라스트오더는/.test(await page.textContent('#barMsg')) && !ADMIN_POSTS.some((p) => p.action === 'save'), '라스트오더가 영업시간 밖이면 저장하지 않고 알려 줌', await page.textContent('#barMsg'));
+  // 월요일도 영업, 일요일 휴무, 19:00–03:00, 라스트오더 02:30, 공지, 전화 비움
+  await page.click('#sec-info label.tg:has(input[data-day="1"])');
+  await page.click('#sec-info label.tg:has(input[data-day="0"])');
+  await page.fill('[data-i="open"]', '19:00'); await page.fill('[data-i="close"]', '03:00'); await page.fill('[data-i="last"]', '02:30');
+  await page.fill('[data-i="noticeKo"]', '12/25 휴무');
+  await page.fill('[data-i="phone"]', '');
+  await page.fill('[data-i="instagram"]', 'https://www.instagram.com/deadlysins.5f/?hl=ko');
+  check(await page.textContent('#hoursPreview') === '손님 화면: 월–토 19:00 – 03:00 · 라스트오더 02:30 · 매주 일요일 휴무', '바꾸는 대로 미리보기가 바뀜', await page.textContent('#hoursPreview'));
+  await page.click('#save');
+  await page.waitForFunction(() => /저장했어요/.test(document.getElementById('barMsg').textContent), null, { timeout: 5000 }).catch(() => {});
+  const saved = (ADMIN_POSTS.filter((p) => p.action === 'save').pop() || {}).data || {};
+  check(JSON.stringify(saved.info) === JSON.stringify({ hours: { days: [1, 2, 3, 4, 5, 6], open: '19:00', close: '03:00', last: '02:30' }, notice: { ko: '12/25 휴무' }, phone: '', instagram: 'deadlysins.5f' }),
+    '저장: 바뀐 것만 (영업 요일 · 시간 · 공지 · 비운 전화 · 인스타 주소에서 아이디만)', saved.info);
+  check(errors.length === 0, '관리 화면 스크립트 오류 없음', errors);
+  await ctx.close();
+  // 배너 사이트: 한국어 · 영어 · 중국어
+  const see = async (locale, when) => {
+    const c = await browser.newContext({ viewport: { width: 390, height: 844 }, locale });
+    await c.route(PROMO_BASE + '**', async (route) => {
+      const u = new URL(route.request().url());
+      if (u.pathname === '/api/track') return route.fulfill({ status: 204, body: '' });
+      if (u.pathname === '/api/menu') return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(LIVE) });
+      const file = path.join(PUBLIC, decodeURIComponent(u.pathname));
+      if (!file.startsWith(PUBLIC) || !fs.existsSync(file)) return route.fulfill({ status: 404, body: '' });
+      return route.fulfill({ status: 200, contentType: TYPES[path.extname(file)] || 'application/octet-stream', body: fs.readFileSync(file) });
+    });
+    const p = await c.newPage();
+    await p.clock.setFixedTime(new Date(when));
+    await p.goto(base + 'promo/index.html', { waitUntil: 'networkidle' });
+    await p.waitForFunction(() => !!document.querySelector('.lb-notice'), null, { timeout: 5000 }).catch(() => {});
+    const r = await p.evaluate(() => ({ info: document.querySelector('.lb-info').innerText.replace(/\s+/g, ' '), notice: (document.querySelector('.lb-notice') || {}).textContent,
+      phone: !!document.querySelector('.lb-info [data-act="phone"]'), ig: (document.querySelector('[data-act="instagram"]') || {}).href, ways: document.querySelectorAll('[data-act="rental"]').length }));
+    await c.close();
+    return r;
+  };
+  const ko = await see('ko-KR', '2026-11-22T12:00:00Z');   // 일요일 21:00 (한국) — 이제 쉬는 날
+  check(/월–토 19:00 – 03:00/.test(ko.info) && /라스트오더 02:30 · 매주 일요일 휴무/.test(ko.info) && ko.notice === '12/25 휴무' && /오늘은 쉬어요 · 내일 오후 7시 오픈/.test(ko.info),
+    '배너 사이트(한국어): 바뀐 요일 · 시간 · 라스트오더 · 쉬는 요일 안내 · 공지 · 영업 상태', ko);
+  check(!ko.phone && ko.ig === 'https://www.instagram.com/deadlysins.5f/' && ko.ways === 2, '비운 전화는 빠지고(대관 문의 버튼도 2개), 인스타 아이디가 바뀜', ko);
+  const en = await see('en-US', '2026-11-23T12:00:00Z');   // 월요일 21:00 — 이제 영업하는 날
+  check(/Mon–Sat 19:00 – 03:00/.test(en.info) && /Last order 02:30 · Closed on Sundays/.test(en.info) && /Open now · until 03:00/.test(en.info) && en.notice === '12/25 휴무',
+    '배너 사이트(영어): Mon–Sat · Closed on Sundays · 영어 공지가 없으면 한국어 공지', en);
+  const zh = await see('zh-CN', '2026-11-23T12:00:00Z');
+  check(/周一–周六 19:00 – 03:00/.test(zh.info) && /最后点单 02:30 · 每周日休息/.test(zh.info) && /营业中 · 至 03:00/.test(zh.info), '배너 사이트(중국어): 周一–周六 · 每周日休息', zh);
+  LIVE = { v: 0, at: null, data: null };
+}
+
 /* 1층 배너 QR 홍보 사이트 (promo/). 실제로는 다른 주소에서 설문 사이트의 data.js · 그림 · API 를 읽으므로,
    그 주소(PROMO_BASE)로 가는 요청을 로컬 public/ 과 로컬 기록으로 돌려서 검사한다. */
 const PROMO_BASE = 'https://deadly-sins-mu.vercel.app/';
@@ -870,7 +1019,7 @@ async function promoSite(browser, base) {
     const r = { over, n: a.length, gap: Math.round(n.getBoundingClientRect().right - a[a.length - 1].getBoundingClientRect().right) }; n.scrollLeft = 0; return r; });
   const tabsKo = await tabs();
   check(tabsKo.n === 5 && tabsKo.over === 0, '메뉴 종류 다섯 칸이 한 줄에 다 들어옴 (한국어)', tabsKo);
-  await page.click('#lbLang');
+  await page.click('#lbLang [data-lang="en"]');
   check(/which sin/i.test(await page.textContent('#concept h2')), '영어 전환');
   const tabsEn = await tabs();
   check(tabsEn.n === 5 && tabsEn.gap >= 12, '영어: 칸을 끝까지 밀면 마지막 칸이 가려지지 않음', tabsEn);
@@ -885,7 +1034,24 @@ async function promoSite(browser, base) {
   }));
   check(promoEn.card[0] !== promoEn.card[1] && promoEn.heads.every((h) => !/^(\w+)\s*\1$/i.test(h)) && /5th floor/.test(promoEn.floor),
     '영어 배너 사이트: 같은 말이 두 번 적히지 않음 · 층수 표기(5th)', promoEn);
-  await page.click('#lbLang');
+  check(/Closed on Mondays/.test(await page.textContent('.lb-info')), '영어: 쉬는 요일 안내가 영업 요일에서 자동으로 (Closed on Mondays)');
+  // 중국어
+  await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(400);
+  await page.click('#lbLang [data-lang="zh"]');
+  await page.evaluate(async () => { for (let y = 0; y <= document.documentElement.scrollHeight; y += 500) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); } scrollTo(0, 0); });
+  await page.waitForTimeout(300);
+  const promoZh = await page.evaluate(() => ({
+    lang: document.documentElement.lang, title: document.querySelector('#concept h2').textContent, info: document.querySelector('.lb-info').textContent,
+    card: document.querySelector('.lb-card .lb-card-ko').textContent, wide: document.documentElement.scrollWidth > innerWidth + 1,
+    tabs: (() => { const n = document.querySelector('.lb-cats'); return n.scrollWidth - n.clientWidth; })()
+  }));
+  check(promoZh.lang === 'zh-Hans' && /哪一种罪/.test(promoZh.title) && /每周一休息/.test(promoZh.info) && /最后点单 01:30/.test(promoZh.info) && promoZh.card === '傲慢之酒' && !promoZh.wide && promoZh.tabs === 0,
+    '중국어 전환: 제목 · 술 이름(傲慢之酒) · 영업 안내(每周一休息), 옆으로 넘치지 않음', promoZh);
+  const promoZhKo = await leftoverKorean(page, '#lbLang');
+  check(promoZhKo.length === 0, '중국어 화면에 한글이 남지 않음 (배너 사이트 전체)', promoZhKo.slice(0, 6));
+  await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(400);
+  await page.click('#lbLang [data-lang="ko"]');
+  check(await page.evaluate(() => document.documentElement.lang) === 'ko', '다시 한국어로');
   check(errors.length === 0, '홍보 사이트 스크립트 오류 · 404 없음', errors);
   await ctx.close();
 
@@ -962,12 +1128,14 @@ let SIGNATURE_EN = {};
     console.log('대상:', base);
     await run(browser, base, 'ko');
     await run(browser, base, 'en');
+    await chinese(browser, base);
     await sizes(browser, base);
     if (!TARGET) await quizV2(browser, base);    // 로컬 서버가 동점 순서를 내려 주는 검사라 로컬에서만
     if (!TARGET) await collect(browser, base);   // 로컬 서버가 /api/track 을 대신 받는 검사라 로컬에서만
     if (!TARGET) await admin(browser, base);     // 마찬가지로 /api/menu 를 로컬 서버가 대신 받는다
     await reducedMotion(browser, base);
     if (!TARGET) await promoSite(browser, base); // 방문 기록 · 그림을 로컬로 돌려서 하는 검사라 로컬에서만
+    if (!TARGET) await shopInfo(browser, base);  // /admin 에서 고친 가게 정보가 배너 사이트에 나오는지
   } catch (e) {
     check(false, '테스트 진행 중 예외', String(e).slice(0, 300));
   } finally {
