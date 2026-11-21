@@ -102,7 +102,7 @@
       opensNext: (w, o) => w + ' ' + o + ' 开门', tomorrow: '明天', dayName: (d) => d,
       lastOrder: (x) => '最后点单 ' + x, lastDone: '今天已停止点单',
       everyDay: '全年无休', closedOn: (d) => '每' + d.map((x) => DAYS.zh[x]).join('、') + '休息',
-      dockMenu: '菜单', dockWay: '怎么走', dockLabel: '快捷入口'
+      dockMenu: '菜单', dockWay: '到店路线', dockLabel: '快捷入口'
     },
     ja: {
       conceptTitle: '今夜、あなたは<br>どの罪を飲み干しますか？',
@@ -112,16 +112,16 @@
       rental: '貸切のご相談、歓迎します', rentalBody: 'ご都合のよい方法でお問い合わせください。', viaIg: 'Instagram DM', viaPhone: '電話', viaEmail: 'メール',
       entrance: 'この看板が見えたら到着です',
       tableKicker: 'AT YOUR TABLE', tableTitle: '席に着いたら、<br>七つの質問が待っています',
-      tableBody: 'テーブルのQRコードを読み取って七つの質問に答えると、七杯の中からあなたの罪にぴったりの一杯を選びます。答えは5階でだけ。',
+      tableBody: 'テーブルのQRコードを読み取って七つの質問に答えると、七杯の中からあなたの罪にぴったりの一杯をお選びします。答えは5階でのお楽しみ。',
       menuKicker: 'MENU', menuTitle: 'メニュー', menuHint: '写真をタップすると説明が出ます',
       menuSig: 'シグネチャー', menuWhisky: 'ウイスキー', menuCocktails: 'カクテル', menuBites: 'おつまみ', menuBev: 'ソフトドリンク',
       menuWhiskyNote: '罪ごとに合うウイスキーを選びました', soldOut: '売り切れ', soldOutNote: '本日は売り切れです',
-      aroma: '香り', taste: '味', finish: 'フィニッシュ', strength: '強さ', cask: '樽', nose: '香り', palate: '味わい', recipe: '材料', plate: '内容', close: '閉じる',
+      aroma: '香り', taste: '味わい', finish: 'フィニッシュ', strength: '強さ', cask: '樽', nose: '香り', palate: '味わい', recipe: '材料', plate: '内容', close: '閉じる',
       photoCredits: '写真の出典', photoEdited: '背景除去・サイズ調整', photoEditedGray: '背景除去・モノクロ・サイズ調整',
       wayKicker: 'FIND US', wayTitle: (f) => f + '階で<br>お待ちしています',
       here: (f) => 'このビルの' + f + '階', map: '地図で見る',
       where: '場所', hours: '営業時間', good: 'ご案内', contact: 'お問い合わせ', noCover: 'チャージ料なし',
-      openNow: (c) => '営業中 · ' + c + 'まで', opensAt: (o) => '本日 ' + o + ' オープン', closedToday: '本日は定休日です',
+      openNow: (c) => '営業中 · ' + c + 'まで', opensAt: (o) => '本日 ' + o + ' オープン', closedToday: '本日はお休みです',
       opensNext: (w, o) => w + ' ' + o + ' オープン', tomorrow: '明日', dayName: (d) => d + '曜',
       lastOrder: (x) => 'ラストオーダー ' + x, lastDone: '本日のご注文は終了しました',
       everyDay: '年中無休', closedOn: (d) => '毎週' + d.map((x) => DAYS.ja[x]).join('・') + '曜定休',

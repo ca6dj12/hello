@@ -96,7 +96,7 @@ window.DS_DATA = {
       "finish": {
         "ko": "짧고 깔끔한",
         "en": "Short and clean",
-        "zh": "短促而干净",
+        "zh": "短而干净",
         "ja": "短く、すっきり"
       },
       "strength": {
@@ -110,7 +110,7 @@ window.DS_DATA = {
     "분": {
       "line": {
         "ko": "불꽃처럼 타오르는 열기가 목을 타고 흐르며 뜨거운 에너지가 폭발한다.",
-        "en": "Heat that burns like a flame runs down the throat, then bursts.",
+        "en": "Flame-like heat runs down the throat, then bursts into fiery energy.",
         "zh": "如烈焰般燃烧的热意顺喉而下，炽热的能量随之爆发。",
         "ja": "炎のように燃え上がる熱が喉を駆け下り、灼熱のエネルギーが爆発する。",
         "confirmed": true
@@ -118,7 +118,7 @@ window.DS_DATA = {
       "style": {
         "ko": "강렬하고 스모키한",
         "en": "Intense and smoky",
-        "zh": "浓烈而烟熏",
+        "zh": "浓烈，带烟熏感",
         "ja": "強烈でスモーキー"
       },
       "desc": {
@@ -188,7 +188,7 @@ window.DS_DATA = {
       "finish": {
         "ko": "짧고 깔끔한",
         "en": "Short and clean",
-        "zh": "短促而干净",
+        "zh": "短而干净",
         "ja": "短く、すっきり"
       },
       "strength": {
@@ -202,7 +202,7 @@ window.DS_DATA = {
     "탐": {
       "line": {
         "ko": "달콤한 유혹과 쌉싸름한 깊이가 교차하며 끝없는 욕망을 부른다.",
-        "en": "Sweet temptation crosses bitter depth and calls for more.",
+        "en": "Sweet temptation meets bitter depth, stirring a desire that never ends.",
         "zh": "甜美的诱惑与微苦的深邃交织，唤起无尽的欲望。",
         "ja": "甘い誘惑とほろ苦い深みが交錯し、尽きない欲望を呼ぶ。",
         "confirmed": true
@@ -325,7 +325,7 @@ window.DS_DATA = {
       },
       "finish": {
         "ko": "깔끔하고 상쾌한",
-        "en": "Clean and cool",
+        "en": "Clean and refreshing",
         "zh": "干净而清爽",
         "ja": "すっきり爽やか"
       },
@@ -570,21 +570,21 @@ window.DS_DATA = {
         "ko": "아쿠아파나",
         "en": "Acqua Panna",
         "zh": "普娜矿泉水",
-        "ja": "アクア パンナ", "id": "acqua-panna",
+        "ja": "アクアパンナ", "id": "acqua-panna",
         "p": "5,000"
       },
       {
         "ko": "콜라",
         "en": "Coke",
         "zh": "可口可乐",
-        "ja": "コカ・コーラ", "id": "coke",
+        "ja": "コーラ", "id": "coke",
         "p": "3,000"
       },
       {
         "ko": "콜라제로",
         "en": "Coke Zero",
         "zh": "零度可口可乐",
-        "ja": "コカ・コーラ ゼロ", "id": "coke-zero",
+        "ja": "コーラゼロ", "id": "coke-zero",
         "p": "3,000"
       },
       {
@@ -598,7 +598,7 @@ window.DS_DATA = {
         "ko": "소다워터",
         "en": "Soda Water",
         "zh": "苏打水",
-        "ja": "ソーダ水", "id": "soda-water",
+        "ja": "ソーダ", "id": "soda-water",
         "p": "3,000"
       }
     ],
@@ -611,15 +611,15 @@ window.DS_DATA = {
       },
       {
         "ko": "콜키지는 제공하지 않습니다. 양해 부탁드립니다.",
-        "en": "Outside drinks are not allowed (no corkage). Thank you for understanding.",
+        "en": "We don't offer corkage, so please don't bring your own bottles. Thank you for understanding.",
         "zh": "谢绝自带酒水（不提供开瓶服务），敬请谅解。",
         "ja": "お飲み物は持ち込み不可です。ご了承ください。"
       },
       {
         "ko": "킵바틀은 첫 이용일로부터 1달간 보관됩니다. (재방문 시 10,000원)",
-        "en": "We keep your unfinished bottle for one month from your first visit. (10,000 KRW when you come back for it)",
-        "zh": "存酒自首次光临之日起保管1个月。（再次光临时收取10,000韩元）",
-        "ja": "ボトルキープは初回ご利用日から1か月間お預かりします。（再来店時10,000ウォン）"
+        "en": "We keep your unfinished bottle for one month from the day you first open it. (10,000 KRW when you return)",
+        "zh": "存酒自首次开瓶之日起保管1个月。（再次光临时收取10,000韩元）",
+        "ja": "キープボトルは初回ご利用日から1か月間お預かりします。（再来店時10,000ウォン）"
       },
       {
         "ko": "잔 및 기물 파손 시 구입가의 50%가 청구됩니다.",
@@ -657,7 +657,7 @@ window.DS_DATA = {
       "about": {
         "ko": "1865년부터 한 가문(그랜트 가)이 지켜 온 증류소의 25년 숙성. 셰리 통이 만든 깊이를 오래 즐기는 잔.",
         "en": "Twenty-five years from a distillery one family (the Grants) has run since 1865. Deep, slow, sherried.",
-        "zh": "自1865年起由同一家族（Grant 家族）守护至今的酒厂，25年陈酿。雪莉桶赋予的深邃，值得慢慢细品。",
+        "zh": "自1865年起由同一家族（Grant 家族）守护至今的蒸馏厂，25年陈酿。雪莉桶赋予的深邃，值得慢慢细品。",
         "ja": "1865年から一族（グラント家）が守り続ける蒸溜所の25年熟成。シェリー樽が生んだ深みをじっくり味わう一杯。"
       },
       "nose": {
@@ -698,13 +698,13 @@ window.DS_DATA = {
       "cask": {
         "ko": "스페인 헤레스 셰리 시즈닝 오크",
         "en": "Sherry-seasoned oak from Jerez",
-        "zh": "西班牙赫雷斯雪莉润桶橡木桶",
+        "zh": "西班牙赫雷斯雪莉酒润过的橡木桶",
         "ja": "スペイン・ヘレスのシェリーシーズニング・オーク樽"
       },
       "about": {
         "ko": "헤레스에서 셰리로 길들인 오크 통에서만 18년. 맥캘란을 상징하는 한 병.",
-        "en": "Eighteen years in oak seasoned with sherry in Jerez — the bottle Macallan is known for.",
-        "zh": "只在赫雷斯以雪莉酒润养的橡木桶中陈年18年。Macallan 的代表之作。",
+        "en": "Eighteen years exclusively in oak seasoned with sherry in Jerez — the bottle Macallan is known for.",
+        "zh": "18年间只用在赫雷斯以雪莉酒润过的橡木桶陈年。Macallan 的代表之作。",
         "ja": "ヘレスでシェリーを染み込ませたオーク樽だけで18年。Macallanを象徴する一本。"
       },
       "nose": {
@@ -752,7 +752,7 @@ window.DS_DATA = {
         "ko": "처음으로 \"싱글 배럴\"을 내건 버번. 병마개의 경주마는 8가지 자세라 모으는 사람도 있다.",
         "en": "The first bourbon sold as a single barrel. The racehorse stopper comes in eight poses — people collect them.",
         "zh": "首款打出“单桶”旗号的波本。瓶塞上的赛马共有8种姿态，也有人专门收集。",
-        "ja": "初めて「シングルバレル」を掲げたバーボン。栓の競走馬は8種類のポーズがあり、集める人もいる。"
+        "ja": "初めて「シングルバレル」を掲げたバーボン。ボトルの栓に付いた競走馬は8種類のポーズがあり、集める人もいる。"
       },
       "nose": {
         "ko": "바닐라, 캐러멜, 오렌지 껍질",
@@ -799,7 +799,7 @@ window.DS_DATA = {
         "ko": "병에 박힌 12갈래 뿔의 수사슴. 세 종류의 셰리 통에서 마무리한 하이랜드 몰트.",
         "en": "The twelve-point stag on the bottle. A Highland malt finished in three kinds of sherry cask.",
         "zh": "瓶身上嵌着12叉鹿角的雄鹿。在三种雪莉桶中过桶的高地麦芽威士忌。",
-        "ja": "ボトルに刻まれた12本角の牡鹿。3種のシェリー樽でフィニッシュしたハイランドモルト。"
+        "ja": "ボトルに付いた、12本に枝分かれした角を持つ牡鹿。3種のシェリー樽でフィニッシュしたハイランドモルト。"
       },
       "nose": {
         "ko": "오렌지 마멀레이드, 크리스마스 케이크",
@@ -850,7 +850,7 @@ window.DS_DATA = {
       },
       "about": {
         "ko": "물을 섞지 않고 통에서 꺼낸 그대로. 이름은 게일어로 \"근원\". 물을 몇 방울 떨어뜨려 보는 것도 좋다.",
-        "en": "Bottled straight from the cask, no water added. Gaelic for \"the origin\". Try a few drops of water.",
+        "en": "Bottled straight from the cask, no water added. The name is Gaelic for \"of the origin\". Try it with a few drops of water.",
         "zh": "不加水稀释，出桶即装瓶。名字在盖尔语中意为“本源”。不妨滴几滴水试试。",
         "ja": "加水せず、樽から出したそのままの姿で。名前はゲール語で「起源」。数滴の加水を試すのもおすすめ。"
       },
@@ -897,8 +897,8 @@ window.DS_DATA = {
       },
       "about": {
         "ko": "업계의 전설 빌리 워커가 되살린 증류소의 15년. 냉각 여과 없이, 색소 없이.",
-        "en": "Fifteen years from the distillery Billy Walker revived. No chill filtering, no added colour.",
-        "zh": "业界传奇 Billy Walker 重振的酒厂所出的15年。非冷凝过滤，不添加焦糖色。",
+        "en": "Fifteen years from the distillery revived by industry legend Billy Walker. No chill filtering, no added colour.",
+        "zh": "业界传奇 Billy Walker 重振的蒸馏厂出品的15年。非冷凝过滤，不添加焦糖色。",
         "ja": "業界の伝説、Billy Walkerが復活させた蒸溜所の15年。ノンチルフィルタード、無着色。"
       },
       "nose": {
@@ -992,7 +992,7 @@ window.DS_DATA = {
       "cask": {
         "ko": "새 아메리칸 오크 (내부를 태운 통)",
         "en": "New charred American oak",
-        "zh": "全新炙烤美国橡木桶",
+        "zh": "全新美国橡木桶（内壁炭化）",
         "ja": "内側を焦がしたアメリカンオークの新樽"
       },
       "about": {
@@ -1086,7 +1086,7 @@ window.DS_DATA = {
       "cask": {
         "ko": "새 아메리칸 오크 (내부를 태운 통)",
         "en": "New charred American oak",
-        "zh": "全新炙烤美国橡木桶",
+        "zh": "全新美国橡木桶（内壁炭化）",
         "ja": "内側を焦がしたアメリカンオークの新樽"
       },
       "about": {
@@ -1138,7 +1138,7 @@ window.DS_DATA = {
       },
       "about": {
         "ko": "아일라 섬의 묵직한 피트 위스키를 대표하는 한 병. 모닥불 연기와 바다 냄새.",
-        "en": "The classic heavy Islay peat. Bonfire smoke and the sea.",
+        "en": "The classic heavily peated Islay whisky. Bonfire smoke and the sea.",
         "zh": "艾雷岛厚重泥煤威士忌的代表之作。篝火的烟与大海的气息。",
         "ja": "アイラ島の重厚なピートウイスキーを代表する一本。焚き火の煙と海の香り。"
       },
@@ -1157,7 +1157,7 @@ window.DS_DATA = {
       "finish": {
         "ko": "아주 길고 스모키",
         "en": "Very long and smoky",
-        "zh": "极其悠长而烟熏",
+        "zh": "极其悠长，烟熏感十足",
         "ja": "とても長くスモーキー"
       },
       "photo": "img/menu/lagavulin-16.webp",
@@ -1185,7 +1185,7 @@ window.DS_DATA = {
       },
       "about": {
         "ko": "가장 스모키한 아일라 몰트로 자주 꼽히는 10년. 강하지만 레몬처럼 상쾌한 끝.",
-        "en": "Often called the smokiest Islay ten-year-old. Fierce, with a lemony lift.",
+        "en": "A ten-year-old often named the smokiest Islay malt of all. Fierce, but with a fresh, lemony finish.",
         "zh": "这款10年常被推为烟熏感最强的艾雷岛麦芽威士忌。劲道十足，收尾却如柠檬般清爽。",
         "ja": "最もスモーキーなアイラモルトとしてよく名が挙がる10年。力強くも、レモンのように爽やかな後味。"
       },
@@ -1204,7 +1204,7 @@ window.DS_DATA = {
       "finish": {
         "ko": "길고 스모키",
         "en": "Long and smoky",
-        "zh": "悠长而烟熏",
+        "zh": "悠长，带烟熏感",
         "ja": "長くスモーキー"
       },
       "photo": "img/menu/ardbeg-10.webp",
@@ -1275,7 +1275,7 @@ window.DS_DATA = {
         "ko": "버번 통 → 카리브 럼 통 마무리",
         "en": "Bourbon cask, finished in Caribbean rum casks",
         "zh": "波本桶 → 加勒比朗姆酒桶过桶",
-        "ja": "バーボン樽 → カリビアン・ラム樽でフィニッシュ"
+        "ja": "バーボン樽 → カリブ産ラム樽でフィニッシュ"
       },
       "about": {
         "ko": "카리브 럼을 담았던 통에서 마무리해 토피와 열대 과일 향이 난다.",
@@ -1320,14 +1320,14 @@ window.DS_DATA = {
       "abv": null,
       "abvNote": {
         "ko": "캐스크 스트렝스 · 정확한 도수와 피트 수치는 병 라벨 참고",
-        "en": "Cask strength; see the label for exact ABV and peating",
+        "en": "Cask strength; see the label for the exact ABV and peat level",
         "zh": "原桶强度 · 确切酒精度与泥煤值请见酒标",
         "ja": "カスクストレングス · 正確な度数とピート値はボトルのラベルを参照"
       },
       "cask": null,
       "about": {
         "ko": "세상에서 가장 강한 피트 위스키로 손꼽히는 시리즈. \".3\" 판은 아일라 섬에서 키운 보리로 만든다. 이 메뉴판의 마지막 장.",
-        "en": "Among the most heavily peated whiskies made. The \".3\" editions use barley grown on Islay. The last page of this menu.",
+        "en": "A series counted among the most heavily peated whiskies in the world. The \".3\" editions use barley grown on Islay. The last page of this menu.",
         "zh": "被列为世上泥煤味最重的威士忌系列之一。“.3”版以艾雷岛种植的大麦酿造。本酒单的最后一页。",
         "ja": "世界で最もピートの強いウイスキーに数えられるシリーズ。「.3」はアイラ島で育った大麦から造られる。このメニューの最終ページ。"
       },
@@ -1430,8 +1430,8 @@ window.DS_DATA = {
       "abv": null,
       "about": {
         "ko": "잔에 담아 내는 요거트 푸딩에 체리를 듬뿍 올린 디저트.",
-        "en": "Yogurt pudding served in a coupe, heaped with cherries.",
-        "zh": "盛在杯中的酸奶布丁，上面堆满樱桃的甜点。",
+        "en": "Yogurt pudding served in a glass, heaped with cherries.",
+        "zh": "盛在杯中的酸奶布丁，上面满满堆着樱桃。",
         "ja": "グラスに盛ったヨーグルトプリンに、チェリーをたっぷりのせたデザート。"
       },
       "plate": {
@@ -1456,7 +1456,7 @@ window.DS_DATA = {
       "about": {
         "ko": "치즈케이크 한 조각에 블루베리 크림과 블루베리를 곁들인 디저트.",
         "en": "A slice of cheesecake with blueberry cream and blueberries.",
-        "zh": "一块芝士蛋糕，搭配蓝莓奶油与蓝莓的甜点。",
+        "zh": "一块芝士蛋糕，配上蓝莓奶油和蓝莓。",
         "ja": "チーズケーキ1切れに、ブルーベリークリームとブルーベリーを添えたデザート。"
       },
       "plate": {
@@ -1541,7 +1541,7 @@ window.DS_DATA = {
         "ko": "캐나다드라이 진저에일. 생강 향이 은은하고 달지 않은 편이라 위스키에 섞어 마시기도 좋다.",
         "en": "Canada Dry Ginger Ale — gently gingery and not too sweet, so it also mixes well with whisky.",
         "zh": "Canada Dry 干姜水。姜香淡雅，不太甜，也很适合兑威士忌饮用。",
-        "ja": "Canada Dryのジンジャーエール。生姜の香りがほのかで甘さ控えめなので、ウイスキーで割るのにもぴったり。"
+        "ja": "Canada Dryのジンジャーエール。生姜の香りがほのかで甘さ控えめなので、ウイスキーを割るのにもぴったり。"
       },
       "photo": "img/menu/ginger-ale.webp",
       "photoCredit": {"author": "Fmvh", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Canada_Dry_ginger_ale_can.jpg"}
@@ -1558,7 +1558,7 @@ window.DS_DATA = {
       "about": {
         "ko": "단맛도 향도 없는 탄산수. 그대로 마시거나, 위스키에 부어 하이볼로.",
         "en": "Plain sparkling water, no sugar, no flavour. On its own, or poured over whisky for a highball.",
-        "zh": "不甜也无香的气泡水。可直接饮用，或倒入威士忌做成嗨棒。",
+        "zh": "无糖、无香味的气泡水。可直接饮用，或兑入威士忌做成嗨棒。",
         "ja": "甘みも香りもない炭酸水。そのままで、またはウイスキーに注いでハイボールに。"
       },
       "photo": "img/menu/soda-water.webp",
@@ -1575,7 +1575,7 @@ window.DS_DATA = {
     // 사장님 제공 2026-10-26 (네이버 · 카카오 지도 등록 내용)
     address: { ko: "서울 송파구 백제고분로41길 42-20, 5층", en: "5F, 42-20 Baekjegobun-ro 41-gil, Songpa-gu, Seoul", zh: "首尔 松坡区 百济古坟路41街 42-20, 5楼", ja: "ソウル 松坡区 百済古墳路41ギル 42-20、5階" },
     station: { ko: "잠실역 2·8호선 10번 출구에서 900m", en: "900 m from Jamsil Station (Lines 2 & 8), Exit 10", zh: "距蚕室站（2号线、8号线）10号出口900米", ja: "蚕室（チャムシル）駅 2・8号線 10番出口から900m" },
-    directions: { ko: "건물 입구로 들어오시면 바로 엘리베이터가 있어요. 5층으로 올라와 주세요.", en: "The elevator is just inside the building entrance. Take it up to the 5th floor.", zh: "进入大楼入口后就是电梯，请乘电梯上5楼。", ja: "建物の入口を入るとすぐにエレベーターがあります。5階までお上がりください。" },
+    directions: { ko: "건물 입구로 들어오시면 바로 엘리베이터가 있어요. 5층으로 올라와 주세요.", en: "The elevator is just inside the building entrance. Take it up to the 5th floor.", zh: "一进大楼入口就是电梯，请乘电梯上到5楼。", ja: "建物の入口を入るとすぐにエレベーターがあります。5階までお上がりください。" },
     parking: { ko: "주차는 지원되지 않아요 · 근처 주차장을 이용해 주세요", en: "No parking on site · please use a nearby parking lot", zh: "本店不提供停车 · 请使用附近停车场", ja: "駐車場のご用意はありません · 近くの駐車場をご利用ください" },
     maps: [
       { name: { ko: "네이버 지도", en: "Naver Map", zh: "Naver 地图", ja: "NAVER マップ" }, url: "https://naver.me/GUTF4SLo" },

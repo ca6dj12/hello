@@ -58,7 +58,7 @@ window.DS_I18N = {
       legendStrong: 'Filled = strong',
       toDesire: 'Meet my signature drink →',
       sigTitle: 'Feed<br>your desire',
-      sigSub: 'Meet the drink that takes after your sin.',
+      sigSub: 'Meet the drink that mirrors your sin.',
       love: 'Love', work: 'Work', sex: 'In bed',
       ageWarn: 'Rated 29+. No peeking.',
       lockMain: 'Tap to reveal',
@@ -106,7 +106,7 @@ window.DS_I18N = {
     },
 
     /* 답을 누르면 잠깐 뜨는 한마디 (원본 REACTIONS 와 같은 개수·순서) */
-    reactions: ['Oh?', 'Noted.', 'Suspicious…', 'So that’s your taste?', 'Interesting.', 'Honest.',
+    reactions: ['Oh?', 'Noted.', 'Suspicious…', 'So that’s your taste?', 'Interesting.', 'Honest, huh?',
       'I see.', 'Bold.', 'I’ll remember that.', 'Heh…', 'Didn’t see that coming.', 'Called it.'],
 
     sins: { 교: 'Pride', 질: 'Envy', 분: 'Wrath', 나: 'Sloth', 탐: 'Greed', 식: 'Gluttony', 색: 'Lust' },
@@ -131,17 +131,17 @@ window.DS_I18N = {
       분: {
         love: 'You say what hurts right away instead of hiding it. That honesty makes relationships heat up fast.',
         work: 'You don’t let frustrating or unfair situations slide. When action is needed, you move first.',
-        sex: 'You’re drawn to high emotion and high tension over calm. The stronger you both react, the deeper you get.'
+        sex: 'You’re drawn to high emotion and high tension over calm. The stronger you both react, the more you lose yourself in it.'
       },
       나: {
-        love: 'You’d rather be comfortable together than play games. You’re drawn to people who feel easy without trying.',
+        love: 'You’d rather be comfortable together than play games. You’re drawn to people who feel natural to be with, no effort needed.',
         work: 'Smart over hard: you look for ways to get results with less effort, and you’re good at finding them.',
         sex: 'Instead of setting an elaborate mood, you like lounging close until touch happens naturally.'
       },
       탐: {
         love: 'When you like someone, you’d rather make it official than leave it vague.',
         work: 'When you have a goal, your ambition is clear. You grab good opportunities fast.',
-        sex: 'Once you’re into someone, a little is never enough. You want to enjoy the touch, and the relationship, until you’re fully satisfied.'
+        sex: 'Once you’re into someone, a little is never enough. You want to enjoy the touching, and everything after, until you’re fully satisfied.'
       },
       식: {
         love: 'To you, a date is a pleasure in itself. Shared experiences like great food, drinks and travel matter a lot.',
@@ -157,27 +157,27 @@ window.DS_I18N = {
       교질: {
         love: 'You want to be valued in love too. If your partner pays more attention to someone else, your competitive side wakes up.',
         work: 'You get stronger under competition. Feeling outpaced pushes your skills higher.',
-        sex: 'You love feeling that your partner is completely into you. The more attention you confirm, the more you want to lead.'
+        sex: 'You love feeling that your partner is completely into you. The surer you are of their attention, the more you want to take the lead.'
       },
       교분: {
-        love: 'You especially hate feeling ignored. When respect breaks down, you say so right away.',
+        love: 'You especially hate feeling disrespected. When respect breaks down, you say so right away.',
         work: 'A hit to your pride actually sharpens your focus. Once you take something on, you don’t back down.',
-        sex: 'You prefer high tension and intense immersion to soft and gentle. A battle for control can be part of the thrill.'
+        sex: 'You’d rather it be high-tension and all-consuming than soft and gentle. A battle for control can be part of the thrill.'
       },
       교나: {
-        love: 'Even when you like someone, you won’t chase. You lean toward people who simply like you back.',
+        love: 'Even when you like someone, you won’t chase. You warm more to people who fall for you on their own.',
         work: 'You save energy but still want great results. You manage efficiency and quality at the same time.',
-        sex: 'You start relaxed, but once the mood builds you naturally take the lead, and you enjoy them following.'
+        sex: 'You start relaxed, but once the mood builds, you naturally take the lead, and you enjoy having them follow.'
       },
       교탐: {
         love: 'You want to be the one they choose. Your standards in relationships are high.',
         work: 'You’re driven by achievement. When a good position or result is in sight, you make sure it’s yours.',
-        sex: 'You want to see their reaction in full and feel deeply satisfied. You prefer certain over half-hearted.'
+        sex: 'You want to see their reaction in full and to feel deeply satisfied. In bed, too, you don’t do half measures.'
       },
       교식: {
         love: 'You love special dates in great places with great food. You want a relationship worth remembering, not an ordinary one.',
         work: 'You’re most effective when fun and recognition come together. The satisfaction of the process matters as much as the result.',
-        sex: 'The whole mood matters: the setting, the scent, the drinks. Within it, you enjoy showing off your charm.'
+        sex: 'The whole mood matters: the setting, the scent, the drinks. Once it’s right, you enjoy showing off your charm.'
       },
       교색: {
         love: 'You know your own charm. When you like someone, you naturally try to catch their attention.',
@@ -186,16 +186,16 @@ window.DS_I18N = {
       },
       질교: {
         love: 'You watch closely who your partner pays attention to, and you want to feel special too.',
-        work: 'Constant comparison can stress you out, but it also drives you to high results.',
+        work: 'Constant comparison can stress you out, but it also drives you to deliver great results.',
         sex: 'You need to know they’re drawn to you more than anyone else. Feeling like you’re winning the comparison turns you on.'
       },
       질분: {
         love: 'Jealousy shows on your face and in your voice. You don’t hold in hurt feelings for long.',
         work: 'When you can see a rival, your focus spikes. Hating to lose turns into action fast.',
-        sex: 'Strong feelings like jealousy or hurt actually raise the heat, in touch and in the relationship.'
+        sex: 'Strong feelings like jealousy or hurt actually raise the heat, both in touch and in bed.'
       },
       질나: {
-        love: 'It bothers you, but competing or clinging feels exhausting. In the end, you pick the comfortable relationship.',
+        love: 'Things do get to you, but competing or clinging feels exhausting. In the end, you pick the comfortable relationship.',
         work: 'You compare yourself to others but don’t jump into every contest. You use your energy only when it counts.',
         sex: 'You want attention but find mind games tiring. You prefer a calm, steady relationship where they focus on you.'
       },
@@ -210,7 +210,7 @@ window.DS_I18N = {
         sex: 'You love sharing the mood, but in that moment you want their attention all to yourself.'
       },
       질색: {
-        love: 'The more you like someone, the more closely you watch their small moves. When someone else gets close, you notice.',
+        love: 'The more you like someone, the more closely you watch their small moves. When someone else gets close, it naturally gets to you.',
         work: 'You read the atmosphere between people well. You’re sharp where competition and relationships tangle.',
         sex: 'The more you like them, the more sensitive you are to their touch and reactions. Feeling that they’re focused only on you is a strong turn-on.'
       },
@@ -220,7 +220,7 @@ window.DS_I18N = {
         sex: 'In bed, you’d rather set the mood than be led. You enjoy the tension of pushing against each other.'
       },
       분질: {
-        love: 'If someone you like shows interest in another, your feelings can shake fast, but you won’t hide them.',
+        love: 'If someone you like shows interest in someone else, you can get rattled fast, but you won’t hide it.',
         work: 'You’re at your strongest in competition. Feeling outpaced fuels your drive.',
         sex: 'Jealousy or rivalry quickly raises the tension. The stronger the feelings, the more forward you get with touch.'
       },
@@ -230,9 +230,9 @@ window.DS_I18N = {
         sex: 'Usually laid-back, but once the switch flips the mood changes completely. Slow start, intense once you’re in it.'
       },
       분탐: {
-        love: 'You hate it when a relationship you want gets disrupted. Once you like someone, you want to protect it.',
+        love: 'You hate it when a relationship you want gets disrupted. Once you like someone, you’re strongly protective of what you have.',
         work: 'You’re touchy when something gets in the way of your goals, but once you set one, you rarely give up.',
-        sex: 'When you want something, you make it clear. In a relationship, you stay fully engaged until you’re satisfied.'
+        sex: 'When you want something, you make it clear. In bed, too, you stay fully engaged until you’re satisfied.'
       },
       분식: {
         love: 'Even after a fight, you’d rather clear the air over food and fun than drag it out.',
@@ -242,12 +242,12 @@ window.DS_I18N = {
       분색: {
         love: 'You feel both love and hurt intensely. Your relationships rarely run flat.',
         work: 'When something interests you, you move fast. Your passion runs high, so emotional situations hit you hard too.',
-        sex: 'When you’re attracted, you react fast and hard. You burn hottest when emotion and desire rise together.'
+        sex: 'When you’re attracted, you react fast and intensely. You burn hottest when emotion and desire rise together.'
       },
       나교: {
         love: 'You won’t cling, but you want to be respected. You like relationships that are comfortable but keep your pride intact.',
         work: 'You want great results with little effort. Efficiency matters a lot to you.',
-        sex: 'You’d rather they come to you than make the effort yourself. Relaxed at first, but once the mood sets you quietly take the lead.'
+        sex: 'You’d rather they come to you than make the effort yourself. Relaxed at first, but once the mood sets, you quietly take the lead.'
       },
       나질: {
         love: 'Their behavior bothers you, but confronting them or competing feels tiring.',
@@ -260,13 +260,13 @@ window.DS_I18N = {
         sex: 'Usually laid-back, but more forward than expected when feelings surge. A big contrast, full of surprises.'
       },
       나탐: {
-        love: 'You want a good relationship, just not an exhausting one. You prefer comfortable and highly satisfying.',
+        love: 'You want a good relationship, just not an exhausting one. You prefer one that’s comfortable and deeply satisfying.',
         work: 'You’re good at finding ways to get big results with little effort. Your sense of efficiency is sharp.',
         sex: 'You want to enjoy it comfortably but still be fully satisfied: minimal effort, maximum pleasure.'
       },
       나식: {
         love: 'You’re drawn to people you can simply lie around, eat and rest with.',
-        work: 'Work without joy wears you out. Give you a comfortable setup, though, and you do steady, good work.',
+        work: 'Work without joy wears you out. In a comfortable setup, though, you do steady, good work.',
         sex: 'You like lying close in bed and letting the touch go on slowly. You’d rather savor it than rush.'
       },
       나색: {
@@ -277,7 +277,7 @@ window.DS_I18N = {
       탐교: {
         love: 'You want to be chosen by the person you like, and your standards are high.',
         work: 'Goals make you ambitious. You don’t want to miss out on either results or recognition.',
-        sex: 'You want the reaction and satisfaction you’re after. You want to look irresistible while keeping control.'
+        sex: 'You make sure you get the reaction and satisfaction you’re after. You want to look irresistible while keeping control.'
       },
       탐질: {
         love: 'When their attention drifts elsewhere, you want even more of it for yourself.',
@@ -286,7 +286,7 @@ window.DS_I18N = {
       },
       탐분: {
         love: 'You don’t let go of a relationship you like easily. When you don’t get the response you want, it frustrates you.',
-        work: 'You hate missing chances or being blocked. In front of a goal, you’re relentless.',
+        work: 'You hate missing chances or being blocked. With a goal in sight, you’re relentless.',
         sex: 'When you want something, you say it directly. When the mood is right, you take charge, and you hate it ending half-done.'
       },
       탐나: {
@@ -312,12 +312,12 @@ window.DS_I18N = {
       식질: {
         love: 'When you see others enjoying their relationships, you want that experience too.',
         work: 'The mood around you affects you a lot. You focus best with fun people.',
-        sex: 'You love sharing the sensations, but you want their attention on you. If it scatters, so does your immersion.'
+        sex: 'You love sharing the sensations, but you want their attention on you. If it wanders, you lose the mood.'
       },
       식분: {
         love: 'Even after a fight, you want to clear the air quickly by eating or having fun together.',
         work: 'You release stress right away. You recover fast, but in-the-moment emotions can sway you.',
-        sex: 'When feelings rise, your body responds fast. You’re most immersed when the mood is intense and the senses are stirred.'
+        sex: 'When feelings rise, your body responds fast. You get most lost in it when the mood is intense and the senses are stirred.'
       },
       식나: {
         love: 'You love everyday dates spent comfortably eating and resting.',
@@ -342,7 +342,7 @@ window.DS_I18N = {
       색질: {
         love: 'The more you like someone, the more closely you watch them. When someone else gets close, it quietly bothers you.',
         work: 'You read the atmosphere between people quickly. You move by instinct where competition and relationships mix.',
-        sex: 'The more you like them, the more sensitive you get to their reactions, and the more you want them to yourself. You’re most immersed when they focus only on you.'
+        sex: 'The more you like them, the more sensitive you get to their reactions, and the more you want them to yourself. You’re most into it when they focus only on you.'
       },
       색분: {
         love: 'When you like someone you mean it, and when you’re hurt you say it. Your love life runs hot, not calm.',
@@ -355,14 +355,14 @@ window.DS_I18N = {
         sex: 'You have desire but don’t want to complicate it. You like staying close and letting it flow naturally into touch.'
       },
       색탐: {
-        love: 'You want clear attention from the person you like. Leaving things vague can frustrate you.',
+        love: 'You want unmistakable attention from the person you like. Leaving things vague can frustrate you.',
         work: 'You combine a knack for drawing people in with a strong sense of purpose. When the result you want is in sight, you move fast.',
         sex: 'With someone you like, you want plenty of attention and touch. When you’re curious, you’re fairly open to new moods and new things.'
       },
       색식: {
         love: 'You love sharing good food, drinks and atmosphere with good people. The sensory side of a date matters to you.',
         work: 'You get energy from new people and experiences. In a fun setting, you’re great at lifting the mood.',
-        sex: 'You’re very sensitive to atmosphere. When drink, scent, music and the feel of skin all line up, your desire and immersion soar.'
+        sex: 'You’re very sensitive to atmosphere. When drink, scent, music and the feel of skin all line up, your desire soars and you lose yourself in it.'
       }
     }
   },
@@ -380,7 +380,7 @@ window.DS_I18N = {
       legendStrong: '实心 = 强',
       toDesire: '看看我的专属特调 →',
       sigTitle: '满足<br>你的欲望',
-      sigSub: '来见见这杯像极了你的罪的酒。',
+      sigSub: '来见见和你的罪最像的那一杯。',
       love: '恋爱', work: '工作', sex: '亲密',
       ageWarn: '29禁，请勿偷看',
       lockMain: '点击查看结果',
@@ -427,7 +427,7 @@ window.DS_I18N = {
     },
 
     reactions: ['哦？', '原来如此！', '有点可疑！', '原来你好这口？', '有意思！', '挺诚实嘛？',
-      '明白了。', '够大胆！', '我记住了！', '呵呵…', '没想到！', '果然！'],
+      '明白了。', '够大胆！', '我记住了！', '嘿嘿…', '没想到！', '果然！'],
 
     sins: { 교: '傲慢', 질: '嫉妒', 분: '暴怒', 나: '懒惰', 탐: '贪婪', 식: '暴食', 색: '色欲' },
     drinkName: {
@@ -438,7 +438,7 @@ window.DS_I18N = {
     /* 결과 성향 49개 (단일 7 + 순서쌍 42). 키는 en.traits 와 같다. */
     traits: {
       교: {
-        love: '就算喜欢，你也不会轻易缠着对方。你想要的是彼此尊重、又把你看得很特别的关系。',
+        love: '就算喜欢，你也不会轻易缠着对方。你想要的是彼此尊重、对方又把你当成特别存在的关系。',
         work: '越被认可，你越投入。事情一旦交到你手上，就想做得比谁都漂亮。',
         sex: '到了床上，你也喜欢掌握主导权。看着对方被你的魅力撩动，是你最满足的时刻。'
       },
@@ -460,7 +460,7 @@ window.DS_I18N = {
       탐: {
         love: '遇到心仪的人，你不想一直暧昧着，更想把关系明明白白地定下来。',
         work: '一旦有了目标，你的野心就毫不含糊。好机会一出现，你出手很快。',
-        sex: '一旦看对眼，浅尝辄止只会让你意犹未尽。无论亲密接触还是这段关系，你都想享受到心满意足。'
+        sex: '一旦看对眼，浅尝辄止只会让你意犹未尽。无论是肢体接触还是更进一步，你都想享受到心满意足。'
       },
       식: {
         love: '在你看来，约会本身就是一种享受。美食、小酒、旅行，这些一起体验的时光对你很重要。',
@@ -469,7 +469,7 @@ window.DS_I18N = {
       },
       색: {
         love: '心动和吸引力对你很重要。有了喜欢的人，你的好感会自然而然地流露在行动里。',
-        work: '你很会看人，也很会读气氛。碰上感兴趣的事，行动力一下子就上来了。',
+        work: '你看人很准，对气氛也很敏锐。碰上感兴趣的事，行动力一下子就上来了。',
         sex: '对你来说，从互相来电到亲密接触往往发展得很快。只要喜欢，你会比较坦率地表达自己的渴望。'
       },
       교질: {
@@ -478,8 +478,8 @@ window.DS_I18N = {
         sex: '你喜欢对方完全为你着迷的感觉。越是确认了对方的在意，你就越想把主导权握在手里。'
       },
       교분: {
-        love: '你尤其讨厌被人无视的感觉。尊重一旦被打破，你会当场把情绪表达出来。',
-        work: '自尊心被戳到时，你的专注力反而更高。一旦接手的事，你不会轻易退让。',
+        love: '你尤其讨厌被人轻视的感觉。一旦觉得不被尊重，你会当场把情绪表达出来。',
+        work: '自尊心被戳到时，你的专注力反而更高。事情一旦接手，你就不会轻易退缩。',
         sex: '比起温柔平缓，你更喜欢张力十足、让人深深沉浸的气氛。争夺主导权，对你来说也可以是一种刺激。'
       },
       교나: {
@@ -503,14 +503,14 @@ window.DS_I18N = {
         sex: '你喜欢先把气氛造起来，把对方的目光吸引过来。感觉到对方正被你撩得心神不定，你才最满足。'
       },
       질교: {
-        love: '对方把关心给了谁，你看得很仔细。你也希望自己被当成特别的那个人。',
+        love: '对方对谁上心、对谁感兴趣，你都看得很仔细。你也希望自己被当成特别的那个人。',
         work: '在处处被比较的环境里，你会有压力，可这同时也成了你拿出高成绩的动力。',
-        sex: '你需要确信，比起任何人，对方更被你吸引。在比较中占上风的感觉，对你也是一种刺激。'
+        sex: '你需要确信，对方被你吸引的程度胜过任何人。在比较中占上风的感觉，对你也是一种刺激。'
       },
       질분: {
         love: '一吃醋，你的表情和语气就藏不住。心里委屈了，也忍不了太久。',
         work: '对手就在眼前时，你的专注力会直线上升。不想输的心情，很快就会变成行动。',
-        sex: '吃醋也好，委屈也好，这类强烈的情绪一上来，你们之间的肢体接触和张力反而更浓。'
+        sex: '吃醋也好，委屈也好，这类强烈的情绪一上来，你们之间的肢体接触反而更多，张力也更足。'
       },
       질나: {
         love: '心里是在意的，可要你去争、去缠着对方，你只觉得累。到头来，你还是会选让自己舒服的关系。',
@@ -529,12 +529,12 @@ window.DS_I18N = {
       },
       질색: {
         love: '越喜欢，你越会留意对方的小举动。有别人靠近时，你自然而然就会在意起来。',
-        work: '人与人之间的气氛，你读得很准。在竞争和人际关系交织的局面里，你的反应很快。',
+        work: '人与人之间的微妙气氛，你总能准确捕捉。在竞争和人际关系交织的局面里，你的反应很快。',
         sex: '越是喜欢的人，你对肢体接触和对方的反应就越敏感。“对方只专注于我”的感觉，对你是很强的刺激。'
       },
       분교: {
         love: '一觉得没被尊重，你会立刻拉开距离，或者把情绪说出来。自尊心，是你衡量感情的重要标准。',
-        work: '遇到不公平或憋屈的情况，你会站出来发声。责任感和好胜心，在你身上总是一起上涨。',
+        work: '遇到不公平或憋屈的情况，你会站出来发声。责任感和好胜心，会在你身上一起高涨。',
         sex: '在床上，你也不愿轻易被牵着走，更想由自己来定调。和对方强烈碰撞出的那股张力，你很享受。'
       },
       분질: {
@@ -550,7 +550,7 @@ window.DS_I18N = {
       분탐: {
         love: '你讨厌自己想要的关系被打乱。只要喜欢上了，想守住这段关系的心也很强。',
         work: '目标受到干扰时，你会很敏感。但目标一旦定下，你就不会轻易放弃。',
-        sex: '有了想要的，你会明确地表达出来。在亲密关系里，你也会主动投入，直到满足为止。'
+        sex: '有了想要的，你会明确地表达出来。在亲密这件事上，你也会主动投入，直到满足为止。'
       },
       분식: {
         love: '就算吵了架，你也不想拖太久，更愿意一起吃吃玩玩，把气氛缓和过来。',
@@ -575,7 +575,7 @@ window.DS_I18N = {
       나분: {
         love: '能过去的事你一般都让它过去，但对方一再越线，你就会变得很坚决。平时的你相当从容。',
         work: '平时你省着力气，可问题一来，专注力会突然飙升。',
-        sex: '平时不紧不慢，情绪猛地涌上来的那一刻，你却比想象中主动。你是温差很大的反转型。'
+        sex: '平时不紧不慢，情绪猛地涌上来的那一刻，你却比想象中主动。你是反差极大、自带反转的类型。'
       },
       나탐: {
         love: '你想要一段好的感情，却不喜欢太累人的恋爱。舒服、满意度又高的关系，才是你的首选。',
@@ -598,12 +598,12 @@ window.DS_I18N = {
         sex: '想要的反应和满足，你都要实实在在地得到。你既想在对方眼里魅力十足，又不想放掉主导权。'
       },
       탐질: {
-        love: '对方的注意力一飘到别处，你反而想要更多的关注落在自己身上。',
+        love: '对方的注意力一飘到别处，你也会想要更多的关注落在自己身上。',
         work: '别人拿出好成绩，你就会瞄准更高的目标。竞争给了你很多动力。',
         sex: '你想得到对方足够多的关注，也很看重“我比任何人都特别”的感觉。'
       },
       탐분: {
-        love: '看上的关系，你不想轻易错过。对方的回应不如你所愿时，你可能会觉得憋闷。',
+        love: '中意的感情，你不想轻易放手。对方的回应不如你所愿时，你可能会觉得憋闷。',
         work: '你讨厌错过机会，也讨厌被人妨碍。在目标面前，你相当执着。',
         sex: '有了想要的，你会直接说出来。气氛对了，你会主动带着节奏走，不上不下地收场只会让你觉得可惜。'
       },
@@ -649,7 +649,7 @@ window.DS_I18N = {
       },
       식색: {
         love: '人、地方、美食、酒，这些一起感受的氛围你很看重。你懂得享受约会本身。',
-        work: '认识新的人、尝试新的体验，会让你能量上升。营造气氛的感觉，你也相当不错。',
+        work: '认识新的人、尝试新的体验，会让你能量上升。营造气氛，你也很有一套。',
         sex: '肢体接触、香气、音乐、酒、氛围，凡是撩动五感的东西你都格外没抵抗力。情调一好，欲望也来得很快。'
       },
       색교: {
@@ -659,7 +659,7 @@ window.DS_I18N = {
       },
       색질: {
         love: '越喜欢，你越会仔细地看对方的一举一动。别人靠近时，你会暗暗在意。',
-        work: '人与人之间的气氛，你读得很快。在竞争和关系混在一起的环境里，你习惯凭直觉行动。',
+        work: '人与人之间的气氛，你察觉得很快。在竞争和人际关系交织的环境里，你习惯凭直觉行动。',
         sex: '越喜欢，你对对方的反应越敏感，想独占的心也越强。对方只专注于你的那一刻，你最投入。'
       },
       색분: {
@@ -680,7 +680,7 @@ window.DS_I18N = {
       색식: {
         love: '和对的人一起享受美食、好酒和气氛，是你的最爱。约会里感官的那一面，你很看重。',
         work: '新的人和新的体验会给你能量。在有趣的环境里，你很擅长把气氛带起来。',
-        sex: '你对气氛非常敏感。酒、香气、音乐，直到肌肤的触感全都对上时，你的欲望和投入度会大大升高。'
+        sex: '你对气氛非常敏感。酒、香气、音乐，乃至肌肤的触感，全都对上的时候，你的欲望和投入度会大大升高。'
       }
     }
   },
@@ -694,9 +694,9 @@ window.DS_I18N = {
       /* 원본 화면 문구 */
       start: 'タップしてスタート',
       footerTip: '答えをタップすると次の質問へ進みます。',
-      legendWeak: '空白 = 弱い',
+      legendWeak: '白抜き = 弱い',
       legendStrong: '塗りつぶし = 強い',
-      toDesire: '私のシグネチャーに会う →',
+      toDesire: '私のシグネチャーカクテルに出会う →',
       sigTitle: 'あなたの欲望を<br>満たして',
       sigSub: 'あなたの罪に似た一杯に出会ってください。',
       love: '恋愛', work: '仕事', sex: '夜の顔',
@@ -704,18 +704,18 @@ window.DS_I18N = {
       lockMain: 'タップして結果を見る',
       /* 개선 레이어 문구 */
       tasteHead: 'この一杯の味',
-      aroma: '香り', taste: '味', finish: 'フィニッシュ', strength: '強さ', price: '価格',
+      aroma: '香り', taste: '味わい', finish: 'フィニッシュ', strength: '強さ', price: '価格',
       won: 'ウォン',
       pairHead: '同じ罪のウイスキー',
       glass: 'グラス',
       order: 'バーテンダーに見せる',
       saveImage: '画像を保存',
       soldOut: '売り切れ', soldOutNote: '本日は売り切れです。',
-      sigSoldOut: '本日この一杯は売り切れです。バーテンダーに近い一杯をおすすめしてもらってください。',
+      sigSoldOut: '本日この一杯は売り切れです。バーテンダーに、似た味わいの一杯をおすすめしてもらってください。',
       share: 'シェア', shareInvite: 'あなたも診断：', shareKicker: '結果をシェア',
       shareHint: '画像を長押しして保存し、インスタのストーリーやLINEでシェアしてください。',
       copyLink: '診断リンクをコピー', copied: 'コピーしました',
-      fullMenu: 'メニュー全体',
+      fullMenu: '全メニュー',
       restart: '最初からやり直す',
       close: '閉じる',
       orderNote: 'この画面をバーテンダーに見せてください',
@@ -734,14 +734,14 @@ window.DS_I18N = {
       learnMore: 'このお酒について', storyHistory: 'ストーリー', storyLayers: '味の流れ', storyServe: 'おすすめの飲み方',
       layerLabels: ['香り', 'ひと口目', '中盤', '余韻'], loading: '読み込み中…',
       storyError: '読み込めませんでした。少し時間をおいてもう一度タップしてください。',
-      detailNote: '一般的な製品情報です。店内のボトル（バッチ・年）によって多少異なる場合があります。'
+      detailNote: '一般的な製品情報です。店内のボトルは、バッチや製造年によって多少異なる場合があります。'
     },
 
     aria: {
-      cover: '表紙', coverArt: 'Deadly Sins モノクロのロゴ',
+      cover: '表紙', coverArt: 'Deadly Sinsのモノクロロゴ',
       quiz: '七つの質問', progress: '質問の進み具合', choices: '答えを選ぶ',
       results: '診断結果', radar: '七つの大罪の傾向グラフ',
-      signature: 'あなたのシグネチャー', back: '前の画面に戻る', art: ' のシンボルとグラス'
+      signature: 'あなたのシグネチャーカクテルの画像', back: '前の画面に戻る', art: ' のシンボルとグラス'
     },
 
     reactions: ['おっ！', 'なるほど！', 'あやしい！', 'そういう好み？', 'おもしろい！', '正直だね？',
@@ -778,7 +778,7 @@ window.DS_I18N = {
       탐: {
         love: '気になる人ができたら、曖昧なままにはしておけない。関係をはっきりさせたいタイプ。',
         work: '目標ができると、欲に迷いがない。いいチャンスと見れば、すかさずつかみにいく。',
-        sex: '一度ハマると、少しだけでは物足りない。スキンシップも関係も、満足するまでとことん楽しみたい。'
+        sex: '一度ハマると、少しだけでは物足りない。スキンシップもその先も、満足するまでとことん楽しみたい。'
       },
       식: {
         love: 'デートもひとつのお楽しみ。グルメ、お酒、旅行など、一緒に味わう体験を大切にする。',
@@ -797,7 +797,7 @@ window.DS_I18N = {
       },
       교분: {
         love: 'ないがしろにされるのが特に嫌い。尊重が崩れると、すぐに気持ちを口に出す。',
-        work: 'プライドを刺激されると、かえって集中力が上がる。一度引き受けたことからは簡単に退かない。',
+        work: 'プライドを刺激されると、かえって集中力が上がる。一度引き受けたら、簡単には引き下がらない。',
         sex: '優しく穏やかなものより、テンション高く強く没頭できる雰囲気が好き。主導権の奪い合いも刺激になる。'
       },
       교나: {
@@ -808,7 +808,7 @@ window.DS_I18N = {
       교탐: {
         love: '気になる人に選ばれたいという欲がある。恋愛でも求める基準は高め。',
         work: '達成欲が強い。いいポジションや成果が見えたら、確実に自分のものにしたい。',
-        sex: '相手の反応もじっくり見たいし、満足感もたっぷり味わいたい。中途半端より、確かなものを選ぶ。'
+        sex: '相手の反応もじっくり見たいし、満足感もたっぷり味わいたい。肌を重ねるときも、中途半端より確かなものを選ぶ。'
       },
       교식: {
         love: 'いいお店、おいしい料理のような特別なデートが好き。ありきたりな関係より、記憶に残る関係を求める。',
@@ -828,7 +828,7 @@ window.DS_I18N = {
       질분: {
         love: '嫉妬すると、表情や口ぶりにすぐ出る。傷ついた気持ちを長くは溜め込まない。',
         work: 'ライバルの姿が見えると、集中力が跳ね上がる。負けず嫌いが、すぐ行動に変わる。',
-        sex: '嫉妬や寂しさのような強い感情がわくと、かえってスキンシップも関係の温度も上がりやすい。'
+        sex: '嫉妬や寂しさのような強い感情がわくと、かえってスキンシップも、ふたりの夜の温度も上がりやすい。'
       },
       질나: {
         love: '気にはなるけれど、張り合ったりすがったりするのは面倒。結局、ラクな関係を選びがち。',
@@ -868,7 +868,7 @@ window.DS_I18N = {
       분탐: {
         love: '望んだ関係が乱されるのを嫌う。気に入った相手との関係は、守り抜きたい気持ちも強い。',
         work: '目標を邪魔されると敏感に反応する。そのかわり、一度目標を決めたら簡単にはあきらめない。',
-        sex: '望むことがあれば、はっきり態度で示す。関係でも、満足するまで積極的にのめり込むほう。'
+        sex: '望むことがあれば、はっきり態度で示す。肌を重ねるときも、満足するまで積極的にのめり込むほう。'
       },
       분식: {
         love: 'ケンカしてもズルズル引きずらない。一緒においしいものを食べて、遊んで、空気を和ませたい。',
@@ -907,7 +907,7 @@ window.DS_I18N = {
       },
       나색: {
         love: 'ドキドキは好きでも、ややこしい駆け引きには疲れてしまう。自然と距離が縮まる関係に惹かれる。',
-        work: 'エネルギーが上がるのは、人や仕事を面白いと感じた時だけ。そのスイッチははっきりしている。',
+        work: '人や仕事を面白いと感じた時にだけ、ぐっとエネルギーが上がる。',
         sex: '自分からガツガツいくより、雰囲気が自然に熟すのを待つのが好き。くつろぎの中で、欲求がじわじわ高まっていく。'
       },
       탐교: {

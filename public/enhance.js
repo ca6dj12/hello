@@ -21,7 +21,7 @@
     return;
   }
 
-  const VERSION = '2026-11-21d';
+  const VERSION = '2026-11-21e';
   const DATA = window.DS_DATA;
   const I18N = window.DS_I18N;
   const QUIZ = window.DS_QUIZ;
