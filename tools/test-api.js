@@ -105,10 +105,10 @@ function fakeRes() {
   check(fwd.code === 404, 'x-forwarded-host 를 꾸며 보내도 404');
   const own = await call('GET', undefined, { query: { stats: '1' }, headers: { host: 'deadly-sins-abc123-ca6dj12s-projects.vercel.app' } });
   const st = own.body || {};
-  check(own.code === 200 && st.results && st.results.total === 3, '배포 고유 주소에서는 통계 (완주 3)', st.results);
+  check(own.code === 200 && st.results && st.results.total === 3 && st.quiz === 'v1', '배포 고유 주소에서는 통계 (완주 3, 버전 표시 없는 기록 = v1)', st.results);
   check(st.results && st.results.bySin.some((r) => r.sin === '나태' && r.n === 1 && r.pct === 33.3), '죄별 명수 · 비율', st.results && st.results.bySin);
   check(Array.isArray(st.days) && st.days.length >= 1 && st.days[0].finished === 3, '날짜별 (한국 시간)', st.days);
-  check(Array.isArray(st.picks) && st.picks.some((r) => r.pick === 'Q1D' && r.n === 1), '보기별 선택 수', st.picks);
+  check(Array.isArray(st.options) && st.options.length === 0 && Array.isArray(st.previous) && st.previous.length === 0, 'v1 기록(Q1D 꼴)은 선택지 표를 만들지 않음', st.options);
   check(Array.isArray(st.recent) && st.recent.length === rows.length, '최근 기록', st.recent && st.recent.length);
   check(Array.isArray(st.errors) && st.errors.some((r) => r.message === 'boom'), '최근 오류', st.errors);
   check(Array.isArray(st.items) && st.items.some((r) => r.id === 'lagavulin-16' && r.n === 1), '많이 눌러 본 메뉴', st.items);
@@ -116,14 +116,55 @@ function fakeRes() {
     '1층 홍보 사이트 (들어옴 2 · 메뉴 1 · 오시는 길 1 · 인스타/전화 1 · 대관 문의 1)', st.promo);
   check(JSON.stringify(st.quits) === JSON.stringify([{ q: 4, n: 1 }, { q: 5, n: 1 }]),
     '그만둔 문항: 세션마다 마지막 것, 끝까지 한 세션은 빼고', st.quits);
+  /* ---------- 설문 v2: 버전 표시 · 동점 순서 · 버전별 통계 ---------- */
+  console.log('\n■ 설문 v2 (버전 표시 · 동점 순서 · 버전별 통계)');
+  const order = async (quiz) => call('GET', undefined, { query: { order: '1', quiz } });
+  const ord0 = await order('v2');
+  check(ord0.code === 200 && ord0.body.order.join('') === '교질분나탐식색' && !('n' in ord0.body), '동점 순서: 결과가 없으면 기본 순서 (건수는 내보내지 않음)', ord0.body);
+  check((await order('drop table')).code === 400 && (await order('')).code === 400, '동점 순서: 이상한 버전 → 400');
+  const v2 = (sid, sin, picks, more) => send(Object.assign({ sid, type: 'result', quiz: 'v2', sin, second: '교만', points: '', picks }, more || {}));
+  await send({ sid: 'n1', type: 'start', quiz: 'v2' });
+  check((await v2('n1', '분노', 'Q1분 Q2교 Q3색 Q4분 Q5교 Q6분 Q7식')).code === 204, 'v2 결과 저장 (고른 선택지를 죄 이름으로)');
+  await v2('n2', '분노', 'Q1분 Q2질 Q3색 Q4나 Q5색 Q6분 Q7분', { tie: true, tieBy: 'recent' });
+  await v2('n3', '탐욕', 'Q1탐 Q2탐 Q3탐 Q4식 Q5나 Q6탐 Q7질');
+  await v2('n4', '색욕', 'Q1나 Q2식 Q3색 Q4교 Q5색 Q6색 Q7색', { tie: true, tieBy: 'random' });
+  await send({ sid: 'n5', type: 'quit', quiz: 'v2', q: 1, answered: 0, junk: 1 });
+  await send({ sid: 'n6', type: 'start', quiz: '<script>' });
+  const tagged = (await pg.query("select sid, type, extra from deadly_sins_events where sid in ('n1','n5','n6') and type <> 'result' order by sid")).rows;
+  check(JSON.stringify(tagged.map((r) => r.extra)) === JSON.stringify([{ quiz: 'v2' }, { q: 1, quiz: 'v2', answered: 0 }, null]),   // jsonb 는 키를 길이순으로 돌려준다
+    '설문 버전 표시는 기타 칸에 (이탈 기록에도), 이상한 값은 버림', tagged.map((r) => r.extra));
+  const ord1 = await order('v2');
+  check(ord1.body.order.join('') === '교질나식탐색분', '동점 순서: 덜 나온 죄가 앞 (안 나온 죄 → 1번 나온 죄 → 2번 나온 분노)', ord1.body.order.join(''));
+  check((await order('v3')).body.order.join('') === '교질분나탐식색', '동점 순서는 설문 버전마다 따로');
+  await send({ sid: 'late', type: 'result', sin: '질투', second: '교만', points: '', picks: 'Q1C' });   // 배포 전에 열어 둔 화면에서 뒤늦게 온 v1 결과
+  const s2 = (await call('GET', undefined, { query: { stats: '1' }, headers: { host: process.env.VERCEL_URL } })).body || {};
+  check(s2.quiz === 'v2' && s2.results.total === 4 && s2.results.bySin[0].sin === '분노' && s2.results.bySin[0].pct === 50 && s2.results.bySin.length === 7,
+    '통계는 번호가 가장 큰 설문 버전의 것 (v2 완주 4, 안 나온 죄도 0 으로 · 뒤늦게 온 v1 결과에 뒤집히지 않음)', s2.results);
+  check(s2.results.ties === 2 && s2.results.tieRate === 50 && s2.results.tieBy.recent === 1 && s2.results.tieBy.random === 1 && s2.results.chi2 === 6.5,
+    '동점 비율 · 동점을 가른 방식 · 균등 검정', s2.results);
+  const q1 = (s2.options || [])[0] || {};
+  check(s2.options.length === 7 && q1.q === 1 && q1.answered === 4 && q1.eff === 2.83 && q1.picks[0].sin === '분노' && q1.picks[0].pct === 50 && q1.picks[0].warn === false,
+    '문항별 선택지 선택률 · 유효 선택지 수', q1);
+  const q3 = s2.options[2].picks;
+  check(q3[0].sin === '색욕' && q3[0].pct === 75 && q3[0].warn === true, '선택률이 50% 를 넘는 선택지는 경고', q3);
+  const wrath = (s2.sinAvg || []).find((r) => r.sin === '분노');
+  check(wrath && wrath.options === 4 && wrath.pct === 37.5, '죄별 평균 선택률', s2.sinAvg);
+  check(s2.previous.length === 1 && s2.previous[0].quiz === 'v1' && s2.previous[0].total === 4, '이전 설문 버전은 따로 요약', s2.previous);
+  check(JSON.stringify(s2.quits) === JSON.stringify([{ q: 1, n: 1 }]), '그만둔 문항도 지금 버전 것만', s2.quits);
   delete process.env.VERCEL_URL;
   check((await call('GET', undefined, { query: { stats: '1' }, headers: { host: 'x' } })).code === 404, 'VERCEL_URL 이 없으면 통계 꺼짐');
+  process.env.DATABASE_URL = '';
+  delete require.cache[path.join(ROOT, 'api', 'track.js')];
+  const noDb = fakeRes(); await require(path.join(ROOT, 'api', 'track.js'))({ method: 'GET', query: { order: '1', quiz: 'v2' }, headers: {} }, noDb);
+  check(noDb.code === 200 && noDb.body.order === null, 'DB 가 없으면 동점 순서 없음 (사이트는 무작위로)', noDb.body);
+  process.env.DATABASE_URL = 'postgresql://test';
 
   // 새 인스턴스가 떠도 스키마 만들기가 다시 돌아도 문제없는지 (if not exists)
   delete require.cache[path.join(ROOT, 'api', 'track.js')];
   const again = require(path.join(ROOT, 'api', 'track.js'));
   const res = fakeRes(); await again({ method: 'GET' }, res);
-  check(res.code === 200 && res.body.events === rows.length, '함수가 새로 떠도 테이블 그대로');
+  const [{ n: allRows }] = (await pg.query('select count(*)::int as n from deadly_sins_events')).rows;
+  check(res.code === 200 && res.body.events === allRows && allRows > rows.length, '함수가 새로 떠도 테이블 그대로');
 
   /* ---------- api/menu.js: 사장님 메뉴 고치기 ---------- */
   console.log('\n■ 메뉴 고치기 (/api/menu)');

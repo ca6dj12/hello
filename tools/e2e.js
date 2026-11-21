@@ -29,6 +29,8 @@ const PROMO = path.join(__dirname, '..', 'promo');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css',
   '.webp': 'image/webp', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png' };
 const BEACONS = [];   // 로컬 서버가 받은 /api/track 기록 (실제 서버 대신)
+let TIE_ORDER = ['색', '식', '탐', '나', '분', '질', '교'];   // 로컬 서버가 내려 주는 동점 순서 (GET /api/track?order=1). null 이면 순서 없음
+const ORDER_CALLS = [];
 // 로컬 서버의 /api/menu (사장님 고침). 실제 서버의 검사는 tools/test-api.js 가 한다.
 const ADMIN_KEY = 'test-key';
 let LIVE = { v: 0, at: null, data: null };
@@ -55,7 +57,10 @@ function serve() {
         req.on('data', (c) => { body += c; });
         req.on('end', () => {
           if (req.method === 'POST') { try { BEACONS.push({ ct: req.headers['content-type'] || '', body: JSON.parse(body) }); } catch (e) { BEACONS.push({ bad: true }); } }
-          res.writeHead(req.method === 'POST' ? 204 : 200); res.end(req.method === 'POST' ? '' : '{"db":false}');
+          const wantsOrder = req.method === 'GET' && /[?&]order=1/.test(req.url);
+          if (wantsOrder) ORDER_CALLS.push(req.url);
+          res.writeHead(req.method === 'POST' ? 204 : 200, { 'Content-Type': 'application/json' });
+          res.end(req.method === 'POST' ? '' : wantsOrder ? JSON.stringify({ order: TIE_ORDER }) : '{"db":false}');
         });
         return;
       }
@@ -452,6 +457,113 @@ async function sizes(browser, base) {
   }
 }
 
+/* 설문 v2: quiz.js 의 문항이 나오는지, 채점(선택지 하나 = 죄 하나)과 동점 규칙(서버가 알려 준 "덜 나온 죄" 순서)이 맞는지 */
+async function quizV2(browser, base) {
+  console.log('\n■ 설문 v2 (문항 · 채점 · 동점)');
+  const NAMES = { 교: '교만', 질: '질투', 분: '분노', 나: '나태', 탐: '탐욕', 식: '탐식', 색: '색욕' };
+  const fresh = async (locale) => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: locale || 'ko-KR' });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
+    await page.goto(base, { waitUntil: 'networkidle' });
+    return { ctx, page, errors };
+  };
+  const begin = async (page) => {
+    await page.click('#start');
+    await page.waitForSelector('#quiz.active', { timeout: 8000 });
+    await page.waitForFunction(() => !coverTransitionBusy, null, { timeout: 8000 });
+    await page.waitForTimeout(250);   // 동점 순서를 받아 올 시간
+  };
+  // 문항마다 그 죄의 답을 고른 것으로 하고 결과 화면을 연다
+  const pick = (page, sins) => page.evaluate((want) => {
+    answers = QUESTIONS.map((q, i) => q.a.findIndex((o) => o.sin === want[i]));
+    if (answers.includes(-1)) return { bad: answers };
+    renderResults();
+    const r = DS_ENHANCE.calculate();
+    return { title: document.getElementById('resultTitle').textContent, top: r[0].k, pts: r.map((x) => x.k + x.points / 3).join(' '), tie: DS_ENHANCE.tie(),
+      meter: [...document.querySelectorAll('#scoreCard .meter-row')].map((row) => row.querySelector('.meter-name').textContent + row.querySelectorAll('.hepta.filled').length).join(' ') };
+  }, sins);
+
+  TIE_ORDER = ['색', '식', '탐', '나', '분', '질', '교']; ORDER_CALLS.length = 0; BEACONS.length = 0;
+  const a = await fresh();
+  const quiz = await a.page.evaluate(() => ({
+    v: DS_ENHANCE.quiz,
+    same: JSON.stringify(QUESTIONS.map((q) => q._ko)) === JSON.stringify(DS_QUIZ.questions.map((q) => q.q.ko)),
+    first: document.getElementById('questionText').textContent,
+    opts: QUESTIONS.every((q) => q.a.length === 4 && q.a.every((o) => o.points === o.sin + '3')),
+    en: QUESTIONS.every((q) => q._en && q._en !== q._ko && q.a.every((o) => o._en && o._en !== o._ko))
+  }));
+  check(quiz.v === 'v2' && quiz.same && quiz.opts && quiz.first === '식당에서 나보다 늦게 온 옆 테이블 음식이 먼저 나왔다.',
+    '문항은 quiz.js (v2) 의 것 · 처음 그려진 1번도 새 문항', quiz);
+  check(quiz.en, '모든 문항 · 선택지에 영어 문구');
+  await begin(a.page);
+  check(ORDER_CALLS.length === 1 && /quiz=v2/.test(ORDER_CALLS[0]), '시작할 때 동점 순서를 받아 옴', ORDER_CALLS);
+  // 분노를 네 번: 압도적 1위
+  const clear = await pick(a.page, ['분', '교', '색', '분', '교', '분', '분']);
+  check(clear.top === '분' && clear.title === NAMES['분'] && /분4/.test(clear.pts) && /분노7/.test(clear.meter) && /교만4/.test(clear.meter),
+    '선택지 하나 = 죄 하나 = 1점 (분노 4번 → 분노, 눈금 7칸 · 교만 2번 → 4칸)', clear);
+  await a.ctx.close();
+
+  // 동점: 분노 2 · 교만 2 · 색욕 2 · 탐식 1 → 서버 순서(색 … 분 … 교)에서 가장 앞선 색욕
+  BEACONS.length = 0;
+  const b = await fresh();
+  await begin(b.page);
+  const tied = await pick(b.page, ['분', '교', '색', '분', '교', '색', '식']);
+  await b.page.waitForTimeout(300);
+  const sentTie = (BEACONS.filter((x) => x.body && x.body.type === 'result').pop() || {}).body || {};
+  check(tied.top === '색' && tied.title === NAMES['색'] && tied.tie.by === 'recent' && tied.tie.frozen === true, '동점이면 서버가 알려 준 순서에서 앞선 죄 (최근에 덜 나온 죄)', tied);
+  check(sentTie.sin === '색욕' && sentTie.tie === true && sentTie.tieBy === 'recent' && sentTie.picks === 'Q1분 Q2교 Q3색 Q4분 Q5교 Q6색 Q7식' && /^색욕 2 · /.test(sentTie.points || ''),
+    '동점 결과 기록: 동점 표시 · 가른 방식 · 죄별 고른 횟수', sentTie);
+  // 결과를 본 뒤에는 서버 순서가 바뀌어도 그 세션의 결과는 그대로 (결과 화면 · 시그니처 · 공유 이미지가 같은 죄)
+  TIE_ORDER = ['교', '분', '질', '나', '탐', '식', '색'];
+  await b.page.click('#toDesire');
+  await b.page.waitForSelector('#signatureNameReveal.visible', { timeout: 20000 });
+  const sig = await b.page.evaluate(() => ({ en: document.getElementById('signatureNameEn').textContent, top: DS_ENHANCE.calculate()[0].k }));
+  check(sig.top === '색' && sig.en === 'LUST', '결과를 본 뒤에는 순서가 바뀌어도 그 세션의 죄는 그대로 (시그니처 = 결과)', sig);
+  // 다시 하기 → 새 세션은 새 순서를 받는다. 순서에서 꼴찌여도 더 많이 고른 죄가 이긴다
+  await b.page.click('[data-ds="restart"]');
+  await b.page.waitForSelector('#cover.active', { timeout: 8000 });
+  await b.page.waitForTimeout(400);
+  await begin(b.page);
+  const again = await pick(b.page, ['분', '교', '색', '분', '교', '색', '식']);
+  check(again.top === '교' && again.tie.by === 'recent', '다시 하면 새 순서를 받음 (같은 답 · 바뀐 순서 → 교만)', again);
+  TIE_ORDER = ['교', '질', '분', '나', '탐', '식', '색'];
+  await b.ctx.close();
+  const c2 = await fresh();
+  await begin(c2.page);
+  const lead = await pick(c2.page, ['질', '식', '색', '식', '색', '색', '분']);
+  check(lead.top === '색' && /색3/.test(lead.pts), '순서에서 꼴찌인 죄도 더 많이 고르면 결과 (색욕 3번 > 탐식 2번)', lead);
+  await c2.ctx.close();
+
+  // 끝까지 직접 눌러서: 마지막 문항 전에 순서를 한 번 더 받고, 오류 없이 결과까지
+  ORDER_CALLS.length = 0;
+  const d = await fresh();
+  await begin(d.page);
+  const done = await answerAll(d.page);
+  check(done && ORDER_CALLS.length === 2, '직접 눌러 끝까지 · 끝에서 두 번째 답에서 순서를 한 번 더 받음', ORDER_CALLS.length);
+  check(d.errors.length === 0, '새 설문 스크립트 오류 없음', d.errors);
+  await d.ctx.close();
+
+  // 서버가 순서를 못 주면(오프라인 · DB 없음) 무작위로 가르되, 동점인 죄 중에서만
+  TIE_ORDER = null;
+  const e = await fresh();
+  await begin(e.page);
+  const off = await pick(e.page, ['분', '교', '색', '분', '교', '색', '식']);
+  check(['분', '교', '색'].includes(off.top) && off.tie.by === 'random', '순서를 못 받으면 동점인 죄 중 무작위', off);
+  await e.ctx.close();
+  TIE_ORDER = ['색', '식', '탐', '나', '분', '질', '교'];
+
+  // quiz.js 를 못 받으면 개선 레이어 없이 원본 그대로 (기록도 안 함)
+  BEACONS.length = 0;
+  const ctx = await browser.newContext({ locale: 'ko-KR' });
+  const p = await ctx.newPage();
+  await p.route('**/quiz.js', (route) => route.abort());
+  await p.goto(base, { waitUntil: 'networkidle' });
+  check(await p.evaluate(() => !window.DS_ENHANCE && QUESTIONS.length === 7), 'quiz.js 가 없으면 원본 그대로 (개선 레이어 건너뜀)');
+  await ctx.close();
+}
+
 /* 결과 기록: 사이트가 /api/track 으로 보내는 내용이 맞는지 (로컬 서버가 대신 받음) */
 async function collect(browser, base) {
   console.log('\n■ 결과 기록 (/api/track)');
@@ -490,7 +602,8 @@ async function collect(browser, base) {
   const SINS_KO = ['교만', '질투', '분노', '나태', '탐욕', '탐식', '색욕'];
   check(['start', 'result', 'signature'].every((t) => types.includes(t)), '시작 · 결과 · 시그니처를 보냄', types);
   check(SINS_KO.includes(result.sin) && result.sin === sig.sin, '결과의 죄 = 시그니처의 죄 (한국어 이름)', [result.sin, sig.sin]);
-  check(/^(Q\d[ABCD] ?){7}$/.test(result.picks || ''), '고른 보기 7개를 원본 순서로 (Q1B …)', result.picks);
+  check(/^(Q\d[교질분나탐식색] ?){7}$/.test(result.picks || '') && result.quiz === 'v2' && sent.every((x) => x.body.quiz === 'v2'),
+    '고른 선택지 7개를 죄 이름으로 (Q1분 …) · 모든 기록에 설문 버전', [result.picks, result.quiz]);
   check(sent.every((x) => !x.bad && x.body.sid === sent[0].body.sid), '한 세션은 같은 세션 값');
   await ctx.close();
 
@@ -793,6 +906,7 @@ let SIGNATURE_EN = {};
     await run(browser, base, 'ko');
     await run(browser, base, 'en');
     await sizes(browser, base);
+    if (!TARGET) await quizV2(browser, base);    // 로컬 서버가 동점 순서를 내려 주는 검사라 로컬에서만
     if (!TARGET) await collect(browser, base);   // 로컬 서버가 /api/track 을 대신 받는 검사라 로컬에서만
     if (!TARGET) await admin(browser, base);     // 마찬가지로 /api/menu 를 로컬 서버가 대신 받는다
     await reducedMotion(browser, base);

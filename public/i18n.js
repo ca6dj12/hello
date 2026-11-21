@@ -1,7 +1,7 @@
 /* =============================================================
    DEADLY SINS — 화면 문구 (한국어 / English)
    ko 는 개선 레이어가 새로 더한 문구만 있습니다. 원본 문구는 원본 HTML 에서 그대로 읽습니다.
-   en.questions 는 원본 QUESTIONS 의 "원래 순서"와 같아야 합니다 (보기를 섞어도 짝이 유지됨).
+   설문 문항(한국어 · 영어)은 quiz.js 에 있습니다.
    en.traits 의 키는 원본 RESULT_TRAITS 와 같아야 합니다 (단일 7개 + 순서쌍 42개).
    ============================================================= */
 window.DS_I18N = {
@@ -104,74 +104,8 @@ window.DS_I18N = {
       탐: 'The Drink of Greed', 식: 'The Drink of Gluttony', 색: 'The Drink of Lust'
     },
 
-    /* 원본 QUESTIONS 순서 그대로 (A, B, C, D) */
-    questions: [
-      {
-        q: 'It’s 2 a.m. and your crush texts: “Want to come over?”',
-        a: [
-          'I’m drawn in. I think about it for a second, then I go.',
-          'If you miss me, you come here. I’m not moving at 2 a.m. for this.',
-          'I keep wondering: is it just me, or do they text other people like this too?',
-          'Tempting, but even the thought of heading out is exhausting. I’ll sleep and see them another time.'
-        ]
-      },
-      {
-        q: 'Your partner secretly bought a sex toy.',
-        a: [
-          'Curious what it is. It’s already bought, so let’s try it together.',
-          'I’m hurt they didn’t tell me, so I confront them right away.',
-          'If they were going to buy one, I would have picked a better one.',
-          'Did they want to enjoy that without me? It keeps bugging me, and I’m a little angry.'
-        ]
-      },
-      {
-        q: 'You win the lottery jackpot. What’s the first thing you do?',
-        a: [
-          'Look into houses, buildings and investments to grow the money even more.',
-          'Take a break from work and indulge in the finest food, drinks, hotels and travel.',
-          'Stop working entirely and spend a while lying around, eating, playing and doing nothing.',
-          'Show everyone who looked down on me just how well I’m doing.'
-        ]
-      },
-      {
-        q: 'On a trip with your partner, you alone get a free upgrade to business class.',
-        a: [
-          'Chances like this are rare. I’m properly enjoying the food, drinks, lounge and service.',
-          'From the lounge to the in-flight service, I’m claiming every single perk I can.',
-          'If my partner asks me to give it up, I get annoyed. Why should I give up my luck?',
-          'They always seemed luckier than me. This time I got picked, and I’m quietly pleased.'
-        ]
-      },
-      {
-        q: 'For one day, people will grant any request you make.',
-        a: [
-          'Make the people I thought were better than me admit my ability, and their mistakes, to my face.',
-          'Ask for enough money and property that I never have to work again.',
-          'Spend a perfect day exactly my way with someone I’ve had my eye on: a great hotel, drinks, a date.',
-          'Make the person who hurt me most apologize to my face and admit what they did.'
-        ]
-      },
-      {
-        q: 'If you could be guaranteed one thing tonight, what would you choose?',
-        a: [
-          'The person I like, who has other admirers, finally choosing me.',
-          'The finest food and drink, as much as I want, no limits.',
-          'Money or assets big enough to completely change my options in life.',
-          'A life where I can eat, play and live without worry, never having to work hard again.'
-        ]
-      },
-      {
-        q: 'You can become famous, but you have to reveal one embarrassing secret from your past.',
-        a: [
-          'I hate that only people more famous and successful than me get noticed. If I can reach their level, I’ll reveal it.',
-          'I can reveal it, but anyone who mocks or laughs at me won’t get away with it.',
-          'Once famous, I’d have to explain myself and keep managing people’s reactions. Not worth it.',
-          'If fame gets me great food, drinks, parties, invites and freebies without much effort, I’ll reveal it.'
-        ]
-      }
-    ],
+    /* 설문 문항의 영어는 quiz.js 에 한국어와 나란히 있다 */
 
-    /* 원본 RESULT_TRAITS 와 같은 키. love = 연애, work = 일, sex = 성적 성향 */
     traits: {
       교: {
         love: 'You don’t cling, even when you like someone. You want a relationship built on mutual respect, where you’re seen as special.',

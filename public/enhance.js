@@ -4,8 +4,9 @@
    원본 파일은 손대지 않으므로 디자이너가 새 버전을 보내도 다시 끼워 넣기만 하면 됩니다.
 
    하는 일
+     · 설문 문항을 quiz.js (v2) 것으로 바꿔 끼우기      → 선택지 하나 = 죄 하나 = 1점
      · 보기 순서를 매 세션 섞기 (Fisher–Yates)          → 위치 습관이 결과를 끌지 않게
-     · 동점 처리: 3점 받은 횟수 → 2점 횟수 → 세션별 무작위 → 배열 순서 편애 제거
+     · 동점 처리: 최근 손님 100명 중 덜 나온 죄 우선 (서버가 순서를 알려 줌, 못 받으면 세션별 무작위)
      · 결과 제목과 시그니처 술이 늘 같은 죄를 가리키게
      · 폰 뒤로가기 = 앱 안의 뒤로가기
      · 다시 하기 / 맛·향·강도·가격 / 바텐더용 주문 화면 / 전체 메뉴 / 결과 이미지 공유
@@ -15,16 +16,35 @@
 (function () {
   'use strict';
 
-  if (typeof QUESTIONS === 'undefined' || typeof SINS === 'undefined' || !window.DS_DATA || !window.DS_I18N) {
+  if (typeof QUESTIONS === 'undefined' || typeof SINS === 'undefined' || !window.DS_DATA || !window.DS_I18N || !window.DS_QUIZ) {
     console.warn('[deadly-sins] 원본 스크립트나 데이터 파일을 찾지 못해 개선 레이어를 건너뜁니다.');
     return;
   }
 
-  const VERSION = '2026-10-22';
+  const VERSION = '2026-11-21';
   const DATA = window.DS_DATA;
   const I18N = window.DS_I18N;
-  const N = QUESTIONS.length;
+  const QUIZ = window.DS_QUIZ;
   const el = (id) => document.getElementById(id);
+
+  /* -----------------------------------------------------------
+     설문 문항: 원본에 박힌 문항(v1) 대신 quiz.js 의 문항을 쓴다.
+     원본 채점 코드가 그대로 돌도록 같은 모양으로 넣는다 — 선택지 하나가 죄 하나에 "3" (= 1점. 미터 · 레이더 눈금이 3 단위).
+     quiz.js 가 잘못돼 있으면 개선 레이어 전체를 건너뛴다 (원본 그대로 동작, 기록 안 함).
+     ----------------------------------------------------------- */
+  const SIN_KEYS = SINS.map((s) => s.k);
+  const quizOk = Array.isArray(QUIZ.questions) && QUIZ.questions.length === QUESTIONS.length && /^v\d{1,3}$/.test(QUIZ.version || '') &&
+    QUIZ.questions.every((q) => q && q.q && q.q.ko && Array.isArray(q.a) && q.a.length === 4 &&
+      new Set(q.a.map((o) => o && o.sin)).size === 4 && q.a.every((o) => SIN_KEYS.includes(o.sin) && o.ko));
+  if (!quizOk) {
+    console.warn('[deadly-sins] quiz.js 의 문항 형식이 맞지 않아 개선 레이어를 건너뜁니다.');
+    return;
+  }
+  QUESTIONS.length = 0;
+  QUIZ.questions.forEach((q) => {
+    QUESTIONS.push({ q: q.q.ko, _en: q.q.en || q.q.ko, a: q.a.map((o) => ({ text: o.ko, points: o.sin + '3', sin: o.sin, _en: o.en || o.ko })) });
+  });
+  const N = QUESTIONS.length;
 
   /* -----------------------------------------------------------
      0. 기록 → 같은 사이트의 /api/track (api/track.js 가 Neon 에 저장)
@@ -41,7 +61,7 @@
   function track(type, data) {
     if (!COLLECT_ON) return;
     try {
-      const body = JSON.stringify(Object.assign({ sid: SID, type, lang, v: VERSION }, data || {}));
+      const body = JSON.stringify(Object.assign({ sid: SID, type, lang, v: VERSION, quiz: QUIZ.version }, data || {}));
       const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
       if (!(navigator.sendBeacon && navigator.sendBeacon(ENDPOINT, blob))) {
         fetch(ENDPOINT, { method: 'POST', keepalive: true, body: blob }).catch(() => {});
@@ -86,10 +106,10 @@
     return v === undefined ? key : v;
   };
 
-  // 원본 문구를 한 번 떠 두고, 언어를 바꿀 때마다 둘 중 하나로 덮어쓴다
+  // 문구를 한 번 떠 두고, 언어를 바꿀 때마다 둘 중 하나로 덮어쓴다 (_id = quiz.js 에 적힌 순서)
   QUESTIONS.forEach((q, i) => {
-    q._ko = q.q; q._en = I18N.en.questions[i].q;
-    q.a.forEach((o, j) => { o._id = i + '-' + j; o._ko = o.text; o._en = I18N.en.questions[i].a[j]; });
+    q._ko = q.q;
+    q.a.forEach((o, j) => { o._id = i + '-' + j; o._ko = o.text; });
   });
   const SIN_KO = SINS.map((s) => s.name);
   const KO = {};
@@ -147,31 +167,41 @@
     }
     return arr;
   }
-  let tieOrder = shuffle(SINS.map((s) => s.k));
+  /* 동점 순서: 7문항으로 일곱 죄를 가리면 손님 셋 중 하나쯤은 1위가 동점이다. 그때 누구를 줄지의 순서.
+     서버(api/track?order=1)가 "최근 손님 100명 중 덜 나온 죄 먼저" 순서를 알려 준다 → 결과가 스스로 고르게 나뉜다.
+     동점만 가르므로, 손님이 더 많이 고른 죄를 제치고 다른 죄가 나오는 일은 없다.
+     못 받으면(오프라인 · 기록 끔) 세션마다 무작위. 결과를 한 번 보여 준 뒤에는 그 세션 동안 순서를 바꾸지 않는다
+     (결과 화면 · 시그니처 · 공유 이미지가 늘 같은 죄를 가리키게). */
+  let tieOrder = shuffle(SIN_KEYS.slice()), tieBy = 'random', tieFrozen = false, tieSeq = 0;
+  function fetchTieOrder() {
+    if (!COLLECT_ON || typeof fetch !== 'function') return;
+    const seq = ++tieSeq;
+    fetch(ENDPOINT + '?order=1&quiz=' + encodeURIComponent(QUIZ.version), { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (seq !== tieSeq || tieFrozen || !j || !Array.isArray(j.order)) return;
+        if (j.order.length === SIN_KEYS.length && SIN_KEYS.every((k) => j.order.includes(k))) { tieOrder = j.order.slice(); tieBy = 'recent'; }
+      })
+      .catch(() => { /* 못 받으면 무작위 순서 그대로 */ });
+  }
   const isFresh = () => answers.every((a) => a === null);
   function newSession() {
     QUESTIONS.forEach((q) => shuffle(q.a));
-    tieOrder = shuffle(SINS.map((s) => s.k));
+    tieOrder = shuffle(SIN_KEYS.slice()); tieBy = 'random'; tieFrozen = false;
     SID = newSid();
+    fetchTieOrder();
   }
 
-  // 원본 calculate 를 대체. 같은 모양({...sin, points})으로 돌려준다.
+  // 원본 calculate 를 대체. 같은 모양({...sin, points})으로 돌려준다. points 는 고른 횟수 × 3.
   calculate = function () {
-    const pts = {}, p3 = {}, p2 = {};
-    SINS.forEach((s) => { pts[s.k] = 0; p3[s.k] = 0; p2[s.k] = 0; });
+    const pts = {};
+    SINS.forEach((s) => { pts[s.k] = 0; });
     QUESTIONS.forEach((q, i) => {
       const o = q.a[answers[i]];
-      if (!o) return;
-      o.points.split(' · ').forEach((part) => {
-        const k = part[0], v = Number(part.slice(-1));
-        pts[k] += v;
-        if (v === 3) p3[k]++;
-        if (v === 2) p2[k]++;
-      });
+      if (o) pts[o.sin] += 3;
     });
     return SINS.map((s) => Object.assign({}, s, { points: pts[s.k] }))
-      .sort((a, b) => b.points - a.points || p3[b.k] - p3[a.k] || p2[b.k] - p2[a.k] ||
-        tieOrder.indexOf(a.k) - tieOrder.indexOf(b.k));
+      .sort((a, b) => b.points - a.points || tieOrder.indexOf(a.k) - tieOrder.indexOf(b.k));
   };
 
   /* -----------------------------------------------------------
@@ -221,9 +251,9 @@
       track('start');
       return;
     }
-    // 답 고르기
+    // 답 고르기 (끝에서 두 번째 문항을 답할 때 동점 순서를 한 번 더 받아 둔다 — 그사이 다른 손님 결과가 반영되게)
     const choice = target.closest('#choices .choice');
-    if (choice && !advancing) { push('q'); return; }
+    if (choice && !advancing) { push('q'); if (index === N - 2 && !tieFrozen) fetchTieOrder(); return; }
     // 시그니처 술로
     if (target.closest('#toDesire')) { push('signature'); return; }
 
@@ -253,6 +283,7 @@
   renderResults = function () {
     originalRenderResults.apply(this, arguments);
     if (answers.some((a) => a === null)) return;
+    tieFrozen = true;
     const ranked = calculate();
     const winner = ranked[0];
     el('resultTitle').textContent = winner.name;
@@ -263,11 +294,12 @@
       sin: KO[winner.k],
       second: KO[ranked[1].k],
       tie: ranked[0].points === ranked[1].points,
-      points: ranked.map((s) => KO[s.k] + ' ' + s.points).join(' · '),
-      // 고른 보기를 "원래" 보기 순서로: Q1B = 1번 문항의 디자이너 원본 B 보기
+      tieBy: ranked[0].points === ranked[1].points ? tieBy : undefined,   // 동점을 무엇으로 갈랐나: recent(서버 순서) · random
+      points: ranked.map((s) => KO[s.k] + ' ' + s.points / 3).join(' · '),   // 죄별로 고른 횟수
+      // 문항마다 고른 선택지의 죄: "Q1분 Q2교 …" (선택지 = 죄 하나라서 이것으로 선택지가 정해진다)
       picks: QUESTIONS.map((q, i) => {
         const o = q.a[answers[i]]; if (!o) return '';
-        return 'Q' + (i + 1) + 'ABCD'[Number(o._id.split('-')[1])];
+        return 'Q' + (i + 1) + o.sin;
       }).join(' ')
     });
   };
@@ -888,6 +920,7 @@
   document.body.appendChild(top);   // #cover 안에 두면 누를 때 표지 전환까지 같이 시작된다
 
   applyLang();
+  renderQuestion();   // 원본이 처음에 그려 둔 v1 의 1번 문항을 새 문항으로 다시 그린다
 
   // 주소 끝이 #menu 면 메뉴를, #menu/<id> 면 그 항목까지 바로 연다 (메뉴판 전용 QR · 링크 공유용)
   async function openFromHash() {
@@ -901,5 +934,5 @@
   }
   openFromHash();
   window.addEventListener('hashchange', openFromHash);
-  window.DS_ENHANCE = { version: VERSION, collect: COLLECT_ON, calculate: () => calculate() };
+  window.DS_ENHANCE = { version: VERSION, quiz: QUIZ.version, collect: COLLECT_ON, calculate: () => calculate(), tie: () => ({ order: tieOrder.slice(), by: tieBy, frozen: tieFrozen }) };
 })();

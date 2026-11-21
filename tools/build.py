@@ -11,7 +11,8 @@ source/deadly_sins.html (디자이너 원본, 손대지 않음) 을 읽어 publi
      물방울 윤곽을 계산한다. 손실 압축은 그 픽셀을 바꾼다.
   2. 원본의 버그를 고친다 (없는 #restart 요소에 이벤트를 걸다 예외가 나던 것).
   3. 선택지 배점을 조정한다 (REBALANCE 표). 문구는 절대 바꾸지 않는다.
-  4. 공유 메타와 개선 레이어(enhance.css / data.js / i18n.js / enhance.js)를 끼워 넣는다.
+  4. 공유 메타와 개선 레이어(enhance.css / data.js / i18n.js / quiz.js / enhance.js)를 끼워 넣는다.
+     설문 문항은 원본 것(v1)이 아니라 public/quiz.js (v2) 를 쓴다 — enhance.js 가 열릴 때 바꿔 끼운다.
   5. 시그니처 일곱 잔 그림 윗부분의 죄 상징(마름모 · 별 · 원 …)만 잘라 메뉴판 아이콘을 만든다.
 
 새 원본을 받으면 source/deadly_sins.html 만 교체하고 다시 실행하면 된다.
@@ -116,6 +117,7 @@ BODY_INJECT = """
 <script>window.DS_SYMBOLS={symbols};</script>
 <script src="data.js"></script>
 <script src="i18n.js"></script>
+<script src="quiz.js"></script>
 <script src="enhance.js"></script>
 </body>"""
 
