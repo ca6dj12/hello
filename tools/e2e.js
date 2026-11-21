@@ -100,6 +100,26 @@ async function answerAll(page) {
   return !!(await page.$('#results.active'));
 }
 const screen = (page) => page.evaluate(() => document.body.dataset.dsScreen);
+// 영어 화면에 남은 한글 (보이는 글자 + 화면낭독기가 읽는 aria-label · alt). allow = 일부러 한글인 곳의 선택자
+const leftoverKorean = (page, allow) => page.evaluate((allowSel) => {
+  const HAN = /[가-힣]/, out = [];
+  const vis = (e) => { if (!e || !e.getClientRects().length) return false; const s = getComputedStyle(e); return s.visibility !== 'hidden' && s.display !== 'none' && +s.opacity > 0.01; };
+  const ok = (e) => allowSel && e.closest(allowSel);
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = w.nextNode(); n; n = w.nextNode()) {
+    const e = n.parentElement, s = n.nodeValue.trim();
+    if (s && HAN.test(s) && e && !/^(SCRIPT|STYLE)$/.test(e.tagName) && vis(e) && !ok(e)) out.push(s.slice(0, 30));
+  }
+  document.querySelectorAll('[aria-label],[alt],[title]').forEach((e) => ['aria-label', 'alt', 'title'].forEach((a) => {
+    const v = e.getAttribute(a); if (v && HAN.test(v) && vis(e) && !ok(e)) out.push(a + '=' + v.slice(0, 30)); }));
+  return out;
+}, allow || '');
+const KO_OK = '#dsLang, .ds-order-ko';   // 언어 전환 버튼(한국어), 바텐더에게 보여 주는 화면의 한글 술 이름
+async function englishOnly(page, lang, where) {
+  if (lang !== 'en') return;
+  const left = await leftoverKorean(page, KO_OK);
+  check(left.length === 0, `영어 화면에 한글이 남지 않음 (${where})`, left.slice(0, 6));
+}
 
 async function run(browser, base, lang) {
   console.log(`\n■ ${lang === 'en' ? 'English' : '한국어'}`);
@@ -136,6 +156,7 @@ async function run(browser, base, lang) {
   const qText = await page.textContent('#questionText');
   check(lang === 'en' ? /^[\x00-\x7F‘’“”…—–·]+$/.test(qText) : /[가-힣]/.test(qText), '질문 문구 언어', qText);
   await shot(page, lang + '-q1');
+  await englishOnly(page, lang, '질문');
 
   // 2문항 답한 뒤 폰 뒤로가기 → 2번 문항
   for (let i = 0; i < 2; i++) {
@@ -157,6 +178,14 @@ async function run(browser, base, lang) {
   });
   check(!r.title.includes('·') && r.title === r.top, '결과 제목 = 1위 한 가지', r);
   await shot(page, lang + '-result');
+  await englishOnly(page, lang, '결과');
+  // 그래프 이름표가 카드 밖으로 나가 잘리지 않는지 (영어 Gluttony 가 가장 길다)
+  const radar = await page.evaluate(() => {
+    const card = document.querySelector('.radar-card').getBoundingClientRect();
+    return [...document.querySelectorAll('#radarSvg text')].map((t) => { const r = t.getBoundingClientRect(); return { t: t.textContent, in: r.left >= card.left + 2 && r.right <= card.right - 2 && r.width > 4 }; });
+  });
+  check(radar.length === 7 && radar.every((x) => x.in), '그래프의 일곱 이름표가 잘리지 않음', radar.filter((x) => !x.in));
+  if (lang === 'en') check(await page.title() === 'DEADLY SINS · Seven Deadly Sins Quiz', '영어일 때 탭 제목도 영어', await page.title());
 
   // 결과 → 폰 뒤로가기 → 7번 문항 → 다시 답 → 결과
   await page.goBack();
@@ -184,6 +213,7 @@ async function run(browser, base, lang) {
   check(lang === 'en' ? sig.extra.includes('16,000 KRW') : sig.extra.includes('16,000원'), '가격 16,000원 표시');
   check(lang === 'en' ? sig.label === 'Love' : sig.label === '연애 성향', '성향 라벨 언어', sig.label);
   await shot(page, lang + '-signature');
+  await englishOnly(page, lang, '시그니처');
   const shareBtn = await page.evaluate(() => {
     const b = document.querySelector('.ds-share-top'); if (!b) return null;
     const r = b.getBoundingClientRect(); return { text: b.textContent, bottom: Math.round(r.bottom), vh: innerHeight };
@@ -206,6 +236,8 @@ async function run(browser, base, lang) {
   const order = await page.textContent('#dsOrder');
   check(order.includes(sig.en) && order.includes('16,000'), '바텐더 화면에 술 이름과 가격', order.slice(0, 120));
   await shot(page, lang + '-order');
+  await englishOnly(page, lang, '바텐더 화면');
+  check(/[가-힣]/.test(await page.textContent('#dsOrder .ds-order-ko')), '바텐더 화면에는 언어와 상관없이 한글 술 이름');
   await page.goBack();
   await page.waitForTimeout(400);
   check(!(await page.$('#dsOrder')) && await screen(page) === 'signature', '폰 뒤로가기 → 바텐더 화면만 닫힘');
@@ -243,6 +275,11 @@ async function run(browser, base, lang) {
     [(r.querySelector('small:not(.ds-row-desc)') || {}).textContent || '', ((r.querySelector('.ds-row-desc') || {}).textContent || '').length]));
   check(sigDesc.length === 7 && sigDesc.every(([style, n]) => style && n > 15), '일곱 잔: 맛 한마디 + 한 줄 설명', sigDesc);
   await shot(page, lang + '-menu');
+  await englishOnly(page, lang, '메뉴판');
+  if (lang === 'en') {
+    const first = await page.evaluate(() => document.querySelector('#dsMenu .ds-sig .ds-row-name').childNodes[0].textContent.trim());
+    check(first === 'PRIDE', '영어 메뉴판: 일곱 잔 이름이 겹쳐 적히지 않음 (PRIDE)', first);
+  }
 
   // 메뉴 항목 누르기 → 상세 → 폰 뒤로가기는 상세만 닫음
   const taps = await page.evaluate(() => document.querySelectorAll('#dsMenu button.ds-tap').length);
@@ -271,6 +308,7 @@ async function run(browser, base, lang) {
   }));
   check(story.layers === 4 && story.text > 150 && story.expanded === 'true', '알아보기: 이야기 · 맛의 흐름 4단계 · 마시는 법', story);
   await shot(page, lang + '-menu-item-story');
+  await englishOnly(page, lang, '메뉴 상세 · 이야기');
   await page.click('#dsItem [data-ds="more"]');
   check(await page.evaluate(() => document.querySelector('#dsItem .ds-story').hidden), '다시 누르면 접힘');
   await page.goBack();
@@ -826,8 +864,27 @@ async function promoSite(browser, base) {
   const closed = await page.evaluate(() => ({ hidden: document.querySelector('.lb-sheet').hidden, url: location.pathname }));
   check(closed.hidden && /promo/.test(closed.url), 'Esc · 바깥을 눌러도 닫힘', closed);
   await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(500);
+  // 메뉴 종류 칸: 한국어 다섯 칸은 한 줄에 다 들어오고(옆으로 밀 것이 없음), 영어는 넘치더라도 끝까지 밀면 마지막 칸이 온전히 보인다
+  const tabs = () => page.evaluate(() => { const n = document.querySelector('.lb-cats'), a = [...n.querySelectorAll('a')];
+    const over = n.scrollWidth - n.clientWidth; n.scrollLeft = 99999;
+    const r = { over, n: a.length, gap: Math.round(n.getBoundingClientRect().right - a[a.length - 1].getBoundingClientRect().right) }; n.scrollLeft = 0; return r; });
+  const tabsKo = await tabs();
+  check(tabsKo.n === 5 && tabsKo.over === 0, '메뉴 종류 다섯 칸이 한 줄에 다 들어옴 (한국어)', tabsKo);
   await page.click('#lbLang');
-  check((await page.textContent('#concept h2')).includes('which sin'), '영어 전환');
+  check(/which sin/i.test(await page.textContent('#concept h2')), '영어 전환');
+  const tabsEn = await tabs();
+  check(tabsEn.n === 5 && tabsEn.gap >= 12, '영어: 칸을 끝까지 밀면 마지막 칸이 가려지지 않음', tabsEn);
+  await page.evaluate(async () => { for (let y = 0; y <= document.documentElement.scrollHeight; y += 500) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); } scrollTo(0, 0); });
+  await page.waitForTimeout(300);
+  const promoKo = await leftoverKorean(page, '#lbLang');
+  check(promoKo.length === 0, '영어 화면에 한글이 남지 않음 (배너 사이트 전체)', promoKo.slice(0, 6));
+  const promoEn = await page.evaluate(() => ({
+    card: [...document.querySelectorAll('.lb-card')].slice(0, 1).map((c) => [c.querySelector('.lb-card-sin').textContent.trim(), c.querySelector('h3').textContent.trim()])[0],
+    heads: [...document.querySelectorAll('.lb-cat h3')].map((h) => h.textContent.trim()),
+    floor: document.querySelector('#way h2').textContent
+  }));
+  check(promoEn.card[0] !== promoEn.card[1] && promoEn.heads.every((h) => !/^(\w+)\s*\1$/i.test(h)) && /5th floor/.test(promoEn.floor),
+    '영어 배너 사이트: 같은 말이 두 번 적히지 않음 · 층수 표기(5th)', promoEn);
   await page.click('#lbLang');
   check(errors.length === 0, '홍보 사이트 스크립트 오류 · 404 없음', errors);
   await ctx.close();

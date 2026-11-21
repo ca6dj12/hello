@@ -21,7 +21,7 @@
     return;
   }
 
-  const VERSION = '2026-11-21';
+  const VERSION = '2026-11-21b';
   const DATA = window.DS_DATA;
   const I18N = window.DS_I18N;
   const QUIZ = window.DS_QUIZ;
@@ -57,11 +57,12 @@
   const newSid = () => Math.random().toString(36).slice(2, 10);
   let SID = newSid();
   let errorBudget = 5;
+  const AUTO = !!navigator.webdriver;   // 자동 조종되는 브라우저(배포 미리보기 봇 · 검사 도구) → 서버가 통계에 넣지 않는다
 
   function track(type, data) {
     if (!COLLECT_ON) return;
     try {
-      const body = JSON.stringify(Object.assign({ sid: SID, type, lang, v: VERSION, quiz: QUIZ.version }, data || {}));
+      const body = JSON.stringify(Object.assign({ sid: SID, type, lang, v: VERSION, quiz: QUIZ.version }, AUTO ? { auto: 1 } : null, data || {}));
       const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
       if (!(navigator.sendBeacon && navigator.sendBeacon(ENDPOINT, blob))) {
         fetch(ENDPOINT, { method: 'POST', keepalive: true, body: blob }).catch(() => {});
@@ -132,13 +133,33 @@
     return node ? { node, key, html, ko: html ? node.innerHTML : node.textContent } : null;
   }).filter(Boolean);
 
+  // 화면낭독기가 읽는 이름표(aria-label · alt). 원본에는 한국어로만 적혀 있어서 영어일 때 바꿔 준다 (문구는 i18n.js 의 en.aria)
+  const ARIA = [
+    ['#cover', 'aria-label', 'cover'], ['#cover .cover-art', 'alt', 'coverArt'],
+    ['#quiz', 'aria-label', 'quiz'], ['#progress', 'aria-label', 'progress'], ['#choices', 'aria-label', 'choices'],
+    ['#results', 'aria-label', 'results'], ['#radarSvg', 'aria-label', 'radar'],
+    ['#signature', 'aria-label', 'signature'], ['#signatureBack', 'aria-label', 'back']
+  ].map(([sel, attr, key]) => {
+    const node = document.querySelector(sel);
+    return node && (I18N.en.aria || {})[key] ? { node, attr, key, ko: node.getAttribute(attr) } : null;
+  }).filter(Boolean);
+  function artAlt() {          // 시그니처 그림의 설명 (원본은 "PRIDE 상징과 술잔")
+    const art = el('signatureArt');
+    if (art && currentSin && SIGNATURE_DRINKS[currentSin]) art.alt = SIGNATURE_DRINKS[currentSin].en + (lang === 'en' ? (I18N.en.aria || {}).art || '' : ' 상징과 술잔');
+  }
+
+  const TITLE_KO = document.title;
   function applyLang() {
     document.documentElement.lang = lang;
+    document.title = lang === 'en' ? I18N.en.ui.docTitle || TITLE_KO : TITLE_KO;   // 브라우저 탭 · 방문 기록에 뜨는 제목
+    ARIA.forEach(({ node, attr, key, ko }) => { node.setAttribute(attr, lang === 'en' ? I18N.en.aria[key] : ko); });
+    artAlt();
     QUESTIONS.forEach((q) => {
       q.q = lang === 'en' ? q._en : q._ko;
       q.a.forEach((o) => { o.text = lang === 'en' ? o._en : o._ko; });
     });
-    SINS.forEach((s, i) => { s.name = lang === 'en' ? I18N.en.sins[s.k] : SIN_KO[i]; });
+    // 화면에 보이는 죄 이름. 한국어는 i18n.js 의 ko.sins 에 적힌 것만 바꿔 보인다 (기록 · 통계에 쓰는 이름 KO 는 원본 그대로)
+    SINS.forEach((s, i) => { s.name = lang === 'en' ? I18N.en.sins[s.k] : (I18N.ko.sins && I18N.ko.sins[s.k]) || SIN_KO[i]; });
     Object.keys(RESULT_TRAITS).forEach((k) => {
       RESULT_TRAITS[k] = lang === 'en' ? I18N.en.traits[k] : TRAITS_KO[k];
     });
@@ -367,6 +388,7 @@
   renderSignatureTrait = function (ranked) {
     originalRenderTrait.apply(this, arguments);
     currentSin = ranked[0].k;
+    artAlt();
     if (lang === 'en') {
       const host = el('signatureTrait');
       const labels = host.querySelectorAll('.trait-label');
@@ -560,7 +582,7 @@
     h += '<section><h3>' + esc(t('menuSeven')) + '</h3><p class="ds-note">' + esc(t('menuSevenNote')(DATA.signaturePrice.toLocaleString('ko-KR'))) + '</p>';
     SINS.forEach((s) => {
       const d = DATA.drinks[s.k];
-      const name = SIGNATURE_DRINKS[s.k].en + ' · ' + (lang === 'en' ? I18N.en.drinkName[s.k] : DRINK_KO[s.k]);
+      const name = lang === 'en' ? SIGNATURE_DRINKS[s.k].en : SIGNATURE_DRINKS[s.k].en + ' · ' + DRINK_KO[s.k];   // 영어는 "PRIDE · The Drink of Pride" 로 같은 말이 겹쳐서 이름만
       const sub = d ? (d.style ? d.style[lang] : d.aroma[lang]) : '';
       h += '<div class="ds-sig' + (s.k === mine ? ' mine' : '') + '">' + menuRow(name, priceOf(), sub, 'sig:' + s.k, d && d.desc ? d.desc[lang] : '') +
         (s.k === mine ? '<em>' + esc(t('yourSin')) + '</em>' : '') + '</div>';
@@ -589,7 +611,7 @@
       const items = all.filter(shown);
       if (!items.length) return;
       h += '<section><h3>' + esc(t(key)) + '</h3>';
-      items.forEach((it) => { h += menuRow(lang === 'en' ? it.en : it.ko, it.p, lang === 'en' ? it.ko : it.en, it.id); });
+      items.forEach((it) => { h += menuRow(lang === 'en' ? it.en : it.ko, it.p, lang === 'en' ? '' : it.en, it.id); });   // 보조 이름(영어)은 한국어 화면에서만
       h += '</section>';
     };
     list('menuCocktails', m.cocktails);

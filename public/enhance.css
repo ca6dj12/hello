@@ -32,6 +32,8 @@ body[data-ds-screen="cover"] .ds-top { display: flex; }
 
 /* 영어 모드에서는 이름이 이미 영어라 아래 작은 영문 표기가 겹친다 */
 html[lang="en"] .meter-en { display: none; }
+/* 결과 그래프의 이름표: 영어 "Gluttony" 는 길어서 그림 왼쪽 끝을 조금 넘는다 → 잘리지 않게 (카드 안쪽 여백에 들어온다) */
+#radarSvg { overflow: visible; }
 
 /* ---------- 시그니처 이름 화면: 스크롤 + 제목 비침 방지 ---------- */
 /* 내용이 길어져도 위아래가 잘리지 않게: 위·아래 auto 여백으로 가운데 정렬 + 넘치면 스크롤 */

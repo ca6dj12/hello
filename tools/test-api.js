@@ -65,6 +65,19 @@ function fakeRes() {
   check((await send({ sid: 'q3', type: 'quit', q: 99 })).code === 400, '이탈 문항이 범위 밖이면 → 400');
   // 1층 배너 홍보 사이트: lb1 은 들어와서 오시는 길 · 인스타, lb2 는 위스키 병을 눌러 메뉴로
   check((await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'open' })).code === 204, '1층 홍보 사이트 방문 저장');
+  // 자동으로 여는 프로그램(배포 미리보기 봇 · 검사 도구)은 받은 척만 하고 저장하지 않는다
+  const before = (await call('GET')).body.events;
+  const a1 = await send({ sid: 'bot1', type: 'visit', lang: 'en', from: 'promo', act: 'open', auto: 1 });
+  const a2 = await call('POST', { sid: 'bot2', type: 'visit', lang: 'en', from: 'promo', act: 'open' }, { headers: { 'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36' } });
+  const a3 = await call('POST', { sid: 'bot3', type: 'start' }, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' } });
+  const a4 = await call('POST', { sid: 'phone1', type: 'visit', lang: 'en', from: 'promo', act: 'open' }, { headers: { 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1' } });
+  const after = (await call('GET')).body.events;
+  const ua = (s) => handler.automated({ headers: { 'user-agent': s } }, {});
+  check(!ua('Mozilla/5.0 (Linux; Android 11; CUBOT NOTE 20) AppleWebKit/537.36 Chrome/120.0 Mobile Safari/537.36') && !ua('Mozilla/5.0 (Linux; Android 14; SM-S921N) KAKAOTALK 10.9.5') && !ua('') &&
+    ua('Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)') && ua('Twitterbot/1.0') && ua('Mozilla/5.0 Chrome/120 Lighthouse'),
+    '봇 판별: 진짜 폰(카카오톡 인앱 · 기종 이름에 BOT) 은 통과, 크롤러 · 검사 도구만 거름');
+  check(a1.code === 204 && a2.code === 204 && a3.code === 204 && a4.code === 204 && after === before + 1,
+    '자동화 브라우저 · 봇의 기록은 저장하지 않음 (auto 표시 · 헤드리스 · 크롤러), 진짜 폰은 저장', { before, after });
   await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'way' });
   await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'instagram' });
   await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'open' });
@@ -112,8 +125,8 @@ function fakeRes() {
   check(Array.isArray(st.recent) && st.recent.length === rows.length, '최근 기록', st.recent && st.recent.length);
   check(Array.isArray(st.errors) && st.errors.some((r) => r.message === 'boom'), '최근 오류', st.errors);
   check(Array.isArray(st.items) && st.items.some((r) => r.id === 'lagavulin-16' && r.n === 1), '많이 눌러 본 메뉴', st.items);
-  check(st.promo && st.promo.opened === 2 && st.promo.clicked_menu === 1 && st.promo.clicked_way === 1 && st.promo.clicked_contact === 1 && st.promo.clicked_rental === 1,
-    '1층 홍보 사이트 (들어옴 2 · 메뉴 1 · 오시는 길 1 · 인스타/전화 1 · 대관 문의 1)', st.promo);
+  check(st.promo && st.promo.opened === 3 && st.promo.opened_en === 1 && st.promo.clicked_menu === 1 && st.promo.clicked_way === 1 && st.promo.clicked_contact === 1 && st.promo.clicked_rental === 1,
+    '1층 홍보 사이트 (들어옴 3 · 그중 영어 1 · 메뉴 1 · 오시는 길 1 · 인스타/전화 1 · 대관 문의 1)', st.promo);
   check(JSON.stringify(st.quits) === JSON.stringify([{ q: 4, n: 1 }, { q: 5, n: 1 }]),
     '그만둔 문항: 세션마다 마지막 것, 끝까지 한 세션은 빼고', st.quits);
   /* ---------- 설문 v2: 버전 표시 · 동점 순서 · 버전별 통계 ---------- */

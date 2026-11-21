@@ -48,32 +48,34 @@
       openNow: (c) => '지금 영업 중 · ' + c + '까지', opensAt: (o) => '오늘 ' + o + ' 오픈', closedToday: '오늘은 쉬어요',
       opensNext: (w, o) => w + ' ' + o + ' 오픈', tomorrow: '내일', dayName: (d) => d + '요일',
       lastOrder: (x) => '라스트오더 ' + x, lastDone: '오늘 주문은 마감됐어요',
-      dockMenu: '메뉴', dockWay: '오시는 길'
+      dockMenu: '메뉴', dockWay: '오시는 길', dockLabel: '바로가기'
     },
     en: {
       lang: '한국어',
-      conceptTitle: 'Tonight, which sin<br>will you swallow?',
+      conceptTitle: 'Which sin will you<br>drink tonight?',
       conceptBody: 'Deadly Sins turns the seven deadly sins into seven cocktails. Pride, envy, greed, gluttony, wrath, lust, sloth — which one are you tonight?',
-      sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: 'Seven signatures', swipe: 'Swipe to see them all',
-      roomKicker: 'THE ROOM', roomTitle: 'Nights on 5F', roomBody: 'Low light, rough walls and seven sins. A seat for one, or for two.',
-      rental: 'Private hire welcome', rentalBody: 'Get in touch however suits you.', viaIg: 'Instagram DM', viaPhone: 'Call', viaEmail: 'Email',
-      entrance: 'You have arrived when you see this sign',
-      tableKicker: 'AT YOUR TABLE', tableTitle: 'Take a seat,<br>seven questions are waiting',
-      tableBody: 'Scan the QR on your table and answer seven questions — we will pick the one glass that matches your sin. Only on the 5th floor.',
+      sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: 'Seven signature cocktails', swipe: 'Swipe to see all seven',
+      roomKicker: 'THE ROOM', roomTitle: 'A night on the fifth floor', roomBody: 'Low light, rough walls, seven sins. As good for one as it is for two.',
+      rental: 'Private events welcome', rentalBody: 'Reach us whichever way is easiest.', viaIg: 'Instagram DM', viaPhone: 'Call', viaEmail: 'Email',
+      entrance: 'When you see this sign, you’re here',
+      tableKicker: 'AT YOUR TABLE', tableTitle: 'Take a seat.<br>Seven questions await.',
+      tableBody: 'Scan the QR code on your table and answer seven questions. We’ll match you with the one cocktail, out of seven, that fits your sin. You’ll only find out on the 5th floor.',
       menuKicker: 'MENU', menuTitle: 'Menu', menuHint: 'Tap a photo for details',
-      menuSig: 'Signature', menuWhisky: 'Whisky', menuCocktails: 'Cocktails', menuBites: 'Bites', menuBev: 'Drinks',
+      menuSig: 'Signature', menuWhisky: 'Whisky', menuCocktails: 'Cocktails', menuBites: 'Bites', menuBev: 'Soft drinks',
       menuWhiskyNote: 'A whisky for every sin', soldOut: 'Sold out', soldOutNote: 'Sold out today',
-      aroma: 'Aroma', taste: 'Taste', finish: 'Finish', strength: 'Strength', cask: 'Cask', nose: 'Nose', palate: 'Palate', recipe: 'Build', plate: 'On the plate', close: 'Close',
+      aroma: 'Aroma', taste: 'Taste', finish: 'Finish', strength: 'Strength', cask: 'Cask', nose: 'Nose', palate: 'Palate', recipe: 'Ingredients', plate: 'On the plate', close: 'Close',
       photoCredits: 'Photo credits', photoEdited: 'background removed, resized', photoEditedGray: 'background removed, black and white, resized',
-      wayKicker: 'FIND US', wayTitle: (f) => 'We are waiting<br>on the ' + f + 'th floor',
-      here: (f) => 'This building, ' + f + 'th floor', map: 'Open in maps',
+      wayKicker: 'FIND US', wayTitle: (f) => 'We’re waiting<br>on the ' + ordinal(f) + ' floor',
+      here: (f) => 'This building, ' + ordinal(f) + ' floor', map: 'Open in maps',
       where: 'Where', hours: 'Hours', good: 'Good to know', contact: 'Contact', noCover: 'No cover charge',
       openNow: (c) => 'Open now · until ' + c, opensAt: (o) => 'Opens today at ' + o, closedToday: 'Closed today',
       opensNext: (w, o) => 'opens ' + w + ' at ' + o, tomorrow: 'tomorrow', dayName: (d) => d,
-      lastOrder: (x) => 'Last order ' + x, lastDone: 'Last orders are done for tonight',
-      dockMenu: 'Menu', dockWay: 'Find us'
+      lastOrder: (x) => 'Last order ' + x, lastDone: 'We’ve stopped taking orders for tonight',
+      dockMenu: 'Menu', dockWay: 'Find us', dockLabel: 'Shortcuts'
     }
   };
+  // 5 → 5th, 1 → 1st, 2 → 2nd, 3 → 3rd, 11~13 → th
+  function ordinal(n) { const v = Math.abs(+n) % 100, s = ['th', 'st', 'nd', 'rd']; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
   let lang = 'ko';
   try { lang = localStorage.getItem('ds_lang') || ((navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en'); } catch (e) {}
   if (lang !== 'en') lang = 'ko';
@@ -169,7 +171,7 @@
   const sinName = (k) => { const x = SINS.find((s) => s[0] === k); return x ? (lang === 'en' ? x[2] : x[1]) : ''; };
   let ITEMS = {};
   function menuCats() {
-    const m = D.menu, other = (it) => (lang === 'en' ? it.ko : it.en);
+    const m = D.menu, other = (it) => (lang === 'en' ? '' : it.en);   // 보조 이름은 한국어 화면에서만 (병에 적힌 영어 이름)
     const cats = [];
     cats.push({ key: 'sig', title: t('menuSig'), en: 'SEVEN SINS', items: SINS.map(([k, ko, en]) => {
       const d = D.drinks[k] || {}, dr = (B.drinks || {})[k] || {};
@@ -189,7 +191,7 @@
     cats.push({ key: 'whisky', title: t('menuWhisky'), en: 'WHISKY', note: t('menuWhiskyNote'), items: whisky.map((w) => plain(w.it, { tag: w.tag, quote: w.quote })) });
     cats.push({ key: 'cocktails', title: t('menuCocktails'), en: 'COCKTAILS', items: m.cocktails.filter(shown).map((it) => plain(it, { sub: L10(det(it.id).kind) })) });
     cats.push({ key: 'bites', title: t('menuBites'), en: 'BITES', items: m.bites.filter(shown).map((it) => plain(it, { sub: L10(det(it.id).plate) })) });
-    cats.push({ key: 'bev', title: t('menuBev'), en: 'DRINKS', items: m.beverages.filter(shown).map((it) => plain(it, { sub: other(it) })) });
+    cats.push({ key: 'bev', title: t('menuBev'), en: 'DRINKS', items: m.beverages.filter(shown).map((it) => plain(it, { sub: other(it) || L10(det(it.id).kind) })) });
     return cats.filter((c) => c.items.length);
   }
   const symImg = (k) => (k && (B.symbols || {})[k] ? '<img src="' + esc(A(B.symbols[k])) + '" alt="">' : '');
@@ -220,7 +222,7 @@
     cats.forEach((c) => c.items.forEach((x) => { ITEMS[x.id] = x; }));
     return '<nav class="lb-cats" aria-label="' + esc(t('menuTitle')) + '">' + cats.map((c, i) =>
       '<a href="#cat-' + c.key + '" data-act="cat"' + (i ? '' : ' class="on"') + '>' + esc(c.title) + '</a>').join('') + '</nav>' +
-      cats.map((c) => '<div class="lb-cat" id="cat-' + c.key + '"><h3>' + esc(c.title) + '<small>' + esc(c.en) + '</small></h3>' +
+      cats.map((c) => '<div class="lb-cat" id="cat-' + c.key + '"><h3>' + esc(c.title) + (lang !== 'en' || c.key === 'sig' ? '<small>' + esc(c.en) + '</small>' : '') + '</h3>' +
         (c.note ? '<p class="lb-cat-note">' + esc(c.note) + '</p>' : '') +
         '<div class="lb-grid">' + c.items.map(itemHtml).join('') + '</div></div>').join('') +
       creditsHtml(cats);
@@ -316,7 +318,7 @@
         const dr = (B.drinks || {})[k] || {}, d = D.drinks[k] || {};
         return '<article class="lb-card">' +
           '<div class="lb-card-art"><img src="' + esc(A(dr.image)) + '" alt="" loading="lazy"></div>' +
-          '<p class="lb-card-sin"><img src="' + esc(A((B.symbols || {})[k])) + '" alt="">' + esc(lang === 'en' ? en : ko) + '</p>' +
+          '<p class="lb-card-sin"><img src="' + esc(A((B.symbols || {})[k])) + '" alt="">' + esc(lang === 'en' ? 'SIGNATURE' : ko) + '</p>' +
           '<h3>' + esc(en) + '</h3>' +
           '<p class="lb-card-ko">' + esc(lang === 'en' ? (d.style ? d.style.en : '') : dr.kr) + '</p>' +
           (d.style && lang === 'ko' ? '<p class="lb-chip">' + esc(d.style.ko) + '</p>' : '') +
@@ -380,6 +382,7 @@
     ROOT.innerHTML = h;
     DOCK.innerHTML = '<a href="#menu" class="lb-dock-menu" data-act="menu">' + esc(t('dockMenu')) + '</a>' +
       '<a href="#way" class="lb-dock-way" data-act="way">' + esc(t('dockWay')) + ' · ' + F + 'F</a>';
+    DOCK.setAttribute('aria-label', t('dockLabel'));
     document.documentElement.lang = lang;
     document.getElementById('lbLang').textContent = t('lang');
     motion();
@@ -453,7 +456,8 @@
   function track(type, data) {
     if (D.collect && D.collect.enabled === false) return;
     try {
-      const body = new Blob([JSON.stringify(Object.assign({ sid: SID, type, lang, from: 'promo' }, data || {}))], { type: 'text/plain;charset=utf-8' });
+      // auto: 자동 조종되는 브라우저(배포 미리보기 봇 · 검사 도구) 표시 → 서버가 통계에 넣지 않는다
+      const body = new Blob([JSON.stringify(Object.assign({ sid: SID, type, lang, from: 'promo' }, navigator.webdriver ? { auto: 1 } : null, data || {}))], { type: 'text/plain;charset=utf-8' });
       if (!(navigator.sendBeacon && navigator.sendBeacon(BASE + 'api/track', body))) fetch(BASE + 'api/track', { method: 'POST', body, keepalive: true, mode: 'no-cors' }).catch(() => {});
     } catch (e) { /* 기록 실패는 무시 */ }
   }

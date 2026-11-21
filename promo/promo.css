@@ -132,13 +132,20 @@ a { color: inherit; }
 
 /* 메뉴: 종류 칸 + 사진 격자 */
 .lb-cats {
-  position: sticky; top: 0; z-index: 6; display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none;
-  margin: 0 -22px; padding: calc(env(safe-area-inset-top, 0px) + 10px) 22px 10px;
+  position: sticky; top: 0; z-index: 6; display: flex; gap: clamp(5px, 1.5vw, 7px); overflow-x: auto; scrollbar-width: none;
+  margin: 0 -22px; padding: calc(env(safe-area-inset-top, 0px) + 10px) 0 10px 22px;
   background: rgba(0, 0, 0, .86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
 .lb-cats::-webkit-scrollbar { display: none; }
+/* 칸 크기는 화면 폭을 따라 조금 줄어든다 → 한국어 다섯 칸은 360px 폰에서도 한 줄에 다 들어온다.
+   그래도 넘칠 때(영어 화면 · 아주 좁은 폰)는 오른쪽 끝이 흐려져서 옆으로 더 있다는 걸 알린다.
+   이 흐림 띠는 마지막 칸 뒤의 여백(22px) 노릇을 해서, 다 들어올 때와 끝까지 밀었을 때는 칸을 가리지 않는다. */
+.lb-cats::after {
+  content: ""; flex: none; position: sticky; right: 0; width: 22px; margin-left: calc(-1 * clamp(5px, 1.5vw, 7px)); align-self: stretch; pointer-events: none;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, .92));
+}
 .lb-cats a {
-  flex: none; padding: 9px 15px; border: 1px solid var(--line); border-radius: 999px; font-size: 13.5px; font-weight: 800;
+  flex: none; padding: 9px clamp(9px, 2.6vw, 15px); border: 1px solid var(--line); border-radius: 999px; font-size: clamp(12.5px, 3.4vw, 13.5px); font-weight: 800;
   color: var(--soft); text-decoration: none; transition: background-color .25s ease, color .25s ease, border-color .25s ease;
 }
 .lb-cats a.on { background: var(--white); border-color: var(--white); color: #000; }

@@ -340,7 +340,7 @@ window.DS_DATA = {
         "sin": "나",
         "label": {
           "ko": "\"아무 생각 없이\"",
-          "en": "\"No thoughts\""
+          "en": "\"Not a single thought\""
         },
         "items": [
           {
@@ -361,7 +361,7 @@ window.DS_DATA = {
         "sin": "분",
         "label": {
           "ko": "\"강하게 때려박는다\"",
-          "en": "\"Hit it hard\""
+          "en": "\"Hit me hard\""
         },
         "items": [
           {
@@ -382,7 +382,7 @@ window.DS_DATA = {
         "sin": "색",
         "label": {
           "ko": "\"부드러워..\"",
-          "en": "\"So smooth..\""
+          "en": "\"So smooth…\""
         },
         "items": [
           {
@@ -469,19 +469,19 @@ window.DS_DATA = {
     "info": [
       {
         "ko": "커버차지는 없습니다. 편하게 즐겨주세요.",
-        "en": "No cover charge. Please make yourself comfortable."
+        "en": "No cover charge. Make yourself at home."
       },
       {
         "ko": "콜키지는 제공하지 않습니다. 양해 부탁드립니다.",
-        "en": "We do not offer corkage. Thank you for understanding."
+        "en": "Outside drinks are not allowed (no corkage). Thank you for understanding."
       },
       {
         "ko": "킵바틀은 첫 이용일로부터 1달간 보관됩니다. (재방문 시 10,000원)",
-        "en": "Kept bottles are held for one month from first use. (10,000 KRW on a return visit)"
+        "en": "We keep your unfinished bottle for one month from your first visit. (10,000 KRW when you come back for it)"
       },
       {
         "ko": "잔 및 기물 파손 시 구입가의 50%가 청구됩니다.",
-        "en": "Broken glassware or fixtures are charged at 50% of the purchase price."
+        "en": "Broken glasses or bar items are charged at 50% of their purchase price."
       }
     ]
   },
@@ -1164,9 +1164,9 @@ window.DS_DATA = {
     floor: 5,
     // 사장님 제공 2026-10-26 (네이버 · 카카오 지도 등록 내용)
     address: { ko: "서울 송파구 백제고분로41길 42-20, 5층", en: "5F, 42-20 Baekjegobun-ro 41-gil, Songpa-gu, Seoul" },
-    station: { ko: "잠실역 2·8호선 10번 출구에서 900m", en: "900 m from Jamsil Stn. (Line 2·8) Exit 10" },
-    directions: { ko: "건물 입구로 들어오시면 바로 엘리베이터가 있어요. 5층으로 올라와 주세요.", en: "The lift is right inside the building entrance. Come up to the 5th floor." },
-    parking: { ko: "주차는 지원되지 않아요 · 근처 주차장을 이용해 주세요", en: "No parking on site · please use a nearby car park" },
+    station: { ko: "잠실역 2·8호선 10번 출구에서 900m", en: "900 m from Jamsil Station (Lines 2 & 8), Exit 10" },
+    directions: { ko: "건물 입구로 들어오시면 바로 엘리베이터가 있어요. 5층으로 올라와 주세요.", en: "The elevator is just inside the building entrance. Take it up to the 5th floor." },
+    parking: { ko: "주차는 지원되지 않아요 · 근처 주차장을 이용해 주세요", en: "No parking on site · please use a nearby parking lot" },
     maps: [
       { name: { ko: "네이버 지도", en: "Naver Map" }, url: "https://naver.me/GUTF4SLo" },
       { name: { ko: "카카오맵", en: "Kakao Map" }, url: "https://kko.to/4nOHx5G0m" }

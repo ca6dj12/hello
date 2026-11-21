@@ -6,6 +6,10 @@
    ============================================================= */
 window.DS_I18N = {
   ko: {
+    /* 화면에 보이는 죄 이름을 원본과 다르게 할 때만 적는다.
+       원본 결과 화면은 "탐식"인데, 바로 다음 화면의 술 이름(폭식의 술) · 메뉴판 · 1층 배너 사이트는 "폭식"이라 화면 표시를 폭식으로 맞췄다 (2026-11-21).
+       통계 · 기록의 이름은 그대로 "탐식"이다. 되돌리려면 이 줄을 지우면 된다. */
+    sins: { 식: '폭식' },
     ui: {
       langToggle: 'EN',
       menu: 'MENU',
@@ -48,30 +52,31 @@ window.DS_I18N = {
     ui: {
       langToggle: '한국어',
       menu: 'MENU',
+      docTitle: 'DEADLY SINS · Seven Deadly Sins Quiz',
       /* 원본 화면 문구 */
       start: 'Tap to begin',
-      footerTip: 'Tap an answer to move on to the next question.',
-      legendWeak: 'Empty heptagon = weak',
-      legendStrong: 'Filled heptagon = strong',
+      footerTip: 'Tap an answer to go to the next question.',
+      legendWeak: 'Empty = weak',
+      legendStrong: 'Filled = strong',
       toDesire: 'Meet my signature drink →',
-      sigTitle: 'Satisfy<br>your desire',
-      sigSub: 'Meet the glass that looks like your sin.',
+      sigTitle: 'Feed<br>your desire',
+      sigSub: 'Meet the drink that takes after your sin.',
       love: 'Love', work: 'Work', sex: 'In bed',
-      ageWarn: '29+ only. No peeking.',
+      ageWarn: 'Rated 29+. No peeking.',
       lockMain: 'Tap to reveal',
       /* 개선 레이어 문구 */
       tasteHead: 'In the glass',
       aroma: 'Aroma', taste: 'Taste', finish: 'Finish', strength: 'Strength', price: 'Price',
       won: ' KRW',
-      pairHead: 'Whisky of the same sin',
+      pairHead: 'Whiskies for this sin',
       glass: 'Glass',
       order: 'Show the bartender',
       saveImage: 'Save image',
       soldOut: 'Sold out', soldOutNote: 'Sold out today.',
       sigSoldOut: 'This one is sold out tonight. Ask the bartender for something close.',
-      share: 'Share', shareInvite: 'Try it:', shareKicker: 'Share your result',
+      share: 'Share', shareInvite: 'Find your sin:', shareKicker: 'Share your result',
       shareHint: 'Press and hold the image to save it, then post it to your Instagram story or send it to a friend.',
-      copyLink: 'Copy test link', copied: 'Copied',
+      copyLink: 'Copy quiz link', copied: 'Copied',
       fullMenu: 'Full menu',
       restart: 'Start over',
       close: 'Close',
@@ -82,21 +87,29 @@ window.DS_I18N = {
       shareText: (en, kr) => `My sin tonight is ${en} — ${kr}`,
       yourSin: 'Your sin',
       menuSeven: 'SEVEN SINS',
-      menuSevenNote: (p) => `Seven glasses · ${p} KRW each`,
+      menuSevenNote: (p) => `Seven signature cocktails · ${p} KRW each`,
       menuWhisky: 'WHISKY SELECTION',
       menuBites: 'BITES', menuCocktails: 'COCKTAILS', menuBeverages: 'BEVERAGES', menuInfo: 'INFORMATION',
-      menuNote: 'Prices may change.',
+      menuNote: 'Prices are subject to change.',
       tapHint: 'Tap a name for details',
-      bottle: 'Bottle', cask: 'Cask', nose: 'Nose', palate: 'Palate', recipe: 'Build', plate: 'On the plate', photoCredits: 'Photo credits', photoEdited: 'background removed, resized', photoEditedGray: 'background removed, black and white, resized',
+      bottle: 'Bottle', cask: 'Cask', nose: 'Nose', palate: 'Palate', recipe: 'Ingredients', plate: 'On the plate', photoCredits: 'Photo credits', photoEdited: 'background removed, resized', photoEditedGray: 'background removed, black and white, resized',
       learnMore: 'Learn more about this drink', storyHistory: 'The story', storyLayers: 'How it tastes', storyServe: 'How to drink it',
       layerLabels: ['Nose', 'First sip', 'Mid-palate', 'Finish'], loading: 'Loading…',
       storyError: 'Could not load this. Please try again in a moment.',
-      detailNote: 'General product information; the bottle on our shelf (batch or year) may differ slightly.'
+      detailNote: 'General product information. The bottle on our shelf may differ slightly by batch or year.'
+    },
+
+    /* 화면낭독기가 읽는 이름표 (원본의 aria-label · alt 를 영어일 때 이걸로 바꾼다) */
+    aria: {
+      cover: 'Cover', coverArt: 'Deadly Sins logo in black and white',
+      quiz: 'Seven questions', progress: 'Question progress', choices: 'Choose an answer',
+      results: 'Your result', radar: 'Chart of your seven deadly sins',
+      signature: 'Your signature drink', back: 'Back to the previous screen', art: ' symbol and glass'
     },
 
     /* 답을 누르면 잠깐 뜨는 한마디 (원본 REACTIONS 와 같은 개수·순서) */
-    reactions: ['Oh?', 'Noted.', 'Suspicious…', 'That’s your type?', 'Interesting.', 'Honest.',
-      'I see.', 'Bold.', 'I’ll remember that.', 'Heh…', 'Didn’t expect that.', 'Called it.'],
+    reactions: ['Oh?', 'Noted.', 'Suspicious…', 'So that’s your taste?', 'Interesting.', 'Honest.',
+      'I see.', 'Bold.', 'I’ll remember that.', 'Heh…', 'Didn’t see that coming.', 'Called it.'],
 
     sins: { 교: 'Pride', 질: 'Envy', 분: 'Wrath', 나: 'Sloth', 탐: 'Greed', 식: 'Gluttony', 색: 'Lust' },
     drinkName: {
@@ -135,7 +148,7 @@ window.DS_I18N = {
       식: {
         love: 'To you, a date is a pleasure in itself. Shared experiences like great food, drinks and travel matter a lot.',
         work: 'You go all in on work you enjoy. Without interest, though, your focus fades fast.',
-        sex: 'You’re weak for the senses: scent, drink, music, the feel of skin. When the mood is right, you want it to last.'
+        sex: 'You have a weakness for the senses: scent, drink, music, the feel of skin. When the mood is right, you want it to last.'
       },
       색: {
         love: 'Butterflies and attraction matter most. When you like someone, it naturally shows in what you do.',
@@ -321,7 +334,7 @@ window.DS_I18N = {
       식색: {
         love: 'You value the shared atmosphere of people, places, food and drink. You know how to enjoy the date itself.',
         work: 'Meeting people and trying new things fires you up. You’re also good at setting a mood.',
-        sex: 'You’re especially weak to anything that stirs the five senses: touch, scent, music, drinks, mood. When the vibe is right, desire rises fast.'
+        sex: 'You have a real weakness for anything that stirs the senses: touch, scent, music, drinks, mood. When the vibe is right, desire rises fast.'
       },
       색교: {
         love: 'You want to look irresistible to the person you like. Liking someone doesn’t make you lose confidence.',

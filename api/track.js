@@ -105,6 +105,17 @@ function canSeeStats(req) {
   return !!own && host === own.toLowerCase();
 }
 
+/* 자동으로 사이트를 여는 프로그램은 통계에 넣지 않는다.
+   배포할 때마다 Vercel 이 미리보기 화면을 찍으러 들어오고(영어 · 방문만 남김), 검사 도구 · 크롤러도 페이지를 연다.
+   · 사이트 스크립트가 보내는 auto 표시 (navigator.webdriver = 자동 조종되는 브라우저)
+   · 요청의 User-Agent 가 헤드리스 브라우저 · 봇 */
+// "…bot/2.1" · "…bot;" 꼴만 봇으로 본다 (기종 이름에 BOT 이 들어간 폰 — CUBOT 등 — 을 빼지 않도록)
+const BOT_UA = /HeadlessChrome|PhantomJS|Lighthouse|PageSpeed|Prerender|vercel-screenshot|(?:bot|crawler|spider)[\/;)\-]/i;
+function automated(req, d) {
+  if (d && (d.auto === 1 || d.auto === true)) return true;
+  return BOT_UA.test(String((req.headers && req.headers['user-agent']) || ''));
+}
+
 const KST = "(created_at at time zone 'Asia/Seoul')";
 const QUIZ_OF = "coalesce(extra->>'quiz', 'v1')";
 
@@ -185,6 +196,7 @@ async function stats(sql) {
     // 1층 배너 홍보 사이트: 들어온 사람 → 메뉴 · 오시는 길 · 인스타/전화/지도를 누른 사람 (세션 수)
     q(`select
          count(distinct sid) filter (where extra->>'act' = 'open')::int as opened,
+         count(distinct sid) filter (where extra->>'act' = 'open' and lang = 'en')::int as opened_en,
          count(distinct sid) filter (where extra->>'act' in ('menu', 'cat', 'item', 'bottle', 'bite'))::int as clicked_menu,
          count(distinct sid) filter (where extra->>'act' = 'way')::int as clicked_way,
          count(distinct sid) filter (where extra->>'act' in ('instagram', 'phone', 'email', 'map'))::int as clicked_contact,
@@ -256,6 +268,7 @@ module.exports = async function handler(req, res) {
     let d = req.body;
     if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { return res.status(400).end(); } }
     if (Buffer.isBuffer(d)) { try { d = JSON.parse(d.toString('utf8')); } catch (e) { return res.status(400).end(); } }
+    if (automated(req, d)) return res.status(204).end();   // 받은 척만 하고 저장하지 않는다
     const row = toRow(d);
     if (!row) return res.status(400).end();
 
@@ -268,5 +281,6 @@ module.exports = async function handler(req, res) {
   }
 };
 module.exports.toRow = toRow;      // 테스트용
+module.exports.automated = automated;
 module.exports.SCHEMA = SCHEMA;
 module.exports.save = save;
