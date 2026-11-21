@@ -847,6 +847,8 @@ async function shopInfo(browser, base) {
     '가게 정보 칸에 지금 값(화–일 20:00–02:00 · 라스트오더 01:30 · 전화)이 채워져 있음', first);
   check(first.preview === '손님 화면: 화–일 20:00 – 02:00 · 라스트오더 01:30 · 매주 월요일 휴무' && first.jump === '가게 정보 시그니처 위스키 칵테일 안주 음료',
     '손님 화면 미리보기 · 위쪽 바로가기', first);
+  const adminText = await page.evaluate(() => document.getElementById('editor').innerText);
+  check(!/[\u3040-\u30ff\u4e00-\u9fff]/.test(adminText) && !/English|中文|日本語/.test(adminText), '관리 페이지는 한국어만 (외국어 입력 칸 없음)', (adminText.match(/.{0,20}(English|中文|日本語|[\u3040-\u30ff\u4e00-\u9fff]).{0,20}/) || [])[0]);
   // 잘못 넣으면 저장하지 않고 알려 준다
   await page.fill('[data-i="last"]', '10:00');
   await page.click('#save'); await page.waitForTimeout(250);

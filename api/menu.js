@@ -11,7 +11,7 @@
        items: { "<메뉴 id>": { g, b, p, soldOut, hidden, new } },     // 시그니처는 "sig:교" 처럼
        extra: [ { id: "x-…", section, ko, en, g, b, p, about: { ko, en }, soldOut, hidden, new } ],   // 새 메뉴
        info: { hours: { days: [0~6], open: "20:00", close: "02:00", last: "01:30" },                // 가게 정보 (1층 배너 사이트에 나온다)
-               notice: { ko, en, zh, ja }, phone, instagram, email } }
+               notice: { ko }, phone, instagram, email } }   // 공지는 한국어로만 (관리 페이지가 한국어만)
 
    비밀번호는 Vercel 환경 변수 ADMIN_PASSWORD. 없으면 저장은 503 (읽기는 됨).
    틀린 비밀번호는 IP 마다 15분에 10번, 전체 15분에 50번까지 — 넘으면 잠시 막는다.
@@ -77,7 +77,7 @@ function shopInfo(v) {
   }
   if (v.notice !== undefined && v.notice !== null) {
     if (typeof v.notice !== 'object' || Array.isArray(v.notice)) return null;
-    const n = clean({ ko: text(v.notice.ko, 120), en: text(v.notice.en, 160), zh: text(v.notice.zh, 120), ja: text(v.notice.ja, 120) });
+    const n = clean({ ko: text(v.notice.ko, 120) });   // 외국어 칸은 받지 않는다
     if (Object.keys(n).length) out.notice = n;
   }
   const field = (k, re, max) => {
