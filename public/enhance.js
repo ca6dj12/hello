@@ -21,7 +21,7 @@
     return;
   }
 
-  const VERSION = '2026-11-21c';
+  const VERSION = '2026-11-21d';
   const DATA = window.DS_DATA;
   const I18N = window.DS_I18N;
   const QUIZ = window.DS_QUIZ;
@@ -98,14 +98,15 @@
   /* -----------------------------------------------------------
      1. 언어
      ----------------------------------------------------------- */
-  // 한국어 · English · 中文(간체). 폰 언어로 시작하고, 손님이 고르면 그걸 기억한다.
-  const LANGS = ['ko', 'en', 'zh'].filter((l) => I18N[l] && I18N[l].ui);
-  const LANG_LABEL = { ko: '한국어', en: 'EN', zh: '中文' };
-  const HTML_LANG = { ko: 'ko', en: 'en', zh: 'zh-Hans' };
+  // 한국어 · English · 中文(간체) · 日本語. 폰 언어로 시작하고, 손님이 고르면 그걸 기억한다.
+  const LANGS = ['ko', 'en', 'zh', 'ja'].filter((l) => I18N[l] && I18N[l].ui);
+  const LANG_LABEL = { ko: '한국어', en: 'EN', zh: '中文', ja: '日本語' };
+  const HTML_LANG = { ko: 'ko', en: 'en', zh: 'zh-Hans', ja: 'ja' };
   let lang = (function () {
     try { const v = localStorage.getItem('ds_lang'); if (LANGS.includes(v)) return v; } catch (e) {}
     const n = navigator.language || 'ko';
-    return /^ko\b/i.test(n) ? 'ko' : /^zh\b/i.test(n) && LANGS.includes('zh') ? 'zh' : 'en';
+    const two = n.slice(0, 2).toLowerCase();
+    return two === 'ko' ? 'ko' : (two === 'zh' || two === 'ja') && LANGS.includes(two) ? two : 'en';
   })();
   // 화면 문구. 한국어가 아닌 언어는 그 언어 → 영어 → 한국어 순으로 찾는다 (빠진 문구가 있어도 빈칸이 안 되게)
   const t = (key) => {
@@ -779,13 +780,13 @@
     return c;
   }
   function wrap(ctx, text, maxW) {
-    // 중국어는 띄어쓰기가 없어서 글자 단위로 끊는다 (쉼표 · 마침표가 줄 맨 앞에 오지 않게)
-    const cjk = lang === 'zh' && /[\u3400-\u9fff]/.test(text), glue = cjk ? '' : ' ';
+    // 중국어 · 일본어는 띄어쓰기가 없어서 글자 단위로 끊는다 (쉼표 · 마침표 · 작은 가나가 줄 맨 앞에 오지 않게)
+    const cjk = (lang === 'zh' || lang === 'ja') && /[\u3040-\u30ff\u3400-\u9fff]/.test(text), glue = cjk ? '' : ' ';
     const words = cjk ? Array.from(String(text)) : String(text).split(/\s+/), lines = [];
     let cur = '';
     words.forEach((w) => {
       const test = cur ? cur + glue + w : w;
-      if (ctx.measureText(test).width > maxW && cur && !(cjk && /[，。！？；：、”’）》]/.test(w))) { lines.push(cur); cur = w; } else cur = test;
+      if (ctx.measureText(test).width > maxW && cur && !(cjk && /[，。！？；：、”’）》」』ーっゃゅょぁぃぅぇぉッャュョァィゥェォ…]/.test(w))) { lines.push(cur); cur = w; } else cur = test;
     });
     if (cur) lines.push(cur);
     return lines;
@@ -798,6 +799,7 @@
 
     const serif = 'Georgia, "Times New Roman", serif';
     const sans = lang === 'zh' ? '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif'
+      : lang === 'ja' ? '-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif'
       : '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif';
     ctx.textAlign = 'center';
 

@@ -83,7 +83,7 @@ function toRow(d) {
   return {
     sid,
     type: d.type,
-    lang: d.lang === 'en' || d.lang === 'zh' ? d.lang : 'ko',
+    lang: ['en', 'zh', 'ja'].includes(d.lang) ? d.lang : 'ko',
     sin: sin(d.sin),
     second: sin(d.second),
     tie: d.tie === true ? true : (d.type === 'result' ? false : null),
@@ -198,6 +198,7 @@ async function stats(sql) {
          count(distinct sid) filter (where extra->>'act' = 'open')::int as opened,
          count(distinct sid) filter (where extra->>'act' = 'open' and lang = 'en')::int as opened_en,
          count(distinct sid) filter (where extra->>'act' = 'open' and lang = 'zh')::int as opened_zh,
+         count(distinct sid) filter (where extra->>'act' = 'open' and lang = 'ja')::int as opened_ja,
          count(distinct sid) filter (where extra->>'act' in ('menu', 'cat', 'item', 'bottle', 'bite'))::int as clicked_menu,
          count(distinct sid) filter (where extra->>'act' = 'way')::int as clicked_way,
          count(distinct sid) filter (where extra->>'act' in ('instagram', 'phone', 'email', 'map'))::int as clicked_contact,

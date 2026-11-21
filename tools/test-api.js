@@ -80,8 +80,9 @@ function fakeRes() {
     '자동화 브라우저 · 봇의 기록은 저장하지 않음 (auto 표시 · 헤드리스 · 크롤러), 진짜 폰은 저장', { before, after });
   // 언어: ko · en · zh 만. 모르는 값은 ko 로
   await send({ sid: 'zh1', type: 'visit', lang: 'zh', from: 'promo', act: 'open' });
-  check(handler.toRow({ sid: 'a', type: 'start', lang: 'zh' }).lang === 'zh' && handler.toRow({ sid: 'a', type: 'start', lang: 'xx' }).lang === 'ko' && handler.toRow({ sid: 'a', type: 'start' }).lang === 'ko',
-    '언어는 ko · en · zh 만 저장 (모르는 값 · 빈 값은 ko)');
+  await send({ sid: 'ja1', type: 'visit', lang: 'ja', from: 'promo', act: 'open' });
+  check(handler.toRow({ sid: 'a', type: 'start', lang: 'zh' }).lang === 'zh' && handler.toRow({ sid: 'a', type: 'start', lang: 'ja' }).lang === 'ja' && handler.toRow({ sid: 'a', type: 'start', lang: 'xx' }).lang === 'ko' && handler.toRow({ sid: 'a', type: 'start' }).lang === 'ko',
+    '언어는 ko · en · zh · ja 만 저장 (모르는 값 · 빈 값은 ko)');
   await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'way' });
   await send({ sid: 'lb1', type: 'visit', from: 'promo', act: 'instagram' });
   await send({ sid: 'lb2', type: 'visit', from: 'promo', act: 'open' });
@@ -129,8 +130,8 @@ function fakeRes() {
   check(Array.isArray(st.recent) && st.recent.length === rows.length, '최근 기록', st.recent && st.recent.length);
   check(Array.isArray(st.errors) && st.errors.some((r) => r.message === 'boom'), '최근 오류', st.errors);
   check(Array.isArray(st.items) && st.items.some((r) => r.id === 'lagavulin-16' && r.n === 1), '많이 눌러 본 메뉴', st.items);
-  check(st.promo && st.promo.opened === 4 && st.promo.opened_en === 1 && st.promo.opened_zh === 1 && st.promo.clicked_menu === 1 && st.promo.clicked_way === 1 && st.promo.clicked_contact === 1 && st.promo.clicked_rental === 1,
-    '1층 홍보 사이트 (들어옴 4 · 그중 영어 1 · 중국어 1 · 메뉴 1 · 오시는 길 1 · 인스타/전화 1 · 대관 문의 1)', st.promo);
+  check(st.promo && st.promo.opened === 5 && st.promo.opened_en === 1 && st.promo.opened_zh === 1 && st.promo.opened_ja === 1 && st.promo.clicked_menu === 1 && st.promo.clicked_way === 1 && st.promo.clicked_contact === 1 && st.promo.clicked_rental === 1,
+    '1층 홍보 사이트 (들어옴 5 · 그중 영어 1 · 중국어 1 · 일본어 1 · 메뉴 1 · 오시는 길 1 · 인스타/전화 1 · 대관 문의 1)', st.promo);
   check(JSON.stringify(st.quits) === JSON.stringify([{ q: 4, n: 1 }, { q: 5, n: 1 }]),
     '그만둔 문항: 세션마다 마지막 것, 끝까지 한 세션은 빼고', st.quits);
   /* ---------- 설문 v2: 버전 표시 · 동점 순서 · 버전별 통계 ---------- */
@@ -232,12 +233,12 @@ function fakeRes() {
   check(undo.code === 200 && undo.body.data.signaturePrice === 17000 && undo.body.data.items, '되돌리기 → 직전 저장 내용', undo.body.data);
 
   // 가게 정보 (영업 요일 · 시간 · 라스트오더 · 공지 · 연락처)
-  const INFO = { hours: { days: [6, 1, 2, 3, 4, 5], open: '19:00', close: '03:00', last: '02:30' }, notice: { ko: ' 12/25 휴무 ', en: '', zh: '12月25日休息' }, phone: '', instagram: 'deadlysins.5f', email: 'a@b.kr' };
+  const INFO = { hours: { days: [6, 1, 2, 3, 4, 5], open: '19:00', close: '03:00', last: '02:30' }, notice: { ko: ' 12/25 휴무 ', en: '', zh: '12月25日休息', ja: '12/25 休業' }, phone: '', instagram: 'deadlysins.5f', email: 'a@b.kr' };
   const savedInfo = await mcall('POST', { action: 'save', data: { info: INFO } }, KEY);
   // jsonb 는 키 순서를 바꿔 돌려주므로 키를 정렬해서 견준다
   const canon = (o) => JSON.stringify(o, (k, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.keys(v).sort().reduce((a, x) => { a[x] = v[x]; return a; }, {}) : v));
   check(savedInfo.code === 200 && canon(savedInfo.body.data.info) === canon({ hours: { days: [1, 2, 3, 4, 5, 6], open: '19:00', close: '03:00', last: '02:30' },
-    notice: { ko: '12/25 휴무', zh: '12月25日休息' }, phone: '', instagram: 'deadlysins.5f', email: 'a@b.kr' }),
+    notice: { ko: '12/25 휴무', zh: '12月25日休息', ja: '12/25 休業' }, phone: '', instagram: 'deadlysins.5f', email: 'a@b.kr' }),
     '가게 정보 저장: 요일은 정렬, 빈 공지 칸은 빠짐, 비운 전화는 빈 값 그대로(화면에서 숨김)', savedInfo.body.data);
   check(JSON.stringify((await mcall('GET')).body.data.info.hours.days) === '[1,2,3,4,5,6]', '손님 화면이 읽는 주소(GET)에도 가게 정보가 나옴');
   await bad({ info: { hours: { days: [], open: '19:00', close: '03:00' } } }, '영업 요일이 하나도 없음 → 400');

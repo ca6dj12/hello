@@ -4,7 +4,7 @@
      node tools/simulate.js
 
    1. 구조: 균형 배치인지 센다 — 하나라도 어기면 종료 코드 1
-        · 7문항, 문항마다 서로 다른 죄 4개, 한국어 · 영어 · 중국어 문구가 모두 있을 것
+        · 7문항, 문항마다 서로 다른 죄 4개, 한국어 · 영어 · 중국어 · 일본어 문구가 모두 있을 것
         · 일곱 죄가 각각 정확히 4문항에 나올 것
         · 어떤 두 죄든 정확히 2문항에서 맞붙을 것 (21쌍 모두)
         · 예비 문항은 바꿔 끼울 문항과 죄 구성이 같을 것
@@ -39,10 +39,10 @@ console.log(`public/quiz.js · 설문 ${QUIZ.version} · ${QUIZ.questions.length
 console.log('\n■ 구조 (균형 배치)');
 const Q = QUIZ.questions;
 const HANGUL = /[가-힣]/;
-const wellFormed = (q) => q && q.q && q.q.ko && q.q.en && q.q.zh && !HANGUL.test(q.q.en + q.q.zh) && Array.isArray(q.a) && q.a.length === 4 &&
-  q.a.every((o) => SINS.includes(o.sin) && o.ko && o.en && o.zh && !HANGUL.test(o.en + o.zh)) && new Set(q.a.map((o) => o.sin)).size === 4;
+const wellFormed = (q) => q && q.q && q.q.ko && q.q.en && q.q.zh && q.q.ja && !HANGUL.test(q.q.en + q.q.zh + q.q.ja) && Array.isArray(q.a) && q.a.length === 4 &&
+  q.a.every((o) => SINS.includes(o.sin) && o.ko && o.en && o.zh && o.ja && !HANGUL.test(o.en + o.zh + o.ja)) && new Set(q.a.map((o) => o.sin)).size === 4;
 check(/^v\d{1,3}$/.test(QUIZ.version), '설문 버전 표시 (v숫자)', QUIZ.version);
-check(Q.length === 7 && Q.every(wellFormed), '7문항 · 문항마다 서로 다른 죄 4개 · 한국어 · 영어 · 중국어 문구');
+check(Q.length === 7 && Q.every(wellFormed), '7문항 · 문항마다 서로 다른 죄 4개 · 한국어 · 영어 · 중국어 · 일본어 문구');
 const appear = {}, pair = {};
 SINS.forEach((k) => { appear[k] = 0; });
 Q.forEach((q) => {

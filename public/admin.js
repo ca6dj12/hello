@@ -18,7 +18,7 @@
   const H0 = (Array.isArray(P.hours) && P.hours[0]) || { days: [0, 1, 2, 3, 4, 5, 6], open: '20:00', close: '02:00' };
   const BASE_INFO = {
     days: (H0.days || []).slice().sort((a, b) => a - b), open: H0.open || '', close: H0.close || '', last: H0.last || '',
-    noticeKo: '', noticeEn: '', noticeZh: '',
+    noticeKo: '', noticeEn: '', noticeZh: '', noticeJa: '',
     phone: P.phone || '', instagram: String(P.instagram || '').replace(/^@/, ''), email: P.email || ''
   };
   const WEEK = [[1, '월'], [2, '화'], [3, '수'], [4, '목'], [5, '금'], [6, '토'], [0, '일']];
@@ -93,7 +93,7 @@
     const info = {
       days: sh && Array.isArray(sh.days) ? sh.days.slice().sort((a, b) => a - b) : BASE_INFO.days.slice(),
       open: sh ? sh.open || '' : BASE_INFO.open, close: sh ? sh.close || '' : BASE_INFO.close, last: sh ? sh.last || '' : BASE_INFO.last,
-      noticeKo: sn.ko || '', noticeEn: sn.en || '', noticeZh: sn.zh || '',
+      noticeKo: sn.ko || '', noticeEn: sn.en || '', noticeZh: sn.zh || '', noticeJa: sn.ja || '',
       phone: typeof si.phone === 'string' ? si.phone : BASE_INFO.phone,
       instagram: typeof si.instagram === 'string' ? si.instagram : BASE_INFO.instagram,
       email: typeof si.email === 'string' ? si.email : BASE_INFO.email
@@ -142,7 +142,7 @@
     if (i.days.join() !== BASE_INFO.days.join() || i.open !== BASE_INFO.open || i.close !== BASE_INFO.close || (i.last || '') !== BASE_INFO.last)
       info.hours = { days: i.days.slice(), open: i.open, close: i.close, last: i.last || undefined };
     const notice = {};
-    [['ko', i.noticeKo], ['en', i.noticeEn], ['zh', i.noticeZh]].forEach(([k, v]) => { if (String(v || '').trim()) notice[k] = String(v).trim(); });
+    [['ko', i.noticeKo], ['en', i.noticeEn], ['zh', i.noticeZh], ['ja', i.noticeJa]].forEach(([k, v]) => { if (String(v || '').trim()) notice[k] = String(v).trim(); });
     if (Object.keys(notice).length) info.notice = notice;
     if (i.phone.trim() !== BASE_INFO.phone) info.phone = i.phone.trim();
     if (igId(i.instagram) !== BASE_INFO.instagram) info.instagram = igId(i.instagram);
@@ -206,10 +206,11 @@
         '<p class="preview" id="hoursPreview" role="status"></p></div>' +
       '<div class="card"><p class="lbl">공지 <small>선택 · 영업시간 위에 빨간 상자로 나와요</small></p>' +
         textInput('noticeKo', i.noticeKo, '예: 12/25 휴무 · 이번 주 토요일은 밤 9시에 열어요', 'type="text" maxlength="120"') +
-        '<details class="more"' + (i.noticeEn || i.noticeZh ? ' open' : '') + '><summary>영어 · 중국어 공지도 적기</summary>' +
-          '<p class="hint">비워 두면 영어 · 중국어 화면에도 위의 한국어 공지가 그대로 나와요.</p>' +
+        '<details class="more"' + (i.noticeEn || i.noticeZh || i.noticeJa ? ' open' : '') + '><summary>영어 · 중국어 · 일본어 공지도 적기</summary>' +
+          '<p class="hint">비워 두면 외국어 화면에는 영어 공지가, 영어도 비어 있으면 위의 한국어 공지가 나와요.</p>' +
           textInput('noticeEn', i.noticeEn, '공지 (English)', 'type="text" maxlength="160" lang="en"') +
-          textInput('noticeZh', i.noticeZh, '공지 (中文)', 'type="text" maxlength="120" lang="zh-Hans"') + '</details></div>' +
+          textInput('noticeZh', i.noticeZh, '공지 (中文)', 'type="text" maxlength="120" lang="zh-Hans"') +
+          textInput('noticeJa', i.noticeJa, '공지 (日本語)', 'type="text" maxlength="120" lang="ja"') + '</details></div>' +
       '<div class="card"><p class="lbl">연락처 <small>비우면 손님 화면에서 빠져요</small></p>' +
         textInput('phone', i.phone, '전화번호', 'type="tel" inputmode="tel" maxlength="20" autocomplete="off"') +
         textInput('instagram', i.instagram, '인스타그램 아이디 (@ 없이)', 'type="text" maxlength="60" autocapitalize="none" autocorrect="off" spellcheck="false"') +

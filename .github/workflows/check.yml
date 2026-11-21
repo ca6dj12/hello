@@ -32,12 +32,12 @@ jobs:
         run: node tools/test-api.js
       - name: 설문 구조(균형 배치)와 결과 쏠림
         run: node tools/simulate.js
-      - name: 영어 · 중국어 번역이 빠진 곳이 없는지
+      - name: 영어 · 중국어 · 일본어 번역이 빠진 곳이 없는지
         run: node tools/check-i18n.js
       - name: 브라우저 설치
         working-directory: tools
         run: npx playwright-core install --with-deps chromium
-      - name: 한국어 · 영어 · 중국어 · 화면 크기별로 끝까지 눌러 보기
+      - name: 한국어 · 영어 · 중국어 · 일본어 · 화면 크기별로 끝까지 눌러 보기
         run: node tools/e2e.js --shots e2e-shots
       # 화면 캡처는 실패했을 때만, 사흘만 보관 (비공개 저장소의 보관 용량 한도 500MB 를 쓰지 않게)
       - if: failure()

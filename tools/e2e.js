@@ -415,7 +415,9 @@ async function run(browser, base, lang) {
     await page.waitForTimeout(200);
     check(await page.evaluate(() => document.documentElement.lang) === other, `언어 전환 → ${other}`);
     const pills = await page.evaluate(() => [...document.querySelectorAll('#dsLang [data-lang]')].map((b) => b.dataset.lang + (b.classList.contains('on') ? '*' : '')).join(' '));
-    check(pills === (other === 'ko' ? 'ko* en zh' : 'ko en* zh'), '언어 고르기 세 칸 (한국어 · EN · 中文), 지금 언어만 켜짐', pills);
+    check(pills === (other === 'ko' ? 'ko* en zh ja' : 'ko en* zh ja'), '언어 고르기 네 칸 (한국어 · EN · 中文 · 日本語), 지금 언어만 켜짐', pills);
+    const top = await page.evaluate(() => { const r = document.querySelector('.ds-top').getBoundingClientRect(); return { left: Math.round(r.left), right: Math.round(r.right), w: innerWidth }; });
+    check(top.left >= 8 && top.right <= top.w, '표지 위쪽 단추(MENU · 언어 네 칸)가 화면 안에 들어옴', top);
   } else check(false, '퀴즈 1번에서 폰 뒤로가기 → 표지', await screen(page));
 
   // 메뉴판 전용 링크: #menu, #menu/<id>
@@ -744,10 +746,16 @@ async function admin(browser, base) {
   LIVE = { v: 0, at: null, data: null };
 }
 
-/* 중국어(간체): 폰 언어가 중국어면 중국어로 시작하고, 질문 → 결과 → 시그니처 → 메뉴까지 한글이 남지 않아야 한다 */
-async function chinese(browser, base) {
-  console.log('\n■ 中文');
-  const ctx = await browser.newContext({ viewport: { width: 360, height: 740 }, deviceScaleFactor: 2, locale: 'zh-CN' });
+/* 중국어(간체) · 일본어: 폰 언어가 그 언어면 그 언어로 시작하고, 질문 → 결과 → 시그니처 → 메뉴까지 한글이 남지 않아야 한다 */
+const ZH = { name: '中文', ko: '중국어', code: 'zh', locale: 'zh-CN', html: 'zh-Hans', start: '点击开始', title: /七宗罪/, font: /PingFang SC/,
+  text: /[\u4e00-\u9fff]/, run: /[\u4e00-\u9fff]{8,}/, sins: '傲慢 嫉妒 暴怒 懒惰 贪婪 暴食 色欲', drink: /之酒$/, won: '16,000韩元', love: '恋爱',
+  first: 'PRIDE · 傲慢之酒', bite: /芝士蛋糕/, story: /艾雷岛/ };
+const JA = { name: '日本語', ko: '일본어', code: 'ja', locale: 'ja-JP', html: 'ja', start: 'タップしてスタート', title: /七つの大罪/, font: /Hiragino Sans/,
+  text: /[\u3040-\u30ff]/, run: /[\u3040-\u30ff\u4e00-\u9fff]{8,}/, sins: '傲慢 嫉妬 憤怒 怠惰 強欲 暴食 色欲', drink: /の酒$/, won: '16,000ウォン', love: '恋愛',
+  first: 'PRIDE · 傲慢の酒', bite: /チーズケーキ/, story: /アイラ/ };
+async function cjk(browser, base, C) {
+  console.log('\n■ ' + C.name);
+  const ctx = await browser.newContext({ viewport: { width: 360, height: 740 }, deviceScaleFactor: 2, locale: C.locale });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 200)));
@@ -756,25 +764,25 @@ async function chinese(browser, base) {
   await page.waitForTimeout(400);
   const cover = await page.evaluate(() => ({ lang: document.documentElement.lang, start: document.getElementById('start').textContent, title: document.title,
     on: (document.querySelector('#dsLang .on') || {}).textContent, font: getComputedStyle(document.body).fontFamily }));
-  check(cover.lang === 'zh-Hans' && cover.start === '点击开始' && cover.on === '中文' && /七宗罪/.test(cover.title), '폰 언어가 중국어면 중국어로 시작', cover);
-  check(/PingFang SC/.test(cover.font) && !/Apple SD Gothic/.test(cover.font), '중국어 글꼴을 먼저 찾음 (한글 글꼴이 섞이지 않게)', cover.font);
-  await shot(page, 'zh-cover');
+  check(cover.lang === C.html && cover.start === C.start && cover.on === C.name && C.title.test(cover.title), `폰 언어가 ${C.ko}면 ${C.ko}로 시작`, cover);
+  check(C.font.test(cover.font) && !/Apple SD Gothic/.test(cover.font), `${C.ko} 글꼴을 먼저 찾음 (한글 글꼴이 섞이지 않게)`, cover.font);
+  await shot(page, C.code + '-cover');
   await page.click('#start');
   await page.waitForSelector('#quiz.active', { timeout: 8000 });
   await page.waitForFunction(() => !coverTransitionBusy, null, { timeout: 8000 });
   const q = await page.evaluate(() => ({ text: document.getElementById('questionText').textContent, opts: [...document.querySelectorAll('#choices .choice-text')].map((x) => x.textContent),
     wide: [...document.querySelectorAll('#questionText, #choices .choice')].some((e) => e.getBoundingClientRect().right > innerWidth + 1) }));
-  check(/[\u4e00-\u9fff]/.test(q.text) && !/[가-힣A-Za-z]{6,}/.test(q.text) && q.opts.length === 4 && q.opts.every((o) => /[\u4e00-\u9fff]/.test(o)) && !q.wide,
-    '질문과 선택지가 중국어 · 화면 밖으로 나가지 않음 (띄어쓰기가 없어도 줄이 바뀜)', q);
-  await englishOnly(page, 'en', '中文 질문');
-  await shot(page, 'zh-q1');
+  check(C.text.test(q.text) && !/[가-힣A-Za-z]{6,}/.test(q.text) && q.opts.length === 4 && q.opts.every((o) => C.text.test(o)) && !q.wide,
+    `질문과 선택지가 ${C.ko} · 화면 밖으로 나가지 않음 (띄어쓰기가 없어도 줄이 바뀜)`, q);
+  await englishOnly(page, 'en', C.name + ' 질문');
+  await shot(page, C.code + '-q1');
   check(await answerAll(page), '7문항 끝까지 → 결과');
   await page.waitForTimeout(500);
   const r = await page.evaluate(() => ({ title: document.getElementById('resultTitle').textContent, k: calculate()[0].k,
     radar: [...document.querySelectorAll('#radarSvg text')].map((t) => t.textContent).join(' ') }));
-  check(['傲慢', '嫉妒', '暴怒', '懒惰', '贪婪', '暴食', '色欲'].includes(r.title) && r.radar === '傲慢 嫉妒 暴怒 懒惰 贪婪 暴食 色欲', '결과 제목 · 그래프 이름표가 중국어', r);
-  await englishOnly(page, 'en', '中文 결과');
-  await shot(page, 'zh-result');
+  check(C.sins.split(' ').includes(r.title) && r.radar === C.sins, `결과 제목 · 그래프 이름표가 ${C.ko}`, r);
+  await englishOnly(page, 'en', C.name + ' 결과');
+  await shot(page, C.code + '-result');
   await page.click('#toDesire');
   await page.waitForSelector('#signatureNameReveal.visible', { timeout: 20000 });
   await page.waitForTimeout(700);
@@ -782,38 +790,38 @@ async function chinese(browser, base) {
     extra: document.querySelector('.ds-extra').textContent, label: (document.querySelector('#signatureTrait .trait-label') || {}).textContent,
     copy: (document.querySelector('#signatureTrait .trait-copy') || {}).textContent,
     wide: [...document.querySelectorAll('#signatureTrait .trait-copy, .ds-extra p, .ds-extra dd')].some((e) => e.getBoundingClientRect().right > innerWidth + 1) }));
-  check(sig.en === SIGNATURE_EN[r.k] && /之酒$/.test(sig.name) && sig.extra.includes('16,000韩元') && sig.label === '恋爱' && /[\u4e00-\u9fff]{8,}/.test(sig.copy || '') && !sig.wide,
-    '시그니처: 술 이름(…之酒) · 가격(韩元) · 성향이 중국어 · 넘치지 않음', sig);
-  await englishOnly(page, 'en', '中文 시그니처');
-  await shot(page, 'zh-signature');
+  check(sig.en === SIGNATURE_EN[r.k] && C.drink.test(sig.name) && sig.extra.includes(C.won) && sig.label === C.love && C.run.test(sig.copy || '') && !sig.wide,
+    `시그니처: 술 이름 · 가격(${C.won}) · 성향이 ${C.ko} · 넘치지 않음`, sig);
+  await englishOnly(page, 'en', C.name + ' 시그니처');
+  await shot(page, C.code + '-signature');
   const img = await page.evaluate(async (k) => { const b = await window.DS_makeShareImage(k); const bmp = await createImageBitmap(b); return { size: b.size, w: bmp.width, h: bmp.height }; }, r.k);
-  check(img.w === 1080 && img.h === 1920 && img.size > 50000, '결과 이미지 생성 (중국어)', img);
+  check(img.w === 1080 && img.h === 1920 && img.size > 50000, `결과 이미지 생성 (${C.ko})`, img);
   await page.click('.ds-actions [data-ds="menu"]');
   await page.waitForSelector('#dsMenu.open', { timeout: 3000 });
   await page.waitForTimeout(400);
   const menu = await page.evaluate(() => ({ first: document.querySelector('#dsMenu .ds-sig .ds-row-name').childNodes[0].textContent.trim(),
     whisky: (document.querySelector('#dsMenu button[data-id="lagavulin-16"] .ds-row-name') || {}).textContent,
     bite: (document.querySelector('#dsMenu button[data-id="cheesecake"] .ds-row-name') || {}).textContent }));
-  check(menu.first === 'PRIDE · 傲慢之酒' && /^Lagavulin 16/.test(menu.whisky || '') && /芝士蛋糕/.test(menu.bite || '') && /Cheesecake/.test(menu.bite || ''),
-    '메뉴판: 일곱 잔은 PRIDE · 傲慢之酒, 위스키는 병에 적힌 영어 이름, 안주는 중국어 + 영어', menu);
+  check(menu.first === C.first && /^Lagavulin 16/.test(menu.whisky || '') && C.bite.test(menu.bite || '') && /Cheesecake/.test(menu.bite || ''),
+    `메뉴판: 일곱 잔은 ${C.first}, 위스키는 병에 적힌 영어 이름, 안주는 ${C.ko} + 영어`, menu);
   await page.evaluate(async () => { const m = document.getElementById('dsMenu'); for (let y = 0; y <= m.scrollHeight; y += 300) { m.scrollTop = y; await new Promise((r) => setTimeout(r, 30)); } m.scrollTop = 0; });
-  await englishOnly(page, 'en', '中文 메뉴판');
+  await englishOnly(page, 'en', C.name + ' 메뉴판');
   await page.click('#dsMenu button[data-id="lagavulin-16"]');
   await page.waitForSelector('#dsItem.open', { timeout: 3000 });
   await page.click('#dsItem [data-ds="more"]');
   await page.waitForSelector('#dsItem .ds-story .ds-layers li', { timeout: 5000 });
   await page.waitForTimeout(400);
   const story = await page.evaluate(() => document.querySelector('#dsItem .ds-story').textContent);
-  check(/艾雷岛/.test(story) && story.length > 100, '술 이야기도 중국어', story.slice(0, 60));
-  await englishOnly(page, 'en', '中文 메뉴 상세 · 이야기');
-  await shot(page, 'zh-menu-item');
+  check(C.story.test(story) && story.length > 100, `술 이야기도 ${C.ko}`, story.slice(0, 60));
+  await englishOnly(page, 'en', C.name + ' 메뉴 상세 · 이야기');
+  await shot(page, C.code + '-menu-item');
   // 고른 언어는 다음에 열어도 그대로 (폰 언어보다 먼저)
   const page2 = await ctx.newPage();
   await page2.goto(base, { waitUntil: 'networkidle' });
   await page2.click('#dsLang [data-lang="ko"]');
   await page2.reload({ waitUntil: 'networkidle' });
-  check(await page2.evaluate(() => document.documentElement.lang) === 'ko' && await page2.textContent('#start') === '클릭해주세요', '손님이 고른 언어를 기억함 (중국어 폰에서 한국어를 고르면 다음에도 한국어)');
-  check(errors.length === 0, '중국어 화면 스크립트 오류 · 404 없음', errors);
+  check(await page2.evaluate(() => document.documentElement.lang) === 'ko' && await page2.textContent('#start') === '클릭해주세요', `손님이 고른 언어를 기억함 (${C.ko} 폰에서 한국어를 고르면 다음에도 한국어)`);
+  check(errors.length === 0, `${C.ko} 화면 스크립트 오류 · 404 없음`, errors);
   await ctx.close();
 }
 
@@ -887,6 +895,8 @@ async function shopInfo(browser, base) {
     '배너 사이트(영어): Mon–Sat · Closed on Sundays · 영어 공지가 없으면 한국어 공지', en);
   const zh = await see('zh-CN', '2026-11-23T12:00:00Z');
   check(/周一–周六 19:00 – 03:00/.test(zh.info) && /最后点单 02:30 · 每周日休息/.test(zh.info) && /营业中 · 至 03:00/.test(zh.info), '배너 사이트(중국어): 周一–周六 · 每周日休息', zh);
+  const ja = await see('ja-JP', '2026-11-23T12:00:00Z');
+  check(/月–土 19:00 – 03:00/.test(ja.info) && /ラストオーダー 02:30 · 毎週日曜定休/.test(ja.info) && /営業中 · 03:00まで/.test(ja.info), '배너 사이트(일본어): 月–土 · 毎週日曜定休', ja);
   LIVE = { v: 0, at: null, data: null };
 }
 
@@ -1050,6 +1060,21 @@ async function promoSite(browser, base) {
   const promoZhKo = await leftoverKorean(page, '#lbLang');
   check(promoZhKo.length === 0, '중국어 화면에 한글이 남지 않음 (배너 사이트 전체)', promoZhKo.slice(0, 6));
   await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(400);
+  // 일본어
+  await page.click('#lbLang [data-lang="ja"]');
+  await page.evaluate(async () => { for (let y = 0; y <= document.documentElement.scrollHeight; y += 500) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); } scrollTo(0, 0); });
+  await page.waitForTimeout(300);
+  const promoJa = await page.evaluate(() => {
+    const n = document.querySelector('.lb-cats'), a = [...n.querySelectorAll('a')]; n.scrollLeft = 99999;
+    const gap = Math.round(n.getBoundingClientRect().right - a[a.length - 1].getBoundingClientRect().right); n.scrollLeft = 0;
+    return { lang: document.documentElement.lang, title: document.querySelector('#concept h2').textContent, info: document.querySelector('.lb-info').textContent,
+      card: document.querySelector('.lb-card .lb-card-ko').textContent, wide: document.documentElement.scrollWidth > innerWidth + 1, gap };
+  });
+  check(promoJa.lang === 'ja' && /どの罪/.test(promoJa.title) && /毎週月曜定休/.test(promoJa.info) && /ラストオーダー 01:30/.test(promoJa.info) && promoJa.card === '傲慢の酒' && !promoJa.wide && promoJa.gap >= 12,
+    '일본어 전환: 제목 · 술 이름(傲慢の酒) · 영업 안내(毎週月曜定休), 옆으로 넘치지 않음 · 메뉴 칸 끝까지 보임', promoJa);
+  const promoJaKo = await leftoverKorean(page, '#lbLang');
+  check(promoJaKo.length === 0, '일본어 화면에 한글이 남지 않음 (배너 사이트 전체)', promoJaKo.slice(0, 6));
+  await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(400);
   await page.click('#lbLang [data-lang="ko"]');
   check(await page.evaluate(() => document.documentElement.lang) === 'ko', '다시 한국어로');
   check(errors.length === 0, '홍보 사이트 스크립트 오류 · 404 없음', errors);
@@ -1128,7 +1153,8 @@ let SIGNATURE_EN = {};
     console.log('대상:', base);
     await run(browser, base, 'ko');
     await run(browser, base, 'en');
-    await chinese(browser, base);
+    await cjk(browser, base, ZH);
+    await cjk(browser, base, JA);
     await sizes(browser, base);
     if (!TARGET) await quizV2(browser, base);    // 로컬 서버가 동점 순서를 내려 주는 검사라 로컬에서만
     if (!TARGET) await collect(browser, base);   // 로컬 서버가 /api/track 을 대신 받는 검사라 로컬에서만

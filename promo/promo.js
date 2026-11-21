@@ -24,10 +24,15 @@
   const SINS = [['교', '교만', 'PRIDE'], ['질', '질투', 'ENVY'], ['탐', '탐욕', 'GREED'], ['식', '폭식', 'GLUTTONY'],
     ['분', '분노', 'WRATH'], ['색', '색욕', 'LUST'], ['나', '나태', 'SLOTH']];
   const ORDER = SINS.map((s) => s[0]);
-  const DAYS = { ko: ['일', '월', '화', '수', '목', '금', '토'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], zh: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'] };
+  const DAYS = { ko: ['일', '월', '화', '수', '목', '금', '토'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], zh: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'], ja: ['日', '月', '火', '水', '木', '金', '土'] };
   const DAY_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const ZH_SIN = { 교: '傲慢', 질: '嫉妒', 탐: '贪婪', 식: '暴食', 분: '暴怒', 색: '色欲', 나: '懒惰' };   // 중국어 죄 이름 (술 이름은 뒤에 之酒)
-  const LANGS = ['ko', 'en', 'zh'], LANG_LABEL = { ko: '한국어', en: 'EN', zh: '中文' }, HTML_LANG = { ko: 'ko', en: 'en', zh: 'zh-Hans' };
+  // 중국어 · 일본어 죄 이름과 술 이름 꼴 (傲慢之酒 · 傲慢の酒)
+  const LOCAL_SIN = {
+    zh: { 교: '傲慢', 질: '嫉妒', 탐: '贪婪', 식: '暴食', 분: '暴怒', 색: '色欲', 나: '懒惰' },
+    ja: { 교: '傲慢', 질: '嫉妬', 탐: '強欲', 식: '暴食', 분: '憤怒', 색: '色欲', 나: '怠惰' }
+  };
+  const DRINK_OF = { zh: '之酒', ja: 'の酒' };
+  const LANGS = ['ko', 'en', 'zh', 'ja'], LANG_LABEL = { ko: '한국어', en: 'EN', zh: '中文', ja: '日本語' }, HTML_LANG = { ko: 'ko', en: 'en', zh: 'zh-Hans', ja: 'ja' };
 
   const T = {
     ko: {
@@ -98,6 +103,29 @@
       lastOrder: (x) => '最后点单 ' + x, lastDone: '今天已停止点单',
       everyDay: '全年无休', closedOn: (d) => '每' + d.map((x) => DAYS.zh[x]).join('、') + '休息',
       dockMenu: '菜单', dockWay: '怎么走', dockLabel: '快捷入口'
+    },
+    ja: {
+      conceptTitle: '今夜、あなたは<br>どの罪を飲み干しますか？',
+      conceptBody: 'Deadly Sinsは、七つの大罪を七杯のカクテルに仕立てました。傲慢、嫉妬、強欲、暴食、憤怒、色欲、怠惰——今夜のあなたはどれですか？',
+      sevenKicker: 'SEVEN SINS · SIGNATURE', sevenTitle: '七杯のシグネチャー', swipe: '横にスワイプしてご覧ください',
+      roomKicker: 'THE ROOM', roomTitle: '5階の夜', roomBody: '落とした照明、ざらついた壁、そして七つの罪。おひとりでも、おふたりでも。',
+      rental: '貸切のご相談、歓迎します', rentalBody: 'ご都合のよい方法でお問い合わせください。', viaIg: 'Instagram DM', viaPhone: '電話', viaEmail: 'メール',
+      entrance: 'この看板が見えたら到着です',
+      tableKicker: 'AT YOUR TABLE', tableTitle: '席に着いたら、<br>七つの質問が待っています',
+      tableBody: 'テーブルのQRコードを読み取って七つの質問に答えると、七杯の中からあなたの罪にぴったりの一杯を選びます。答えは5階でだけ。',
+      menuKicker: 'MENU', menuTitle: 'メニュー', menuHint: '写真をタップすると説明が出ます',
+      menuSig: 'シグネチャー', menuWhisky: 'ウイスキー', menuCocktails: 'カクテル', menuBites: 'おつまみ', menuBev: 'ソフトドリンク',
+      menuWhiskyNote: '罪ごとに合うウイスキーを選びました', soldOut: '売り切れ', soldOutNote: '本日は売り切れです',
+      aroma: '香り', taste: '味', finish: 'フィニッシュ', strength: '強さ', cask: '樽', nose: '香り', palate: '味わい', recipe: '材料', plate: '内容', close: '閉じる',
+      photoCredits: '写真の出典', photoEdited: '背景除去・サイズ調整', photoEditedGray: '背景除去・モノクロ・サイズ調整',
+      wayKicker: 'FIND US', wayTitle: (f) => f + '階で<br>お待ちしています',
+      here: (f) => 'このビルの' + f + '階', map: '地図で見る',
+      where: '場所', hours: '営業時間', good: 'ご案内', contact: 'お問い合わせ', noCover: 'チャージ料なし',
+      openNow: (c) => '営業中 · ' + c + 'まで', opensAt: (o) => '本日 ' + o + ' オープン', closedToday: '本日は定休日です',
+      opensNext: (w, o) => w + ' ' + o + ' オープン', tomorrow: '明日', dayName: (d) => d + '曜',
+      lastOrder: (x) => 'ラストオーダー ' + x, lastDone: '本日のご注文は終了しました',
+      everyDay: '年中無休', closedOn: (d) => '毎週' + d.map((x) => DAYS.ja[x]).join('・') + '曜定休',
+      dockMenu: 'メニュー', dockWay: 'アクセス', dockLabel: 'ショートカット'
     }
   };
   // 5 → 5th, 1 → 1st, 2 → 2nd, 3 → 3rd, 11~13 → th
@@ -105,7 +133,7 @@
   // 한국어 · English · 中文(간체). 고른 언어를 기억하고(설문 사이트와 같은 이름 ds_lang), 처음에는 폰 언어를 따른다.
   let lang = '';
   try { lang = localStorage.getItem('ds_lang') || ''; } catch (e) {}
-  if (!LANGS.includes(lang)) { const n = (navigator.language || 'ko').toLowerCase(); lang = n.indexOf('ko') === 0 ? 'ko' : n.indexOf('zh') === 0 ? 'zh' : 'en'; }
+  if (!LANGS.includes(lang)) { const n = (navigator.language || 'ko').toLowerCase(); lang = n.indexOf('ko') === 0 ? 'ko' : n.indexOf('zh') === 0 ? 'zh' : n.indexOf('ja') === 0 ? 'ja' : 'en'; }
   const t = (k, ...a) => { const v = T[lang][k] !== undefined ? T[lang][k] : T.en[k]; return typeof v === 'function' ? v(...a) : v; };
   const esc = (s) => String(s === undefined || s === null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   // { ko, en, zh } 에서 지금 언어의 글. 없으면 (한국어 화면이 아닐 때) 영어 → 한국어
@@ -206,8 +234,8 @@
   /* ---------- 메뉴: 종류별 사진 격자, 누르면 설명 ---------- */
   const shown = (it) => !it.hidden;
   const det = (id) => (D.details || {})[id] || {};
-  const sinName = (k) => { const x = SINS.find((s) => s[0] === k); return x ? (lang === 'en' ? x[2] : lang === 'zh' ? ZH_SIN[k] : x[1]) : ''; };
-  const drinkName = (k, kr) => (lang === 'zh' ? ZH_SIN[k] + '之酒' : kr);   // 교만의 술 · 傲慢之酒
+  const sinName = (k) => { const x = SINS.find((s) => s[0] === k); return x ? (lang === 'en' ? x[2] : LOCAL_SIN[lang] ? LOCAL_SIN[lang][k] : x[1]) : ''; };
+  const drinkName = (k, kr) => (LOCAL_SIN[lang] ? LOCAL_SIN[lang][k] + DRINK_OF[lang] : kr);   // 교만의 술 · 傲慢之酒 · 傲慢の酒
   let ITEMS = {};
   function menuCats() {
     const m = D.menu, other = (it) => (lang === 'en' || L10(it) === it.en ? '' : it.en);   // 보조 이름(병에 적힌 영어 이름)은 한국어 · 중국어 화면에서만
