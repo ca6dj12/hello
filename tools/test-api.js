@@ -237,10 +237,19 @@ function fakeRes() {
   const savedInfo = await mcall('POST', { action: 'save', data: { info: INFO } }, KEY);
   // jsonb 는 키 순서를 바꿔 돌려주므로 키를 정렬해서 견준다
   const canon = (o) => JSON.stringify(o, (k, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.keys(v).sort().reduce((a, x) => { a[x] = v[x]; return a; }, {}) : v));
-  check(savedInfo.code === 200 && canon(savedInfo.body.data.info) === canon({ hours: { days: [1, 2, 3, 4, 5, 6], open: '19:00', close: '03:00', last: '02:30' },
+  check(savedInfo.code === 200 && canon(savedInfo.body.data.info) === canon({ hours: [{ days: [1, 2, 3, 4, 5, 6], open: '19:00', close: '03:00', last: '02:30' }],
     notice: { ko: '12/25 휴무' }, phone: '', instagram: 'deadlysins.5f', email: 'a@b.kr' }),
     '가게 정보 저장: 요일은 정렬, 공지는 한국어만(외국어 칸은 버림), 비운 전화는 빈 값 그대로(화면에서 숨김)', savedInfo.body.data);
-  check(JSON.stringify((await mcall('GET')).body.data.info.hours.days) === '[1,2,3,4,5,6]', '손님 화면이 읽는 주소(GET)에도 가게 정보가 나옴');
+  check(JSON.stringify((await mcall('GET')).body.data.info.hours[0].days) === '[1,2,3,4,5,6]', '손님 화면이 읽는 주소(GET)에도 가게 정보가 나옴 (예전 한 줄 꼴도 받아 여러 줄 꼴로)');
+  // 요일마다 시간이 다르면 여러 줄 (토 · 일 줄을 먼저 보내도 월요일부터 순서대로 저장)
+  const TWO = [{ days: [0, 6], open: '19:00', close: '02:00', last: '01:00' }, { days: [5, 2, 4, 3], open: '19:30', close: '02:00', last: '01:00' }];
+  const savedTwo = await mcall('POST', { action: 'save', data: { info: { hours: TWO } } }, KEY);
+  check(savedTwo.code === 200 && canon(savedTwo.body.data.info.hours) === canon([{ days: [2, 3, 4, 5], open: '19:30', close: '02:00', last: '01:00' }, { days: [0, 6], open: '19:00', close: '02:00', last: '01:00' }]),
+    '영업시간 여러 줄: 화–금 19:30 / 토 · 일 19:00 (월요일부터 순서대로, 요일은 정렬)', savedTwo.body.data && savedTwo.body.data.info);
+  await bad({ info: { hours: [{ days: [2, 3], open: '19:30', close: '02:00' }, { days: [3, 6], open: '19:00', close: '02:00' }] } }, '한 요일이 두 줄에 → 400');
+  await bad({ info: { hours: [] } }, '영업시간 줄이 하나도 없음 → 400');
+  await bad({ info: { hours: [{ days: [1], open: '19:00', close: '02:00' }, null] } }, '빈 줄 → 400');
+  await bad({ info: { hours: Array.from({ length: 8 }, (_, i) => ({ days: [i % 7], open: '19:00', close: '02:00' })) } }, '여덟 줄 이상 → 400');
   await bad({ info: { hours: { days: [], open: '19:00', close: '03:00' } } }, '영업 요일이 하나도 없음 → 400');
   await bad({ info: { hours: { days: [7], open: '19:00', close: '03:00' } } }, '없는 요일 번호 → 400');
   await bad({ info: { hours: { days: [1, 1], open: '19:00', close: '03:00' } } }, '같은 요일 두 번 → 400');

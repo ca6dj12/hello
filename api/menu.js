@@ -10,7 +10,7 @@
      { signaturePrice: 16000,
        items: { "<메뉴 id>": { g, b, p, soldOut, hidden, new } },     // 시그니처는 "sig:교" 처럼
        extra: [ { id: "x-…", section, ko, en, g, b, p, about: { ko, en }, soldOut, hidden, new } ],   // 새 메뉴
-       info: { hours: { days: [0~6], open: "20:00", close: "02:00", last: "01:30" },                // 가게 정보 (1층 배너 사이트에 나온다)
+       info: { hours: [ { days: [2,3,4,5], open: "19:30", close: "02:00", last: "01:00" }, … ],  // 가게 정보 (1층 배너 사이트에 나온다). 요일마다 시간이 다르면 줄을 나눔
                notice: { ko }, phone, instagram, email } }   // 공지는 한국어로만 (관리 페이지가 한국어만)
 
    비밀번호는 Vercel 환경 변수 ADMIN_PASSWORD. 없으면 저장은 503 (읽기는 됨).
@@ -66,14 +66,22 @@ const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 function shopInfo(v) {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
   const out = {};
+  // 영업시간: [{ days, open, close, last? }, …] — 요일마다 시간이 다르면 여러 줄 (예: 화–금 19:30–02:00 / 토 · 일 19:00–02:00).
+  // 예전 꼴(한 줄짜리 객체)도 받아 배열로 바꾼다. 한 요일이 두 줄에 들어가면 안 된다. 줄은 월요일부터 순서대로.
   if (v.hours !== undefined) {
-    const h = v.hours;
-    if (!h || typeof h !== 'object' || !Array.isArray(h.days) || !h.days.length || h.days.length > 7) return null;
-    if (!h.days.every((x) => Number.isInteger(x) && x >= 0 && x <= 6) || new Set(h.days).size !== h.days.length) return null;
-    if (!HHMM.test(h.open) || !HHMM.test(h.close) || h.open === h.close) return null;
-    const last = h.last === undefined || h.last === null || h.last === '' ? undefined : h.last;
-    if (last !== undefined && !HHMM.test(last)) return null;
-    out.hours = clean({ days: h.days.slice().sort((a, b) => a - b), open: h.open, close: h.close, last });
+    const list = Array.isArray(v.hours) ? v.hours : [v.hours];
+    if (!list.length || list.length > 7) return null;
+    const seen = new Set(), rows = [];
+    for (const h of list) {
+      if (!h || typeof h !== 'object' || Array.isArray(h) || !Array.isArray(h.days) || !h.days.length || h.days.length > 7) return null;
+      if (!h.days.every((x) => Number.isInteger(x) && x >= 0 && x <= 6 && !seen.has(x) && seen.add(x))) return null;
+      if (!HHMM.test(h.open) || !HHMM.test(h.close) || h.open === h.close) return null;
+      const last = h.last === undefined || h.last === null || h.last === '' ? undefined : h.last;
+      if (last !== undefined && !HHMM.test(last)) return null;
+      rows.push(clean({ days: h.days.slice().sort((a, b) => a - b), open: h.open, close: h.close, last }));
+    }
+    const first = (h) => Math.min(...h.days.map((d) => (d + 6) % 7));   // 월요일 = 0
+    out.hours = rows.sort((a, b) => first(a) - first(b));
   }
   if (v.notice !== undefined && v.notice !== null) {
     if (typeof v.notice !== 'object' || Array.isArray(v.notice)) return null;

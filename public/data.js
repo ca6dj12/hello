@@ -617,9 +617,9 @@ window.DS_DATA = {
       },
       {
         "ko": "킵바틀은 첫 이용일로부터 1달간 보관됩니다. (재방문 시 10,000원)",
-        "en": "We keep your unfinished bottle for one month from the day you first open it. (10,000 KRW when you return)",
-        "zh": "存酒自首次开瓶之日起保管1个月。（再次光临时收取10,000韩元）",
-        "ja": "キープボトルは初回ご利用日から1か月間お預かりします。（再来店時10,000ウォン）"
+        "en": "We keep your unfinished bottle for one month from the day you first open it. (A 10,000 KRW storage and reopening charge applies when you come back for it.)",
+        "zh": "存酒自首次开瓶之日起保管1个月。（再次光临饮用时，另收保管及开瓶费10,000韩元）",
+        "ja": "キープボトルは初回ご利用日から1か月間お預かりします。（再来店時、保管料と開栓料として10,000ウォンを別途いただきます）"
       },
       {
         "ko": "잔 및 기물 파손 시 구입가의 50%가 청구됩니다.",
@@ -1429,10 +1429,10 @@ window.DS_DATA = {
       "region": null,
       "abv": null,
       "about": {
-        "ko": "잔에 담아 내는 요거트 푸딩에 체리를 듬뿍 올린 디저트.",
-        "en": "Yogurt pudding served in a glass, heaped with cherries.",
-        "zh": "盛在杯中的酸奶布丁，上面满满堆着樱桃。",
-        "ja": "グラスに盛ったヨーグルトプリンに、チェリーをたっぷりのせたデザート。"
+        "ko": "요거트 푸딩에 체리를 듬뿍 올린 디저트.",
+        "en": "Yogurt pudding heaped with cherries.",
+        "zh": "酸奶布丁上满满堆着樱桃。",
+        "ja": "ヨーグルトプリンに、チェリーをたっぷりのせたデザート。"
       },
       "plate": {
         "ko": "체리 요거트 푸딩 · 체리",
@@ -1581,9 +1581,13 @@ window.DS_DATA = {
       { name: { ko: "네이버 지도", en: "Naver Map", zh: "Naver 地图", ja: "NAVER マップ" }, url: "https://naver.me/GUTF4SLo" },
       { name: { ko: "카카오맵", en: "Kakao Map", zh: "Kakao 地图", ja: "カカオマップ" }, url: "https://kko.to/4nOHx5G0m" }
     ],
-    // 영업 요일(0 = 일요일 … 6 = 토요일) · 여는 시간 · 닫는 시간 · 라스트오더. 월요일만 휴무 (일요일도 영업 — 네이버에는 아직 일요일 휴무로 나옴).
+    // 영업 요일(0 = 일요일 … 6 = 토요일) · 여는 시간 · 닫는 시간 · 라스트오더. 요일마다 시간이 다르면 줄을 나눈다. 월요일만 휴무.
+    // 사장님 2026-11-22: 화–금 19:30–02:00 · 토 · 일 19:00–02:00 · 라스트오더 01:00 · 매주 월요일 휴무
     // ★ 사장님은 /admin 의 "가게 정보"에서 바꿀 수 있다 (거기서 저장한 값이 여기 값보다 먼저). "매주 월요일 휴무" 같은 안내는 요일에서 자동으로 만들어진다.
-    hours: [{ days: [0, 2, 3, 4, 5, 6], open: "20:00", close: "02:00", last: "01:30" }],
+    hours: [
+      { days: [2, 3, 4, 5], open: "19:30", close: "02:00", last: "01:00" },
+      { days: [0, 6], open: "19:00", close: "02:00", last: "01:00" }
+    ],
     instagram: "deadlysins.bar",   // @ 없이
     phone: "0507-1304-6522",   // 네이버 스마트콜 가상번호 (사장님 2026-10-27, 개인 010 번호는 싣지 않음) — 누르면 바로 전화
     email: "deadly_sins@naver.com",  // 누르면 메일 앱

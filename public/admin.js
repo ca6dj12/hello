@@ -15,9 +15,16 @@
 
   /* 가게 정보의 기본값 (data.js 의 promo). 요일 번호: 0 = 일요일 … 6 = 토요일. 화면에는 월요일부터 보여 준다. */
   const P = BASE.promo || {};
-  const H0 = (Array.isArray(P.hours) && P.hours[0]) || { days: [0, 1, 2, 3, 4, 5, 6], open: '20:00', close: '02:00' };
+  // 영업시간은 "시간대" 여러 줄: [{ days, open, close, last }] — 요일마다 시간이 다르면 줄을 나눈다 (예: 화–금 19:30 / 토 · 일 19:00).
+  // 월요일부터 순서대로 놓고, 요일을 하나도 안 고른 줄은 뺀다. 라스트오더가 없으면 ''.
+  const monFirst = (d) => (d + 6) % 7;
+  const normHours = (v) => (Array.isArray(v) ? v : v ? [v] : [])
+    .filter((h) => h && Array.isArray(h.days) && h.days.length)
+    .map((h) => ({ days: h.days.slice().sort((a, b) => a - b), open: h.open || '', close: h.close || '', last: h.last || '' }))
+    .sort((a, b) => Math.min(...a.days.map(monFirst)) - Math.min(...b.days.map(monFirst)));
+  const BASE_HOURS = normHours(P.hours).length ? normHours(P.hours) : [{ days: [0, 1, 2, 3, 4, 5, 6], open: '20:00', close: '02:00', last: '' }];
+  const hoursKey = (H) => JSON.stringify(normHours(H).map((h) => [h.days, h.open, h.close, h.last]));
   const BASE_INFO = {
-    days: (H0.days || []).slice().sort((a, b) => a - b), open: H0.open || '', close: H0.close || '', last: H0.last || '',
     noticeKo: '',
     phone: P.phone || '', instagram: String(P.instagram || '').replace(/^@/, ''), email: P.email || ''
   };
@@ -91,8 +98,7 @@
     // 가게 정보: 저장된 것이 있으면 그것, 없으면 data.js 기본값
     const si = d.info || {}, sh = si.hours || null, sn = si.notice || {};
     const info = {
-      days: sh && Array.isArray(sh.days) ? sh.days.slice().sort((a, b) => a - b) : BASE_INFO.days.slice(),
-      open: sh ? sh.open || '' : BASE_INFO.open, close: sh ? sh.close || '' : BASE_INFO.close, last: sh ? sh.last || '' : BASE_INFO.last,
+      hours: normHours(sh).length ? normHours(sh) : normHours(BASE_HOURS),   // normHours 는 새 객체를 만든다 (기본값을 건드리지 않게)
       noticeKo: sn.ko || '',
       phone: typeof si.phone === 'string' ? si.phone : BASE_INFO.phone,
       instagram: typeof si.instagram === 'string' ? si.instagram : BASE_INFO.instagram,
@@ -139,8 +145,8 @@
     if (extra.length) out.extra = extra;
     // 가게 정보: 기본(data.js)과 달라진 것만
     const i = model.info, info = {};
-    if (i.days.join() !== BASE_INFO.days.join() || i.open !== BASE_INFO.open || i.close !== BASE_INFO.close || (i.last || '') !== BASE_INFO.last)
-      info.hours = { days: i.days.slice(), open: i.open, close: i.close, last: i.last || undefined };
+    if (hoursKey(i.hours) !== hoursKey(BASE_HOURS))
+      info.hours = normHours(i.hours).map((h) => ({ days: h.days, open: h.open, close: h.close, last: h.last || undefined }));
     if (String(i.noticeKo || '').trim()) info.notice = { ko: String(i.noticeKo).trim() };   // 공지는 한국어로만 (관리 페이지는 한국어만)
     if (i.phone.trim() !== BASE_INFO.phone) info.phone = i.phone.trim();
     if (igId(i.instagram) !== BASE_INFO.instagram) info.instagram = igId(i.instagram);
@@ -156,8 +162,9 @@
     '<label class="price"><span>' + label + '</span><input type="text" inputmode="numeric" data-f="' + f + '" value="' + esc(fmt(v)) + '" placeholder="0"></label>';
 
   /* ---------- 가게 정보: 영업 요일 · 시간 · 공지 · 연락처 ---------- */
-  const timeInput = (f, v, label) =>
-    '<label class="time"><span>' + label + '</span><input type="time" data-i="' + f + '" value="' + esc(v) + '" step="300"></label>';
+  // 시간대 g 의 여는 시간 · 닫는 시간 · 라스트오더
+  const timeInput = (g, f, v, label) =>
+    '<label class="time"><span>' + label + '</span><input type="time" data-h="' + g + '" data-hf="' + f + '" value="' + esc(v) + '" step="300"></label>';
   const textInput = (f, v, label, attrs) =>
     '<label class="txt"><span>' + label + '</span><input data-i="' + f + '" value="' + esc(v) + '" ' + (attrs || 'type="text"') + '></label>';
   // [0,2,3,4,5,6] → "화–일" (월요일부터 세어 사흘 이상 이어지면 줄여 쓴다 — 손님 화면과 같은 규칙)
@@ -173,11 +180,15 @@
   }
   // 넣은 값에 문제가 있으면 그 설명, 없으면 ''
   function infoProblem() {
-    const i = model.info, o = toMin(i.open), c = toMin(i.close), l = toMin(i.last);
-    if (!i.days.length) return '영업하는 요일을 하나 이상 골라 주세요.';
-    if (isNaN(o) || isNaN(c)) return '여는 시간과 닫는 시간을 넣어 주세요.';
-    if (o === c) return '여는 시간과 닫는 시간이 같아요.';
-    if (i.last && (isNaN(l) || (l - o + 1440) % 1440 >= (c - o + 1440) % 1440)) return '라스트오더는 여는 시간과 닫는 시간 사이로 넣어 주세요.';
+    const i = model.info, H = i.hours;
+    if (!H.some((h) => h.days.length)) return '영업하는 요일을 하나 이상 골라 주세요.';
+    for (let g = 0; g < H.length; g++) {
+      const h = H[g], at = H.length > 1 ? '시간대 ' + (g + 1) + ': ' : '', o = toMin(h.open), c = toMin(h.close), l = toMin(h.last);
+      if (!h.days.length) return at + '요일을 골라 주거나, 이 시간대를 지워 주세요.';
+      if (isNaN(o) || isNaN(c)) return at + '여는 시간과 닫는 시간을 넣어 주세요.';
+      if (o === c) return at + '여는 시간과 닫는 시간이 같아요.';
+      if (h.last && (isNaN(l) || (l - o + 1440) % 1440 >= (c - o + 1440) % 1440)) return at + '라스트오더는 여는 시간과 닫는 시간 사이로 넣어 주세요.';
+    }
     if (i.phone.trim() && !/^[\d+\-() ]{7,20}$/.test(i.phone.trim())) return '전화번호는 숫자와 - 만 넣어 주세요.';
     if (igId(i.instagram) && !/^[A-Za-z0-9._]{1,30}$/.test(igId(i.instagram))) return '인스타그램 아이디를 확인해 주세요 (영문 · 숫자 · 마침표 · 밑줄).';
     if (i.email.trim() && !/^[^\s@<>"']{1,60}@[^\s@<>"']{1,60}\.[A-Za-z]{2,}$/.test(i.email.trim())) return '이메일 주소를 확인해 주세요.';
@@ -187,21 +198,42 @@
   function updatePreview() {
     const el = $('hoursPreview');
     if (!el) return;
-    const i = model.info, bad = infoProblem();
-    const off = WEEK.filter(([d]) => !i.days.includes(d)).map(([, n]) => n);
+    const bad = infoProblem(), H = normHours(model.info.hours), open = new Set([].concat(...H.map((h) => h.days)));
+    const off = WEEK.filter(([d]) => !open.has(d)).map(([, n]) => n);
+    // 손님 화면과 같은 규칙: 라스트오더가 모든 시간대에서 같으면 한 번만, 다르면 시간대마다
+    const lasts = [...new Set(H.map((h) => h.last))], shared = lasts.length === 1 ? lasts[0] : '';
     el.classList.toggle('is-bad', !!bad);
     el.textContent = bad && (/요일|시간|라스트오더/.test(bad)) ? bad
-      : '손님 화면: ' + dayRange(i.days) + ' ' + i.open + ' – ' + i.close + (i.last ? ' · 라스트오더 ' + i.last : '') + ' · ' + (off.length ? '매주 ' + off.join(' · ') + '요일 휴무' : '연중무휴');
+      : '손님 화면: ' + H.map((h) => dayRange(h.days) + ' ' + h.open + ' – ' + h.close + (!shared && h.last ? ' (라스트오더 ' + h.last + ')' : '')).join(' / ') +
+        (shared ? ' · 라스트오더 ' + shared : '') + ' · ' + (off.length ? '매주 ' + off.join(' · ') + '요일 휴무' : '연중무휴');
+  }
+  // 시간대마다 카드 하나: 요일 · 여는 시간 · 닫는 시간 · 라스트오더. 한 요일은 한 시간대에만 (다른 시간대에서 고르면 옮겨 간다)
+  const elsewhere = (g, d) => model.info.hours.some((x, k) => k !== g && x.days.includes(d));
+  function hoursHtml() {
+    const H = model.info.hours, many = H.length > 1;
+    return H.map((h, g) =>
+      '<div class="card hgroup" data-hg="' + g + '"><div class="lbl-row"><p class="lbl">' + (many ? '시간대 ' + (g + 1) : '영업 요일 · 시간') +
+        ' <small>흰색으로 켜진 요일에 영업해요</small></p>' + (many ? '<button type="button" class="del" data-act="hdel" data-h="' + g + '">지우기</button>' : '') + '</div>' +
+        '<div class="tgs days">' + WEEK.map(([d, name]) => '<label class="tg' + (elsewhere(g, d) ? ' is-other' : '') + '"><input type="checkbox" data-h="' + g + '" data-day="' + d + '"' +
+          (h.days.includes(d) ? ' checked' : '') + '><span>' + name + '</span></label>').join('') + '</div>' +
+        '<div class="times">' + timeInput(g, 'open', h.open, '여는 시간') + timeInput(g, 'close', h.close, '닫는 시간') + timeInput(g, 'last', h.last, '라스트오더') + '</div></div>').join('') +
+      (H.length < 7 ? '<button type="button" class="add hadd" data-act="hadd">+ 요일마다 시간이 다르면: 시간대 추가</button>' : '') +
+      '<div class="card"><p class="hint">자정을 넘겨 새벽에 닫으면 새벽 시간 그대로 넣으면 돼요 (새벽 2시 = 오전 2:00). 라스트오더가 없으면 비워 두세요. ' +
+        '어느 시간대에서도 고르지 않은 요일은 쉬는 날로 나와요.</p><p class="preview" id="hoursPreview" role="status"></p></div>';
+  }
+  // 요일을 옮긴 뒤 체크 표시 · "다른 시간대에 있음" 표시를 맞춘다
+  function syncDays() {
+    document.querySelectorAll('#sec-info input[data-day]').forEach((x) => {
+      const g = Number(x.getAttribute('data-h')), d = Number(x.getAttribute('data-day'));
+      x.checked = model.info.hours[g].days.includes(d);
+      x.parentElement.classList.toggle('is-other', elsewhere(g, d));
+    });
   }
   function infoHtml() {
     const i = model.info;
     return '<section class="sec" id="sec-info" data-sec="info"><h2>가게 정보</h2>' +
       '<p class="hint">여기서 바꾼 내용은 <b>1층 배너 사이트</b>의 "오시는 길"에 나와요. "매주 월요일 휴무" 같은 안내는 요일을 고르면 알아서 바뀌어요.</p>' +
-      '<div class="card"><p class="lbl">영업하는 요일 <small>흰색으로 켜진 요일에 영업해요</small></p><div class="tgs days">' +
-        WEEK.map(([d, name]) => '<label class="tg"><input type="checkbox" data-day="' + d + '"' + (i.days.includes(d) ? ' checked' : '') + '><span>' + name + '</span></label>').join('') + '</div></div>' +
-      '<div class="card"><p class="lbl">영업시간</p><div class="times">' + timeInput('open', i.open, '여는 시간') + timeInput('close', i.close, '닫는 시간') + timeInput('last', i.last, '라스트오더') + '</div>' +
-        '<p class="hint">자정을 넘겨 새벽에 닫으면 새벽 시간 그대로 넣으면 돼요 (새벽 2시 = 오전 2:00). 라스트오더가 없으면 비워 두세요.</p>' +
-        '<p class="preview" id="hoursPreview" role="status"></p></div>' +
+      hoursHtml() +
       '<div class="card"><p class="lbl">공지 <small>선택 · 영업시간 위에 빨간 상자로 나와요</small></p>' +
         textInput('noticeKo', i.noticeKo, '예: 12/25 휴무 · 이번 주 토요일은 밤 9시에 열어요', 'type="text" maxlength="120"') + '</div>' +
       '<div class="card"><p class="lbl">연락처 <small>비우면 손님 화면에서 빠져요</small></p>' +
@@ -274,13 +306,16 @@
   function onField(e) {
     const el = e.target, f = el.getAttribute('data-f');
     // 가게 정보 칸
-    const day = el.getAttribute('data-day'), key = el.getAttribute('data-i');
-    if (day !== null) {
-      const s = new Set(model.info.days);
-      if (el.checked) s.add(Number(day)); else s.delete(Number(day));
-      model.info.days = [...s].sort((a, b) => a - b);
-      updatePreview(); setDirty(true); return;
+    const day = el.getAttribute('data-day'), key = el.getAttribute('data-i'), hg = el.getAttribute('data-h'), hf = el.getAttribute('data-hf');
+    if (day !== null && hg !== null) {
+      const H = model.info.hours, g = Number(hg), d = Number(day);
+      if (el.checked) H.forEach((x, k) => { if (k !== g) x.days = x.days.filter((y) => y !== d); });   // 다른 시간대에 있던 요일이면 이리로 옮긴다
+      const s = new Set(H[g].days);
+      if (el.checked) s.add(d); else s.delete(d);
+      H[g].days = [...s].sort((a, b) => a - b);
+      syncDays(); updatePreview(); setDirty(true); return;
     }
+    if (hg !== null && hf) { model.info.hours[Number(hg)][hf] = el.value; updatePreview(); setDirty(true); return; }
     if (key) { model.info[key] = el.value; updatePreview(); setDirty(true); return; }
     if (!f) return;
     if (f === 'sigPrice') { model.sigPrice = Number(fmt(el.value).replace(/,/g, '')) || 0; setDirty(true); return; }
@@ -322,6 +357,17 @@
         last.scrollIntoView({ block: 'center', behavior: 'smooth' });
         const i = last.querySelector('input'); if (i) i.focus({ preventScroll: true });
       }
+    } else if (b.getAttribute('data-act') === 'hadd') {
+      // 새 시간대: 시간은 바로 위 시간대를 그대로 가져오고, 요일은 비워 둔다 (고르면 원래 시간대에서 옮겨 온다)
+      const H = model.info.hours, prev = H[H.length - 1] || {};
+      H.push({ days: [], open: prev.open || '', close: prev.close || '', last: prev.last || '' });
+      render(); setDirty(true);
+      const cards = document.querySelectorAll('#sec-info .hgroup'), card = cards[cards.length - 1];
+      if (card) { card.classList.add('just-added'); card.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+    } else if (b.getAttribute('data-act') === 'hdel') {
+      const g = Number(b.getAttribute('data-h')), H = model.info.hours;
+      if (H.length < 2 || !window.confirm('시간대 ' + (g + 1) + '을(를) 지울까요? 그 요일은 쉬는 날이 돼요. (저장해야 반영돼요)')) return;
+      H.splice(g, 1); render(); setDirty(true);
     } else if (b.getAttribute('data-act') === 'del') {
       const t = targetOf(b);
       if (!t || !window.confirm('이 메뉴를 지울까요? (저장해야 반영돼요)')) return;

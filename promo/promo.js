@@ -162,8 +162,10 @@
     // 가게 정보: 영업 요일 · 시간 · 라스트오더 · 공지 · 연락처 (비운 연락처는 화면에서 빠진다)
     const info = d.info;
     if (info && typeof info === 'object') {
-      const h = info.hours;
-      if (h && Array.isArray(h.days) && h.days.length && h.open && h.close) L.hours = [{ days: h.days, open: h.open, close: h.close, last: h.last || undefined }];
+      // 영업시간은 여러 줄 (요일마다 시간이 다를 때). 예전에 저장한 한 줄짜리 꼴도 받는다
+      const rows = (Array.isArray(info.hours) ? info.hours : info.hours ? [info.hours] : [])
+        .filter((h) => h && Array.isArray(h.days) && h.days.length && h.open && h.close);
+      if (rows.length) L.hours = rows.map((h) => ({ days: h.days, open: h.open, close: h.close, last: h.last || undefined }));
       if (info.notice && typeof info.notice === 'object') L.notice = info.notice;
       ['phone', 'instagram', 'email'].forEach((k) => { if (typeof info[k] === 'string') L[k] = info[k]; });
     }
@@ -226,9 +228,12 @@
     if (!H.length) return '';
     // 쉬는 요일 안내는 영업 요일에서 만든다 ("매주 월요일 휴무" · "Closed on Mondays" · "每周一休息") — 요일을 바꾸면 문구도 같이 바뀌게
     const open = new Set([].concat(...H.map((h) => h.days || []))), off = [1, 2, 3, 4, 5, 6, 0].filter((d) => !open.has(d));
-    const notes = [...new Set(H.filter((h) => h.last).map((h) => t('lastOrder', h.last)))].concat([off.length ? t('closedOn', off) : t('everyDay')]);
-    return H.map((h) => '<span>' + esc(dayRange(h.days)) + '</span> ' + esc(h.open) + ' – ' + esc(h.close)).join('<br>') +
-      (notes.length ? '<br><small>' + esc(notes.join(' · ')) + '</small>' : '');
+    // 라스트오더가 모든 줄에서 같으면 아래에 한 번만, 줄마다 다르면 그 줄 끝에
+    const lasts = [...new Set(H.map((h) => h.last || ''))], shared = lasts.length === 1 ? lasts[0] : '';
+    const notes = (shared ? [t('lastOrder', shared)] : []).concat([off.length ? t('closedOn', off) : t('everyDay')]);
+    return H.map((h) => '<span>' + esc(dayRange(h.days)) + '</span> ' + esc(h.open) + ' – ' + esc(h.close) +
+        (!shared && h.last ? ' <small>' + esc(t('lastOrder', h.last)) + '</small>' : '')).join('<br>') +
+      '<br><small>' + esc(notes.join(' · ')) + '</small>';
   }
 
   /* ---------- 메뉴: 종류별 사진 격자, 누르면 설명 ---------- */

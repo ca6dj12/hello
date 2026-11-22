@@ -836,39 +836,64 @@ async function shopInfo(browser, base) {
   await page.goto(base + 'admin.html', { waitUntil: 'networkidle' });
   await page.fill('#pw', ADMIN_KEY); await page.click('#login button');
   await page.waitForSelector('#editor:not([hidden])', { timeout: 5000 });
+  page.on('dialog', (d) => d.accept());   // 시간대 지우기 확인 창
+  const groups = () => page.evaluate(() => [...document.querySelectorAll('#sec-info .hgroup')].map((g) => ({
+    days: [...g.querySelectorAll('input[data-day]:checked')].map((x) => x.dataset.day).join(''),
+    other: [...g.querySelectorAll('label.tg.is-other input')].map((x) => x.dataset.day).join(''),
+    open: g.querySelector('[data-hf="open"]').value, close: g.querySelector('[data-hf="close"]').value, last: g.querySelector('[data-hf="last"]').value })));
   const first = await page.evaluate(() => ({
-    days: [...document.querySelectorAll('#sec-info input[data-day]:checked')].map((x) => x.dataset.day).join(''),
-    open: document.querySelector('[data-i="open"]').value, close: document.querySelector('[data-i="close"]').value, last: document.querySelector('[data-i="last"]').value,
     phone: document.querySelector('[data-i="phone"]').value, preview: document.getElementById('hoursPreview').textContent,
     jump: [...document.querySelectorAll('#jump a')].map((a) => a.textContent).join(' '), saveOff: document.getElementById('save').disabled,
-    clipped: [...document.querySelectorAll('#sec-info input')].some((i) => i.getBoundingClientRect().right > innerWidth)
+    dels: document.querySelectorAll('#sec-info [data-act="hdel"]').length, add: !!document.querySelector('#sec-info [data-act="hadd"]'),
+    clipped: [...document.querySelectorAll('#sec-info input, #sec-info button')].some((i) => i.getBoundingClientRect().right > innerWidth)
   }));
-  check(first.days === '234560' && first.open === '20:00' && first.close === '02:00' && first.last === '01:30' && first.phone === '0507-1304-6522' && first.saveOff && !first.clipped,
-    '가게 정보 칸에 지금 값(화–일 20:00–02:00 · 라스트오더 01:30 · 전화)이 채워져 있음', first);
-  check(first.preview === '손님 화면: 화–일 20:00 – 02:00 · 라스트오더 01:30 · 매주 월요일 휴무' && first.jump === '가게 정보 시그니처 위스키 칵테일 안주 음료',
+  const g0 = await groups();
+  check(JSON.stringify(g0) === JSON.stringify([{ days: '2345', other: '60', open: '19:30', close: '02:00', last: '01:00' }, { days: '60', other: '2345', open: '19:00', close: '02:00', last: '01:00' }]) &&
+    first.phone === '0507-1304-6522' && first.saveOff && first.dels === 2 && first.add && !first.clipped,
+    '가게 정보 칸에 지금 값: 시간대 1 화–금 19:30–02:00 · 시간대 2 토 · 일 19:00–02:00 · 라스트오더 01:00 · 전화 (화면 밖으로 나가는 칸 없음)', [g0, first]);
+  check(first.preview === '손님 화면: 화–금 19:30 – 02:00 / 토 · 일 19:00 – 02:00 · 라스트오더 01:00 · 매주 월요일 휴무' && first.jump === '가게 정보 시그니처 위스키 칵테일 안주 음료',
     '손님 화면 미리보기 · 위쪽 바로가기', first);
   const adminText = await page.evaluate(() => document.getElementById('editor').innerText);
-  check(!/[\u3040-\u30ff\u4e00-\u9fff]/.test(adminText) && !/English|中文|日本語/.test(adminText), '관리 페이지는 한국어만 (외국어 입력 칸 없음)', (adminText.match(/.{0,20}(English|中文|日本語|[\u3040-\u30ff\u4e00-\u9fff]).{0,20}/) || [])[0]);
-  // 잘못 넣으면 저장하지 않고 알려 준다
-  await page.fill('[data-i="last"]', '10:00');
+  check(!/[぀-ヿ一-鿿]/.test(adminText) && !/English|中文|日本語/.test(adminText), '관리 페이지는 한국어만 (외국어 입력 칸 없음)', (adminText.match(/.{0,20}(English|中文|日本語|[぀-ヿ一-鿿]).{0,20}/) || [])[0]);
+  // 잘못 넣으면 저장하지 않고 어느 시간대인지 알려 준다
+  await page.fill('[data-h="1"][data-hf="last"]', '10:00');
   await page.click('#save'); await page.waitForTimeout(250);
-  check(/라스트오더는/.test(await page.textContent('#barMsg')) && !ADMIN_POSTS.some((p) => p.action === 'save'), '라스트오더가 영업시간 밖이면 저장하지 않고 알려 줌', await page.textContent('#barMsg'));
-  // 월요일도 영업, 일요일 휴무, 19:00–03:00, 라스트오더 02:30, 공지, 전화 비움
-  await page.click('#sec-info label.tg:has(input[data-day="1"])');
-  await page.click('#sec-info label.tg:has(input[data-day="0"])');
-  await page.fill('[data-i="open"]', '19:00'); await page.fill('[data-i="close"]', '03:00'); await page.fill('[data-i="last"]', '02:30');
+  check(/^시간대 2: 라스트오더는/.test(await page.textContent('#barMsg')) && !ADMIN_POSTS.some((p) => p.action === 'save'), '라스트오더가 영업시간 밖이면 저장하지 않고 어느 시간대인지 알려 줌', await page.textContent('#barMsg'));
+  await page.fill('[data-h="1"][data-hf="last"]', '01:00');
+  // 한 요일은 한 시간대에만: 시간대 1 에서 토요일을 누르면 시간대 2 에서 빠져 이리로 온다 (다시 누르면 되돌릴 수 있다)
+  await page.click('#sec-info label.tg:has(input[data-h="0"][data-day="6"])');
+  const moved = await groups();
+  check(moved[0].days === '23456' && moved[1].days === '0' && moved[1].other === '23456', '다른 시간대의 요일을 누르면 이 시간대로 옮겨 옴 (저쪽에는 점선으로 표시)', moved);
+  await page.click('#sec-info label.tg:has(input[data-h="1"][data-day="6"])');
+  check((await groups())[1].days === '60', '되돌리기: 시간대 2 에서 다시 누르면 토요일이 돌아감', await groups());
+  // 시간대 추가 → 요일이 비어 있으면 알려 줌 → 지우기
+  await page.click('#sec-info [data-act="hadd"]');
+  const three = await groups();
+  check(three.length === 3 && three[2].days === '' && three[2].open === '19:00' && /^시간대 3: 요일을 골라/.test(await page.textContent('#hoursPreview')),
+    '시간대 추가: 시간은 위 시간대를 가져오고, 요일을 고르기 전엔 미리보기에 알림', [three, await page.textContent('#hoursPreview')]);
+  await page.click('#sec-info [data-act="hdel"][data-h="2"]');
+  check((await groups()).length === 2, '시간대 지우기');
+  // 월–금 19:00–03:00 (라스트오더 02:30) / 토 18:00–02:00 (라스트오더 01:00) · 일요일 휴무, 공지, 전화 비움
+  await page.click('#sec-info label.tg:has(input[data-h="0"][data-day="1"])');
+  await page.click('#sec-info label.tg:has(input[data-h="1"][data-day="0"])');
+  await page.fill('[data-h="0"][data-hf="open"]', '19:00'); await page.fill('[data-h="0"][data-hf="close"]', '03:00'); await page.fill('[data-h="0"][data-hf="last"]', '02:30');
+  await page.fill('[data-h="1"][data-hf="open"]', '18:00'); await page.fill('[data-h="1"][data-hf="last"]', '01:00');
   await page.fill('[data-i="noticeKo"]', '12/25 휴무');
   await page.fill('[data-i="phone"]', '');
   await page.fill('[data-i="instagram"]', 'https://www.instagram.com/deadlysins.5f/?hl=ko');
-  check(await page.textContent('#hoursPreview') === '손님 화면: 월–토 19:00 – 03:00 · 라스트오더 02:30 · 매주 일요일 휴무', '바꾸는 대로 미리보기가 바뀜', await page.textContent('#hoursPreview'));
+  check(await page.textContent('#hoursPreview') === '손님 화면: 월–금 19:00 – 03:00 (라스트오더 02:30) / 토 18:00 – 02:00 (라스트오더 01:00) · 매주 일요일 휴무',
+    '바꾸는 대로 미리보기가 바뀜 (라스트오더가 시간대마다 다르면 줄마다)', await page.textContent('#hoursPreview'));
   await page.click('#save');
   await page.waitForFunction(() => /저장했어요/.test(document.getElementById('barMsg').textContent), null, { timeout: 5000 }).catch(() => {});
   const saved = (ADMIN_POSTS.filter((p) => p.action === 'save').pop() || {}).data || {};
-  check(JSON.stringify(saved.info) === JSON.stringify({ hours: { days: [1, 2, 3, 4, 5, 6], open: '19:00', close: '03:00', last: '02:30' }, notice: { ko: '12/25 휴무' }, phone: '', instagram: 'deadlysins.5f' }),
-    '저장: 바뀐 것만 (영업 요일 · 시간 · 공지 · 비운 전화 · 인스타 주소에서 아이디만)', saved.info);
+  check(JSON.stringify(saved.info) === JSON.stringify({ hours: [{ days: [1, 2, 3, 4, 5], open: '19:00', close: '03:00', last: '02:30' }, { days: [6], open: '18:00', close: '02:00', last: '01:00' }],
+    notice: { ko: '12/25 휴무' }, phone: '', instagram: 'deadlysins.5f' }),
+    '저장: 바뀐 것만 (시간대 두 줄 · 공지 · 비운 전화 · 인스타 주소에서 아이디만)', saved.info);
+  const after = await groups();
+  check(after.length === 2 && after[0].days === '12345' && after[1].days === '6', '저장 뒤 다시 그려도 시간대 그대로', after);
   check(errors.length === 0, '관리 화면 스크립트 오류 없음', errors);
   await ctx.close();
-  // 배너 사이트: 한국어 · 영어 · 중국어
+  // 배너 사이트: 한국어 · 영어 · 중국어 · 일본어
   const see = async (locale, when) => {
     const c = await browser.newContext({ viewport: { width: 390, height: 844 }, locale });
     await c.route(PROMO_BASE + '**', async (route) => {
@@ -889,16 +914,20 @@ async function shopInfo(browser, base) {
     return r;
   };
   const ko = await see('ko-KR', '2026-11-22T12:00:00Z');   // 일요일 21:00 (한국) — 이제 쉬는 날
-  check(/월–토 19:00 – 03:00/.test(ko.info) && /라스트오더 02:30 · 매주 일요일 휴무/.test(ko.info) && ko.notice === '12/25 휴무' && /오늘은 쉬어요 · 내일 오후 7시 오픈/.test(ko.info),
-    '배너 사이트(한국어): 바뀐 요일 · 시간 · 라스트오더 · 쉬는 요일 안내 · 공지 · 영업 상태', ko);
+  check(/월–금 19:00 – 03:00 라스트오더 02:30 토 18:00 – 02:00 라스트오더 01:00 매주 일요일 휴무/.test(ko.info) && ko.notice === '12/25 휴무' && /오늘은 쉬어요 · 내일 오후 7시 오픈/.test(ko.info),
+    '배너 사이트(한국어): 시간대 두 줄 · 줄마다 라스트오더 · 쉬는 요일 안내 · 공지 · 영업 상태', ko);
   check(!ko.phone && ko.ig === 'https://www.instagram.com/deadlysins.5f/' && ko.ways === 2, '비운 전화는 빠지고(대관 문의 버튼도 2개), 인스타 아이디가 바뀜', ko);
   const en = await see('en-US', '2026-11-23T12:00:00Z');   // 월요일 21:00 — 이제 영업하는 날
-  check(/Mon–Sat 19:00 – 03:00/.test(en.info) && /Last order 02:30 · Closed on Sundays/.test(en.info) && /Open now · until 03:00/.test(en.info) && en.notice === '12/25 휴무',
-    '배너 사이트(영어): Mon–Sat · Closed on Sundays · 영어 공지가 없으면 한국어 공지', en);
+  check(/Mon–Fri 19:00 – 03:00 Last order 02:30 Sat 18:00 – 02:00 Last order 01:00 Closed on Sundays/.test(en.info) && /Open now · until 03:00/.test(en.info) && en.notice === '12/25 휴무',
+    '배너 사이트(영어): Mon–Fri · Sat · Closed on Sundays · 영어 공지가 없으면 한국어 공지', en);
   const zh = await see('zh-CN', '2026-11-23T12:00:00Z');
-  check(/周一–周六 19:00 – 03:00/.test(zh.info) && /最后点单 02:30 · 每周日休息/.test(zh.info) && /营业中 · 至 03:00/.test(zh.info), '배너 사이트(중국어): 周一–周六 · 每周日休息', zh);
+  check(/周一–周五 19:00 – 03:00 最后点单 02:30 周六 18:00 – 02:00 最后点单 01:00 每周日休息/.test(zh.info) && /营业中 · 至 03:00/.test(zh.info), '배너 사이트(중국어): 周一–周五 · 周六 · 每周日休息', zh);
   const ja = await see('ja-JP', '2026-11-23T12:00:00Z');
-  check(/月–土 19:00 – 03:00/.test(ja.info) && /ラストオーダー 02:30 · 毎週日曜定休/.test(ja.info) && /営業中 · 03:00まで/.test(ja.info), '배너 사이트(일본어): 月–土 · 毎週日曜定休', ja);
+  check(/月–金 19:00 – 03:00 ラストオーダー 02:30 土 18:00 – 02:00 ラストオーダー 01:00 毎週日曜定休/.test(ja.info) && /営業中 · 03:00まで/.test(ja.info), '배너 사이트(일본어): 月–金 · 土 · 毎週日曜定休', ja);
+  // 예전에 한 줄짜리 꼴로 저장한 가게 정보도 그대로 읽힌다
+  LIVE = { v: 1, at: new Date().toISOString(), data: { info: { hours: { days: [0, 2, 3, 4, 5, 6], open: '20:00', close: '02:00', last: '01:30' }, notice: { ko: '공지' } } } };
+  const old = await see('ko-KR', '2026-11-23T12:00:00Z');
+  check(/화–일 20:00 – 02:00 라스트오더 01:30 · 매주 월요일 휴무/.test(old.info), '예전 꼴(한 줄짜리)로 저장된 영업시간도 읽음', old.info);
   LIVE = { v: 0, at: null, data: null };
 }
 
@@ -965,7 +994,7 @@ async function promoSite(browser, base) {
   check(info.prices.length === 0, '가격은 어디에도 없음', info.prices);
   check(info.credits >= 5, '공용 사진 출처는 메뉴 맨 아래 접어 둠', info.credits);
   check(info.table && info.toQuiz.length === 0, '설문 사이트로 가는 링크 없음 (테이블 질문은 예고만)', info.toQuiz);
-  check(['백제고분로41길 42-20', '잠실역 2·8호선 10번 출구', '엘리베이터', '주차', '화–일 20:00 – 02:00', '라스트오더 01:30 · 매주 월요일 휴무', '@deadlysins.bar', 'deadly_sins@naver.com', '커버차지 없음', '대관 문의 환영']
+  check(['백제고분로41길 42-20', '잠실역 2·8호선 10번 출구', '엘리베이터', '주차', '화–금 19:30 – 02:00', '토 · 일 19:00 – 02:00', '라스트오더 01:00 · 매주 월요일 휴무', '@deadlysins.bar', 'deadly_sins@naver.com', '커버차지 없음', '대관 문의 환영']
     .every((w) => info.info.includes(w)), '오시는 길: 주소 · 역 · 엘리베이터 · 주차 · 영업시간 · 인스타 · 메일 · 커버차지 없음 · 대관 문의', info.info);
   // 전화는 data.js 에 번호가 있을 때만 (가상번호를 받기 전엔 비어 있음 — 아래에서 번호를 넣어 따로 확인)
   const tel = await page.evaluate(() => (window.DS_DATA.promo.phone ? 'tel:' + window.DS_DATA.promo.phone.replace(/[^\d+]/g, '') : ''));
@@ -1057,7 +1086,7 @@ async function promoSite(browser, base) {
     card: document.querySelector('.lb-card .lb-card-ko').textContent, wide: document.documentElement.scrollWidth > innerWidth + 1,
     tabs: (() => { const n = document.querySelector('.lb-cats'); return n.scrollWidth - n.clientWidth; })()
   }));
-  check(promoZh.lang === 'zh-Hans' && /哪一种罪/.test(promoZh.title) && /每周一休息/.test(promoZh.info) && /最后点单 01:30/.test(promoZh.info) && promoZh.card === '傲慢之酒' && !promoZh.wide && promoZh.tabs === 0,
+  check(promoZh.lang === 'zh-Hans' && /哪一种罪/.test(promoZh.title) && /每周一休息/.test(promoZh.info) && /周二–周五 19:30 – 02:00周六 · 周日 19:00 – 02:00最后点单 01:00/.test(promoZh.info) && promoZh.card === '傲慢之酒' && !promoZh.wide && promoZh.tabs === 0,
     '중국어 전환: 제목 · 술 이름(傲慢之酒) · 영업 안내(每周一休息), 옆으로 넘치지 않음', promoZh);
   const promoZhKo = await leftoverKorean(page, '#lbLang');
   check(promoZhKo.length === 0, '중국어 화면에 한글이 남지 않음 (배너 사이트 전체)', promoZhKo.slice(0, 6));
@@ -1072,7 +1101,7 @@ async function promoSite(browser, base) {
     return { lang: document.documentElement.lang, title: document.querySelector('#concept h2').textContent, info: document.querySelector('.lb-info').textContent,
       card: document.querySelector('.lb-card .lb-card-ko').textContent, wide: document.documentElement.scrollWidth > innerWidth + 1, gap };
   });
-  check(promoJa.lang === 'ja' && /どの罪/.test(promoJa.title) && /毎週月曜定休/.test(promoJa.info) && /ラストオーダー 01:30/.test(promoJa.info) && promoJa.card === '傲慢の酒' && !promoJa.wide && promoJa.gap >= 12,
+  check(promoJa.lang === 'ja' && /どの罪/.test(promoJa.title) && /毎週月曜定休/.test(promoJa.info) && /火–金 19:30 – 02:00土 · 日 19:00 – 02:00ラストオーダー 01:00/.test(promoJa.info) && promoJa.card === '傲慢の酒' && !promoJa.wide && promoJa.gap >= 12,
     '일본어 전환: 제목 · 술 이름(傲慢の酒) · 영업 안내(毎週月曜定休), 옆으로 넘치지 않음 · 메뉴 칸 끝까지 보임', promoJa);
   const promoJaKo = await leftoverKorean(page, '#lbLang');
   check(promoJaKo.length === 0, '일본어 화면에 한글이 남지 않음 (배너 사이트 전체)', promoJaKo.slice(0, 6));
@@ -1082,13 +1111,15 @@ async function promoSite(browser, base) {
   check(errors.length === 0, '홍보 사이트 스크립트 오류 · 404 없음', errors);
   await ctx.close();
 
-  // 시각마다 첫 화면의 영업 상태 (화–일 20:00–02:00, 라스트오더 01:30, 월요일 휴무 · 한국 시간)
+  // 시각마다 첫 화면의 영업 상태 (화–금 19:30–02:00 · 토 · 일 19:00–02:00, 라스트오더 01:00, 월요일 휴무 · 한국 시간)
   const WHEN = [
-    ['2026-10-27T06:00:00Z', '○ 오늘 오후 8시 오픈', '화요일 오후 3시'],
-    ['2026-10-27T16:45:00Z', '○ 오늘 주문은 마감됐어요', '화요일 영업 중 새벽 1:45 (라스트오더 지남)'],
-    ['2026-10-27T17:30:00Z', '○ 오늘 오후 8시 오픈', '수요일 새벽 2:30 (닫은 뒤)'],
-    ['2026-10-25T16:00:00Z', '● 지금 영업 중 · 새벽 2시까지', '월요일 새벽 1시 (일요일 영업이 이어짐)'],
-    ['2026-10-26T06:00:00Z', '○ 오늘은 쉬어요 · 내일 오후 8시 오픈', '월요일 오후 3시 (휴무)']
+    ['2026-10-27T06:00:00Z', '○ 오늘 오후 7시 30분 오픈', '화요일 오후 3시'],
+    ['2026-10-27T15:30:00Z', '● 지금 영업 중 · 새벽 2시까지', '화요일 영업 중 새벽 0:30'],
+    ['2026-10-27T16:15:00Z', '○ 오늘 주문은 마감됐어요', '화요일 영업 중 새벽 1:15 (라스트오더 지남)'],
+    ['2026-10-27T17:30:00Z', '○ 오늘 오후 7시 30분 오픈', '수요일 새벽 2:30 (닫은 뒤)'],
+    ['2026-10-31T06:00:00Z', '○ 오늘 오후 7시 오픈', '토요일 오후 3시 (주말은 7시)'],
+    ['2026-10-25T15:30:00Z', '● 지금 영업 중 · 새벽 2시까지', '월요일 새벽 0:30 (일요일 영업이 이어짐)'],
+    ['2026-10-26T06:00:00Z', '○ 오늘은 쉬어요 · 내일 오후 7시 30분 오픈', '월요일 오후 3시 (휴무)']
   ];
   for (const [at, want, what] of WHEN) {
     const o = await open(null, at);

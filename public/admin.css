@@ -55,7 +55,14 @@ button { font-family: var(--sans); cursor: pointer; -webkit-tap-highlight-color:
 .lbl small { margin-left: 6px; font-size: 11.5px; font-weight: 500; color: var(--dim); }
 .hint { margin: 0 0 10px; font-size: 12.5px; line-height: 1.55; color: var(--dim); word-break: keep-all; }
 .hint b { color: var(--soft); }
-.days .tg span { min-width: 42px; justify-content: center; padding: 0 10px; }
+.days { gap: 5px; }
+.days .tg span { min-width: 38px; justify-content: center; padding: 0 8px; }
+.days { margin-bottom: 12px; }
+.days .tg.is-other span { opacity: .45; border-style: dashed; }   /* 다른 시간대에서 고른 요일 (누르면 이리로 옮겨 온다) */
+.lbl-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.lbl-row .lbl { margin: 0; }
+.lbl-row .del { flex: none; }
+.hadd { margin: 0 0 8px; }
 /* 시간 칸은 한 줄에 하나씩 (폰마다 "오후 8:00" · "20:00" 로 다르게 보여서, 세 칸을 나란히 두면 글자가 잘린다) */
 .times { display: grid; gap: 8px; margin-bottom: 10px; }
 .time { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--soft); }
